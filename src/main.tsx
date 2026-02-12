@@ -15,10 +15,15 @@ import {
   Root,
   NotFoundPage,
   Dashboard,
+  Login,
+  SignUp,
+  MultiStepDoctorForm,
   SuperAdminDashboard,
   Nurses,
   Doctors,
-  Patients
+  DoctorProfile,
+  Patients,
+  ServiceUsers,
 } from './App'
 
 
@@ -26,7 +31,11 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<Root />} errorElement={<NotFoundPage />}>
 
-      <Route index path='/' element={<SuperAdminDashboard />} />
+      {/* <Route index path='/' element={<SuperAdminDashboard />} /> */}
+      <Route path='login' element={<Login />} />
+      <Route path='signup' element={<SignUp />} />
+      <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
+
 
       <Route element={<Dashboard />}>
         <Route element={<MainLayout />}>
@@ -35,9 +44,10 @@ const router = createBrowserRouter(
             <Route index element={<SuperAdminDashboard/>}/>
             <Route path='nurses' element={<Nurses />} />
             <Route path='doctors' element={<Doctors />} />
+            <Route path='doctors/:id' element={<DoctorProfile />} />
             <Route path='patients' element={<Patients />} />
+            <Route path='service-users' element={<ServiceUsers />} />
           </Route>
-
         </Route>
       </Route>
     </Route>
