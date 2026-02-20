@@ -1,4 +1,6 @@
-import type { doctorProfile } from "@/types/doctorProfile";
+// import type { doctorProfile } from "@/types/doctorProfile";
+
+import type { doctorProfile } from "@/api-integration/types/doctorProfile";
 
 export const dummyDoctors: doctorProfile[] = [
   {

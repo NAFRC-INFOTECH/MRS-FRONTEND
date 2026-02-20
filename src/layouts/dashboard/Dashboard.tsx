@@ -6,9 +6,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import TopRightNavbar from "@/components/Navbars/TopBars/TopRightNavBar";
 import Sidebar from "@/components/Navbars/SideBars/Sidebar";
-// import Sidebar from "../Components/Nav/Sidebar";
-// import TopRightNavs from "../Components/Nav/TopRightNavs";
-// import TopLefNavs from "../Components/Nav/TopLefNavs";
 
 function Dashboard() {
     const [navWidth, setNavWidth] = useState(272); // Default sidebar width
@@ -23,6 +20,8 @@ function Dashboard() {
     const handleNavWidthChange = (newWidth: number) => {
         setNavWidth(newWidth);
     };
+
+    // const user = "doctor" as UserRole;
 
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
@@ -75,6 +74,7 @@ function Dashboard() {
                 isTablet={isTablet}
                 onWidthChange={handleNavWidthChange}
                 navWidth={navWidth}
+                // role={user?.role ?? "patient"}
             />
 
             {/* Main Content Area */}

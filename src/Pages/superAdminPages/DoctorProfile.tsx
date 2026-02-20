@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 // import { dummyDoctors } from "@/data/dummyDoctors";
-import type { doctorProfile } from "@/types/doctorProfile";
+import type { doctorProfile } from "@/api-integration/types/doctorProfile";
 import { dummyDoctors } from "@/dummyData/dummyDoctor";
 
 // SectionCard & Field components

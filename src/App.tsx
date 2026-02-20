@@ -11,6 +11,11 @@ import SignUp from './Pages/auth/Signup'
 import MultiStepDoctorForm from './components/hiring-form/MultiStepDoctorForm'
 import DoctorProfile from './Pages/superAdminPages/DoctorProfile'
 import ServiceUsers from './Pages/superAdminPages/ServiceUsers'
+import DoctorsDashboard from './Pages/doctorsPages/DoctorsDashboard'
+import NursesDashboard from './Pages/nursesPages/NursesDashboard'
+import PatientMain from './Pages/patientPages/PatientMain'
+import PatientsRegistry from './Pages/recordingdepartment/PatientsRegistry'
+import UserSettings from './Pages/settings/UserSettings'
 
 
 
@@ -28,4 +33,9 @@ export {
   DoctorProfile,
   Patients,
   ServiceUsers,
+  DoctorsDashboard,
+  NursesDashboard,
+  PatientMain,
+  PatientsRegistry,
+  UserSettings
 }

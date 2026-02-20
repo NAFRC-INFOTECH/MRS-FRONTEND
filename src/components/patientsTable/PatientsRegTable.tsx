@@ -7,80 +7,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { dummyPatients } from "./patientsDatas/patientsData";
+import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
 
-// Patient status type
-type PatientStatus = "active" | "inactive" | "discharged";
 
-// Condition type
-type PatientCondition = "on medication" | "on sick bed" | "discharged" | "recovered";
-
-// Patient type
-type Patient = {
-  personalInfo: {
-    id: string;
-    fullName: string;
-    imageUrl: string;
-    phone: string;
-    email: string;
-    address: string;
-    status: PatientStatus;
-    condition: PatientCondition;
-  };
-};
-
-// Dummy patients data
-const dummyPatients: Patient[] = [
-  {
-    personalInfo: {
-      id: "PAT-1001",
-      fullName: "John Doe",
-      imageUrl: "https://randomuser.me/api/portraits/men/51.jpg",
-      phone: "+234 901 234 5678",
-      email: "john.doe@example.com",
-      address: "12 Maple Street, Lagos, Nigeria",
-      status: "active",
-      condition: "on medication",
-    },
-  },
-  {
-    personalInfo: {
-      id: "PAT-1002",
-      fullName: "Jane Smith",
-      imageUrl: "https://randomuser.me/api/portraits/women/52.jpg",
-      phone: "+234 902 345 6789",
-      email: "jane.smith@example.com",
-      address: "45 Banana Avenue, Abuja, Nigeria",
-      status: "inactive",
-      condition: "on sick bed",
-    },
-  },
-  {
-    personalInfo: {
-      id: "PAT-1003",
-      fullName: "David Johnson",
-      imageUrl: "https://randomuser.me/api/portraits/men/53.jpg",
-      phone: "+234 903 456 7890",
-      email: "david.johnson@example.com",
-      address: "78 Palm Road, Port Harcourt, Nigeria",
-      status: "discharged",
-      condition: "discharged",
-    },
-  },
-  {
-    personalInfo: {
-      id: "PAT-1004",
-      fullName: "Clara Evans",
-      imageUrl: "https://randomuser.me/api/portraits/women/54.jpg",
-      phone: "+234 904 567 8901",
-      email: "clara.evans@example.com",
-      address: "90 Pine Street, Ibadan, Nigeria",
-      status: "active",
-      condition: "recovered",
-    },
-  },
-];
-
-export default function PatientsTable() {
+export default function PatientsRegTable() {
   const [patients, setPatients] = useState(dummyPatients);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
   const [searchName, setSearchName] = useState(""); // <--- search state
@@ -242,7 +173,7 @@ export default function PatientsTable() {
                 <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.phone}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.email}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.address}</td>
-                <td className="p-2">
+                <td className="p-2 whitespace-nowrap">
                   <span
                     className={`px-3 py-1 rounded-full text-xs ${getConditionColor(
                       p.personalInfo.condition
