@@ -1,6 +1,4 @@
-import UserProfile from "@/components/settings/UserProfile"
 import {
-  Box,
   List,
   ListItemButton,
   ListItemIcon,
@@ -17,11 +15,7 @@ import {
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 
-export default function SuperAdminSideBar({
-  handleDrawerToggle,
-}: {
-  handleDrawerToggle: () => void
-}) {
+export default function SuperAdminSideBar() {
   const location = useLocation()
 
   /** Reusable route active checker */
@@ -59,26 +53,7 @@ export default function SuperAdminSideBar({
   }, [])
 
   return (
-    <Box
-      onClick={handleDrawerToggle}
-      sx={{ textAlign: "center", backgroundColor: "transparent" }}
-      className="drawer-container px-4 pt-[4rem] md:pt-[5.5rem] lg:py-3 flex flex-col gap-2 bg-[rgba(10,10,73,0.2)] overflow-auto scrollbar-hide h-full"
-    >
-      {/* Header */}
-      <List>
-        <div className="flex items-center gap-3">
-          <div className="w-[44px] h-[44px] bg-blue-500 rounded-full flex items-center justify-center">
-            <img src="data:image/jpeg;base64,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" alt="Logo" />
-          </div>
-          <div className="flex flex-col text-start">
-            <span className="text-xs text-gray-500">ADMIN PORTAL</span>
-            <h2 className="text-sm font-semibold">DHML-MRS</h2>
-          </div>
-        </div>
-      </List>
-
-      <div className="w-full h-[1px] bg-gray-300 my-1 lg:my-2" />
-
+    <section>
       {/* MAIN */}
       <List>
         <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
@@ -89,7 +64,7 @@ export default function SuperAdminSideBar({
           { text: "Dashboard", path: "/mrs-admin", icon: LayoutPanelLeft },
           { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
           { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
-          { text: "Patients", path: "/mrs-admin/patients", icon: ContactRound },
+          { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
           { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser },
         ].map((item) => {
           const active = isRouteActive(item.path)
@@ -164,8 +139,8 @@ export default function SuperAdminSideBar({
         </div>
 
         {/* Profile */}
-        <UserProfile className="flex" textSize="text-xs" />
+        {/* <UserProfile className="flex" textSize="text-xs" /> */}
       </List>
-    </Box>
+    </section>
   )
 }

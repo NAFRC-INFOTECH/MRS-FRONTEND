@@ -10,7 +10,7 @@ import type { DoctorStatus } from "./types";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { dummyDoctors } from "@/dummyData/dummyDoctor";
-import type { doctorProfile } from "@/types/doctorProfile";
+import type { doctorProfile } from "@/api-integration/types/doctorProfile";
 
 
 export default function DoctorsTable() {

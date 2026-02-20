@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useLoginMutation } from "@/api-integration/mutations/auth";
+import { useIsAuthenticated, useUser } from "@/api-integration/redux/selectors";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/validations/auth";
@@ -21,7 +24,11 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
+  const login = useLoginMutation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(loginSchema),
@@ -31,18 +38,24 @@ export default function Login() {
     },
   });
 
+  const loading = login.isPending;
+
   const onSubmit = async (data: LoginSchemaType) => {
-    setLoading(true);
-
-    try {
-      console.log("Login payload:", data);
-
-      // simulate API
-      await new Promise((res) => setTimeout(res, 1500));
-    } finally {
-      setLoading(false);
-    }
+    login.mutate({ email: data.email, password: data.password });
   };
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const to = (location.state as any)?.from?.pathname ?? "/";
+      const role = user.roles?.[0];
+      if (role === "super_admin") navigate("/mrs-admin");
+      else if (role === "doctor") navigate("/doctors-dashboard");
+      else if (role === "nurse") navigate("/nurses-dashboard");
+      else if (role === "patient") navigate("/patient-main-profile");
+      else if (role === "recording") navigate("/recordings");
+      else navigate(to);
+    }
+  }, [isAuthenticated, user, navigate, location.state]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#56bbe3] px-4">
@@ -72,7 +85,7 @@ export default function Login() {
                     <FormControl>
                       <Input
                         placeholder="example@email.com"
-                        className="bg-white/10 border border-gray-400 text-white placeholder:text-gray-400"
+                        className="bg-white/10 border border-gray-400 text-gray-400 placeholder:text-gray-400"
                         {...field}
                       />
                     </FormControl>
@@ -93,13 +106,13 @@ export default function Login() {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter password"
-                          className="bg-white/10 border border-gray-400 text-white placeholder:text-gray-400"
+                          className="bg-white/10 border border-gray-400 text-gray-400 placeholder:text-gray-400"
                           {...field}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
                         >
                           {showPassword ? (
                             <EyeOff size={18} />
@@ -139,12 +152,13 @@ export default function Login() {
                   Forgot password?
                 </button>
 
-                <button
+                <Link
+                  to="/signup"
                   type="button"
-                  className="hover:text-white transition"
+                  className="text-[#56bbe3] transition font-medium cursor-pointer hover:underline"
                 >
                   Create account
-                </button>
+                </Link>
               </div>
             </form>
           </Form>

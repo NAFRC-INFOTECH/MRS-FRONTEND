@@ -19,11 +19,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSignupMutation } from "@/api-integration/mutations/auth";
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const signup = useSignupMutation();
+  const navigate = useNavigate();
+  const loading = signup.isPending;
 
   const form = useForm<SignupSchemaType>({
     resolver: zodResolver(signupSchema),
@@ -36,23 +40,16 @@ export default function Signup() {
   });
 
   const onSubmit = async (data: SignupSchemaType) => {
-    setLoading(true);
-
-    try {
-      console.log("Signup payload:", data);
-
-      // simulate API call
-      await new Promise((res) => setTimeout(res, 1500));
-    } finally {
-      setLoading(false);
-    }
+    signup.mutate({ fullName: data.fullName, email: data.email, password: data.password }, {
+      onSuccess: () => navigate("/mrs-admin")
+    });
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#56bbe3] px-4">
-      <Card className="w-full max-w-md bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="w-full max-w-md bg-white backdrop-blur-xl border border-white/20 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-gray-900">
+          <CardTitle className="text-2xl font-semibold text-[#56bbe3]">
             Create an account
           </CardTitle>
           <p className="text-sm text-gray-500">
@@ -177,9 +174,9 @@ export default function Signup() {
               {/* Footer */}
               <div className="text-sm text-gray-500 text-center">
                 Already have an account?{" "}
-                <span className="text-[#56bbe3] font-medium cursor-pointer hover:underline">
+                <Link to="/login" className="text-[#56bbe3] font-medium cursor-pointer hover:underline">
                   Login
-                </span>
+                </Link>
               </div>
             </form>
           </Form>
