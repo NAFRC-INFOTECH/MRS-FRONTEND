@@ -15,9 +15,13 @@ import Step9Documents from "./hire-doctor-steps/Step9Documents";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { doctorFormSchema, type DoctorFormValues } from "@/lib/validations/doctorFormSchema";
+import { useDoctorProfileUpdateMutation, useCompleteOnboardingMutation } from "@/api-integration/mutations/doctorProfiles";
+import { toast } from "sonner";
 
 export default function MultiStepDoctorForm() {
   const [step, setStep] = useState(0);
+  const updateProfile = useDoctorProfileUpdateMutation();
+  const completeOnboarding = useCompleteOnboardingMutation();
 
   const form = useForm<DoctorFormValues>({
     resolver: zodResolver(doctorFormSchema),
@@ -97,8 +101,72 @@ export default function MultiStepDoctorForm() {
 
   const prev = () => setStep((s) => s - 1);
 
-  const submit = form.handleSubmit((data) => {
-    console.log("FINAL DATA:", data);
+  const submit = form.handleSubmit(async (data) => {
+    const patch = {
+      personalInfo: {
+        fullName: data.fullName,
+        dateOfBirth: data.dob,
+        gender: data.gender,
+        nationality: data.nationality,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        emergencyContact: data.emergencyContact,
+      },
+      qualifications: {
+        medicalDegree: data.degree,
+        specialization: data.specialization,
+        licenses: data.licenseNumber,
+        boardCertifications: data.boardCertifications,
+        additionalCertifications: data.additionalCertifications,
+        medicalSchool: data.medicalSchool,
+        graduationYear: data.graduationYear,
+      },
+      experience: {
+        employers: data.previousEmployer,
+        jobTitles: data.jobTitle,
+        responsibilities: data.duties,
+        references: data.references,
+      },
+      cme: {
+        workshops: data.workshops,
+        research: data.research,
+        fellowships: data.fellowships,
+      },
+      skills: {
+        clinicalSkills: data.clinicalSkills,
+        surgicalExperience: data.surgicalExperience,
+        equipment: data.equipment,
+        leadership: data.leadership,
+      },
+      health: {
+        medicalHistory: data.medicalHistory,
+        vaccinations: data.vaccination,
+        screenings: data.screening,
+      },
+      legal: {
+        licenseProof: data.validLicense,
+        backgroundCheck: data.backgroundCheck,
+        insurance: data.insurance,
+      },
+      statement: {
+        motivation: data.motivation,
+        careerGoals: data.careerGoals,
+        hospitalReason: data.whyHospital,
+      },
+      documents: {
+        cv: typeof data.cv === "string" ? data.cv : "",
+        photo: typeof data.photo === "string" ? data.photo : "",
+        availability: data.availability,
+      },
+    } as const;
+    try {
+      await updateProfile.mutateAsync(patch as any);
+      await completeOnboarding.mutateAsync();
+      toast.success("Onboarding completed. Your account is now a Doctor.");
+    } catch {
+      toast.error("Failed to submit doctor onboarding");
+    }
   });
 
   return (

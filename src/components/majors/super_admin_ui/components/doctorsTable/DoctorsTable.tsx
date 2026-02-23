@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PlusIcon, MoreVertical } from "lucide-react"; // shadcn recommends lucide icons
 import {
   DropdownMenu,
@@ -6,17 +6,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { DoctorStatus } from "./types";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { dummyDoctors } from "@/dummyData/dummyDoctor";
 import type { doctorProfile } from "@/api-integration/types/doctorProfile";
+import { useDoctorsQuery } from "@/api-integration/queries/doctors";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useInviteDoctorMutation } from "@/api-integration/mutations/invitations";
+import { toast } from "sonner";
 
 
 export default function DoctorsTable() {
-  const [doctors, setDoctors] = useState(dummyDoctors);
+  const { data, isLoading, isError } = useDoctorsQuery();
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const inviteDoctor = useInviteDoctorMutation();
   const [filters, setFilters] = useState<{
-    status: DoctorStatus | "";
+    status: doctorProfile["personalInfo"]["status"] | "";
     hospital: string;
     specialty: string;
   }>({
@@ -29,8 +36,7 @@ export default function DoctorsTable() {
 
   const handleAction = (id: string, action: string) => {
   if (action === "delete") {
-    // Remove doctor by personalInfo.id
-    setDoctors((prev) => prev.filter((doc) => doc.personalInfo.id !== id));
+    toast.warning("Delete is not implemented yet");
     return;
   }
 
@@ -40,28 +46,7 @@ export default function DoctorsTable() {
   }
 
   // Update status for other actions
-  setDoctors((prev) =>
-    prev.map((doc) =>
-      doc.personalInfo.id === id
-        ? {
-            ...doc,
-            personalInfo: {
-              ...doc.personalInfo,
-              status:
-                action === "activate"
-                  ? "active"
-                  : action === "assign"
-                  ? "assigned"
-                  : action === "suspend"
-                  ? "suspended"
-                  : action === "sack"
-                  ? "sacked"
-                  : doc.personalInfo.status,
-            },
-          }
-        : doc
-    )
-  );
+  toast.info(`Action "${action}" is not implemented yet`);
 };
 
   const getStatusColor = (status: doctorProfile["personalInfo"]["status"]) => {
@@ -77,16 +62,20 @@ export default function DoctorsTable() {
     }
   };
 
-  const filteredDoctors = doctors.filter((doc) =>
-    (filters.status ? doc.personalInfo.status === filters.status : true) &&
-    (filters.hospital
-      ? doc.personalInfo.hospital.toLowerCase().includes(filters.hospital.toLowerCase())
-      : true) &&
-    (filters.specialty
-      ? doc.qualifications.specialization
-          .toLowerCase()
-          .includes(filters.specialty.toLowerCase())
-      : true)
+  const filteredDoctors = useMemo(
+    () =>
+      (data ?? []).filter((doc) =>
+        (filters.status ? doc.personalInfo.status === filters.status : true) &&
+        (filters.hospital
+          ? (doc.personalInfo.hospital ?? "").toLowerCase().includes(filters.hospital.toLowerCase())
+          : true) &&
+        (filters.specialty
+          ? (doc.qualifications.specialization ?? "")
+              .toLowerCase()
+              .includes(filters.specialty.toLowerCase())
+          : true)
+      ),
+    [data, filters]
   );
 
 
@@ -96,12 +85,61 @@ export default function DoctorsTable() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">View all Doctors</h2>
         <button
-          // onClick={handleAddSpecialist}
+          onClick={() => setShowInvite(true)}
           className="flex items-center px-4 py-2 bg-[#56bbe3] text-white rounded hover:bg-[#56bbe3]/70 rounded-[8px]"
         >
           <PlusIcon className="w-5 h-5 mr-2" /> Add <span className="hidden md:inline-block ml-2">Specialist</span>
         </button>
       </div>
+
+      <Dialog open={showInvite} onOpenChange={setShowInvite}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Doctor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              type="email"
+              placeholder="doctor@example.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setShowInvite(false)}
+              disabled={inviteDoctor.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/70"
+              type="button"
+              onClick={() => {
+                if (!inviteEmail) return;
+                inviteDoctor.mutate(
+                  { email: inviteEmail },
+                  {
+                    onSuccess: (res) => {
+                      toast.success(`Invitation sent to ${res.email}`);
+                      setInviteEmail("");
+                      setShowInvite(false);
+                    },
+                    onError: () => {
+                      toast.error("Failed to send invitation");
+                    },
+                  }
+                );
+              }}
+              disabled={inviteDoctor.isPending || !inviteEmail}
+            >
+              {inviteDoctor.isPending ? "Inviting..." : "Send Invitation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 max-w-[50rem]">
@@ -110,7 +148,7 @@ export default function DoctorsTable() {
           onValueChange={(value) =>
             setFilters((prev) => ({
               ...prev,
-              status: value === "all" ? "" : (value as DoctorStatus),
+              status: value === "all" ? "" : (value as doctorProfile["personalInfo"]["status"]),
             }))
           }
         >
@@ -159,6 +197,20 @@ export default function DoctorsTable() {
             </tr>
           </thead>
           <tbody>
+            {isLoading && (
+              <tr>
+                <td colSpan={7} className="text-center py-6">
+                  Loading doctors...
+                </td>
+              </tr>
+            )}
+            {isError && !isLoading && (
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-red-600">
+                  Failed to load doctors
+                </td>
+              </tr>
+            )}
             {filteredDoctors.map((doc) => (
               <tr
                 key={doc.personalInfo.id}
@@ -198,7 +250,7 @@ export default function DoctorsTable() {
                 </td>
               </tr>
             ))}
-            {filteredDoctors.length === 0 && (
+            {filteredDoctors.length === 0 && !isLoading && (
               <tr>
                 <td colSpan={7} className="text-center py-4">
                   No doctors found.
