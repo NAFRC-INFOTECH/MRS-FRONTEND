@@ -51,6 +51,7 @@ export default function UserSettings() {
     },
   });
   const mutation = useProfileUpdateMutation();
+  const avatar = data?.imageUrl;
   return (
     <section className="md:p-4 w-full space-y-6">
       <h1 className="text-xl font-semibold">User Settings</h1>
@@ -66,13 +67,15 @@ export default function UserSettings() {
             )}
           >
             <div className="space-y-2">
-              <FormLabel>User Image</FormLabel>
+              <FormLabel className="hidden md:block">User Image</FormLabel>
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden border">
                   {previewUrl ? (
                     <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                      <img src={avatar} alt="preview" className="w-full h-full object-cover" />
+                    </div>
                   )}
                 </div>
                 <div className="flex-1 flex items-center gap-2">
