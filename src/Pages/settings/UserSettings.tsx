@@ -4,7 +4,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLogoutMutation } from "@/api-integration/mutations/auth";
 import { useProfileQuery } from "@/api-integration/queries/profile";
-import { useProfileUpdateMutation, useProfileImageUploadMutation } from "@/api-integration/mutations/profile";
+import { useProfileUpdateMutation, useProfileImageUploadMutation, useChangePasswordMutation } from "@/api-integration/mutations/profile";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export default function UserSettings() {
   const { data } = useProfileQuery();
   const logout = useLogoutMutation();
   const uploadImage = useProfileImageUploadMutation();
+  const changePassword = useChangePasswordMutation();
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(data?.imageUrl ?? null);
   const [file, setFile] = React.useState<File | null>(null);
   const form = useForm<z.infer<typeof schema>>({
@@ -52,6 +53,15 @@ export default function UserSettings() {
   });
   const mutation = useProfileUpdateMutation();
   const avatar = data?.imageUrl;
+  const pwdSchema = z.object({
+    currentPassword: z.string().min(6, "Current password is required"),
+    newPassword: z.string().min(6, "New password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Confirm your new password"),
+  }).refine((v) => v.newPassword === v.confirmPassword, { path: ["confirmPassword"], message: "Passwords do not match" });
+  const pwdForm = useForm<z.infer<typeof pwdSchema>>({
+    resolver: zodResolver(pwdSchema),
+    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" }
+  });
   return (
     <section className="md:p-4 w-full space-y-6">
       <h1 className="text-xl font-semibold">User Settings</h1>
@@ -62,7 +72,7 @@ export default function UserSettings() {
             onSubmit={form.handleSubmit((values) =>
               mutation.mutate(values, {
                 onSuccess: () => toast.success("Profile updated"),
-                onError: () => toast.error("Failed to update profile"),
+                onError: (err: any) => toast.error(err?.message ?? "Failed to update profile"),
               })
             )}
           >
@@ -104,7 +114,7 @@ export default function UserSettings() {
                           form.setValue("imageUrl", res.imageUrl);
                           toast.success("Image uploaded");
                         },
-                        onError: () => toast.error("Upload failed"),
+                        onError: (err: any) => toast.error(err?.message ?? "Upload failed"),
                       });
                     }}
                     disabled={uploadImage.isPending || !file}
@@ -234,6 +244,72 @@ export default function UserSettings() {
             </div>
           </form>
         </Form>
+
+        <div className="border-t pt-6">
+          <h2 className="text-lg font-medium mb-4">Change Password</h2>
+          <Form {...pwdForm}>
+            <form
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              onSubmit={pwdForm.handleSubmit((values) => {
+                changePassword.mutate(
+                  { currentPassword: values.currentPassword, newPassword: values.newPassword },
+                  {
+                    onSuccess: () => {
+                      toast.success("Password updated. Please log in again.");
+                      logout.mutate(undefined);
+                    },
+                    onError: (err: any) => toast.error(err?.message ?? "Failed to change password"),
+                  }
+                );
+              })}
+            >
+              <FormField
+                control={pwdForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter current password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={pwdForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter new password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={pwdForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Re-enter new password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="md:col-span-2">
+                <Button className="bg-[#56bbe3] hover:bg-[#45a0d6]" type="submit" disabled={changePassword.isPending}>
+                  {changePassword.isPending ? "Updating..." : "Update Password"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
 
     </section>
   );

@@ -16,3 +16,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const resp = error?.response;
+    const message =
+      resp?.data?.message ||
+      resp?.data?.error ||
+      error?.message ||
+      "Request failed";
+    return Promise.reject(new Error(message));
+  }
+);

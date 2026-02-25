@@ -35,3 +35,14 @@ export const useProfileImageUploadMutation = () => {
     },
   });
 };
+
+export const changePasswordApi = async (payload: { currentPassword: string; newPassword: string }): Promise<{ ok: boolean }> => {
+  const res = await api.patch("/profile/me/password", payload);
+  return res.data as { ok: boolean };
+};
+
+export const useChangePasswordMutation = () => {
+  return useMutation({
+    mutationFn: changePasswordApi,
+  });
+};

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { useNavigate } from "react-router-dom";
 import type { doctorProfile } from "@/api-integration/types/doctorProfile";
 import { useDoctorsQuery } from "@/api-integration/queries/doctors";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useInviteDoctorMutation } from "@/api-integration/mutations/invitations";
@@ -96,6 +96,7 @@ export default function DoctorsTable() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Invite Doctor</DialogTitle>
+            <DialogDescription>Enter the doctor&rsquo;s email to send an invitation.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Input
@@ -127,8 +128,8 @@ export default function DoctorsTable() {
                       setInviteEmail("");
                       setShowInvite(false);
                     },
-                    onError: () => {
-                      toast.error("Failed to send invitation");
+                    onError: (err: any) => {
+                      toast.error(err?.message ?? "Failed to send invitation");
                     },
                   }
                 );
