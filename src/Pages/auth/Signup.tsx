@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSignupMutation } from "@/api-integration/mutations/auth";
+import { toast } from "sonner";
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,9 +41,13 @@ export default function Signup() {
   });
 
   const onSubmit = async (data: SignupSchemaType) => {
-    signup.mutate({ fullName: data.fullName, email: data.email, password: data.password }, {
-      onSuccess: () => navigate("/mrs-admin")
-    });
+    signup.mutate(
+      { fullName: data.fullName, email: data.email, password: data.password },
+      {
+        onSuccess: () => navigate("/mrs-admin"),
+        onError: (err: any) => toast.error(err?.message ?? "Signup failed"),
+      }
+    );
   };
 
   return (

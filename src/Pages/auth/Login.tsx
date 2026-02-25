@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -41,7 +42,14 @@ export default function Login() {
   const loading = login.isPending;
 
   const onSubmit = async (data: LoginSchemaType) => {
-    login.mutate({ email: data.email, password: data.password });
+    login.mutate(
+      { email: data.email, password: data.password },
+      {
+        onError: (err: any) => {
+          toast.error(err?.message ?? "Login failed");
+        },
+      }
+    );
   };
 
   useEffect(() => {
