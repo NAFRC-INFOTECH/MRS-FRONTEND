@@ -16,6 +16,8 @@ import RequireAuth from "@/api-integration/authGuard/RequireAuth";
 import { Toaster } from "@/components/ui/sonner";
 import GlobalErrorBoundary from "./shared/GlobalErrorBoundary";
 import GlobalClientLogging from './shared/GlobalClientLogging';
+import GlobalRealtimeSync from "./shared/GlobalRealtimeSync";
+import AcceptInvite from "./Pages/auth/AcceptInvite";
 
 import {
   MainLayout,
@@ -100,6 +102,7 @@ const router = createBrowserRouter(
       {/* All Unprotected Route */}
       <Route path='login' element={<Login />} />
       <Route path='signup' element={<SignUp />} />
+      <Route path='invite/accept' element={<AcceptInvite />} />
       <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
     </Route>
   )
@@ -113,6 +116,7 @@ ReactDom.createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         <GlobalErrorBoundary>
           <GlobalClientLogging />
+          <GlobalRealtimeSync />
           <Toaster position="top-right" richColors />
           <RouterProvider router={router}/>
         </GlobalErrorBoundary>

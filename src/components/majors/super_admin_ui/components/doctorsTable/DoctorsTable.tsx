@@ -13,7 +13,9 @@ import { useDoctorsQuery } from "@/api-integration/queries/doctors";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useInviteDoctorMutation } from "@/api-integration/mutations/invitations";
+import { useCreateDoctorDirectMutation } from "@/api-integration/mutations/invitations";
+import { useDeleteUserMutation, useSuspendUserMutation } from "@/api-integration/mutations/users";
+import { useUpdateDoctorStatusMutation, useDeleteDoctorProfileMutation, useResetDoctorPasswordMutation } from "@/api-integration/mutations/doctorProfiles";
 import { toast } from "sonner";
 
 
@@ -21,7 +23,14 @@ export default function DoctorsTable() {
   const { data, isLoading, isError } = useDoctorsQuery();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const inviteDoctor = useInviteDoctorMutation();
+  const [inviteName, setInviteName] = useState("");
+  const createDoctor = useCreateDoctorDirectMutation();
+  const deleteUser = useDeleteUserMutation();
+  const suspendUser = useSuspendUserMutation();
+  const updateStatus = useUpdateDoctorStatusMutation();
+  const deleteProfile = useDeleteDoctorProfileMutation();
+  const resetPassword = useResetDoctorPasswordMutation();
+  const [showCreds, setShowCreds] = useState<{ open: boolean; name?: string; email?: string; password?: string }>({ open: false });
   const [filters, setFilters] = useState<{
     status: doctorProfile["personalInfo"]["status"] | "";
     hospital: string;
@@ -32,11 +41,22 @@ export default function DoctorsTable() {
     specialty: "",
   });
 
+  console.log(data)
+
   const navigate = useNavigate();
 
   const handleAction = (id: string, action: string) => {
   if (action === "delete") {
-    toast.warning("Delete is not implemented yet");
+    deleteUser.mutate(id, {
+      onSuccess: () => {
+        deleteProfile.mutate(id);
+        toast.success("Doctor deleted");
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err ?? "");
+        toast.error(msg || "Delete failed");
+      },
+    });
     return;
   }
 
@@ -45,16 +65,65 @@ export default function DoctorsTable() {
     return;
   }
 
-  // Update status for other actions
-  toast.info(`Action "${action}" is not implemented yet`);
+  if (action === "activate") {
+    updateStatus.mutate({ userId: id, status: "active" }, {
+      onSuccess: () => toast.success("Doctor approved"),
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err ?? "");
+        toast.error(msg || "Approval failed");
+      },
+    });
+    return;
+  }
+
+  if (action === "suspend") {
+    suspendUser.mutate({ id, suspended: true }, {
+      onSuccess: () => {
+        updateStatus.mutate({ userId: id, status: "suspended" });
+        toast.success("Doctor suspended");
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err ?? "");
+        toast.error(msg || "Suspend failed");
+      },
+    });
+    return;
+  }
+
+  if (action === "sack") {
+    updateStatus.mutate({ userId: id, status: "sacked" }, {
+      onSuccess: () => toast.success("Doctor marked as sacked"),
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err ?? "");
+        toast.error(msg || "Action failed");
+      },
+    });
+    return;
+  }
+
+  if (action === "reset-password") {
+    resetPassword.mutate(id, {
+      onSuccess: (res) => {
+        setShowCreds({ open: true, password: res.password });
+        toast.success("Temporary password generated");
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err ?? "");
+        toast.error(msg || "Reset failed");
+      },
+    });
+    return;
+  }
+  // if (action === "assign") {
+  //   toast.info("Assign action is not implemented yet");
+  //   return;
+  // }
 };
 
   const getStatusColor = (status: doctorProfile["personalInfo"]["status"]) => {
     switch (status) {
       case "active":
         return "bg-green-100 text-green-800";
-      case "assigned":
-        return "bg-blue-100 text-blue-800";
       case "suspended":
         return "bg-yellow-100 text-yellow-800";
       case "sacked":
@@ -95,10 +164,16 @@ export default function DoctorsTable() {
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite Doctor</DialogTitle>
-            <DialogDescription>Enter the doctor&rsquo;s email to send an invitation.</DialogDescription>
+            <DialogTitle>Create Doctor Account</DialogTitle>
+            <DialogDescription>Enter the doctor&rsquo;s full name and email. A temporary password will be generated.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            <Input
+              type="text"
+              placeholder="Full Name (e.g., Dr. Jane Doe)"
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+            />
             <Input
               type="email"
               placeholder="doctor@example.com"
@@ -111,7 +186,7 @@ export default function DoctorsTable() {
               variant="outline"
               type="button"
               onClick={() => setShowInvite(false)}
-              disabled={inviteDoctor.isPending}
+              disabled={createDoctor.isPending}
             >
               Cancel
             </Button>
@@ -119,24 +194,53 @@ export default function DoctorsTable() {
               className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/70"
               type="button"
               onClick={() => {
-                if (!inviteEmail) return;
-                inviteDoctor.mutate(
-                  { email: inviteEmail },
+                if (!inviteEmail || !inviteName) return;
+                createDoctor.mutate(
+                  { email: inviteEmail, name: inviteName },
                   {
                     onSuccess: (res) => {
-                      toast.success(`Invitation sent to ${res.email}`);
+                      setShowCreds({ open: true, name: inviteName, email: inviteEmail, password: res.password });
                       setInviteEmail("");
+                      setInviteName("");
                       setShowInvite(false);
                     },
-                    onError: (err: any) => {
-                      toast.error(err?.message ?? "Failed to send invitation");
+                    onError: (err: unknown) => {
+                      const msg = err instanceof Error ? err.message : String(err ?? "");
+                      toast.error(msg || "Failed to create doctor account");
                     },
                   }
                 );
               }}
-              disabled={inviteDoctor.isPending || !inviteEmail}
+              disabled={createDoctor.isPending || !inviteEmail || !inviteName}
             >
-              {inviteDoctor.isPending ? "Inviting..." : "Send Invitation"}
+              {createDoctor.isPending ? "Creating..." : "Create Doctor"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showCreds.open} onOpenChange={(o) => setShowCreds((prev) => ({ ...prev, open: o }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Temporary Password</DialogTitle>
+            <DialogDescription>Copy and share securely. It will not be shown again.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {showCreds.name && <div><strong>Name:</strong> {showCreds.name}</div>}
+            {showCreds.email && <div><strong>Email:</strong> {showCreds.email}</div>}
+            <div><strong>Password:</strong> {showCreds.password}</div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => {
+                if (showCreds.password) navigator.clipboard.writeText(showCreds.password);
+                toast.success("Copied");
+              }}
+            >
+              Copy
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setShowCreds({ open: false })}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -160,7 +264,6 @@ export default function DoctorsTable() {
             <SelectGroup>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="assigned">Assigned</SelectItem>
               <SelectItem value="suspended">Suspended</SelectItem>
               <SelectItem value="sacked">Sacked</SelectItem>
             </SelectGroup>
@@ -219,7 +322,7 @@ export default function DoctorsTable() {
                 className="even:bg-[#f9f9f9] border-b border-gray-200">
                 <td className="px-4 py-2">
                   <div className="w-10 h-10 rounded-full border-2 border-[#56bbe3] p-1 overflow-hidden">
-                    <img src={doc.personalInfo.imageUrl} alt={doc.personalInfo.fullName} className="w-full h-full object-cover rounded-full" />
+                    <img src={doc.personalInfo.imageUrl || "https://placehold.co/80x80"} alt={doc.personalInfo.fullName} className="w-full h-full object-cover rounded-full" />
                   </div>
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">{doc.personalInfo.id}</td>
@@ -237,7 +340,7 @@ export default function DoctorsTable() {
                       <MoreVertical className="w-5 h-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {["profile","activate", "assign", "suspend", "sack", "delete"].map((action) => (
+                      {["profile","activate","reset-password","suspend","sack","delete"].map((action) => (
                         <DropdownMenuItem
                           key={action}
                           className={action === "delete" ? "text-red-600" : ""}

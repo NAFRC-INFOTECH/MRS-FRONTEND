@@ -12,8 +12,8 @@ export default class GlobalErrorBoundary extends React.Component<Props, State> {
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error: any) {
-    const message = error?.message || "Unexpected error";
+  componentDidCatch(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error ?? "Unexpected error");
     toast.error(message);
   }
   render() {
