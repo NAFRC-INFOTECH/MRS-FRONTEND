@@ -45,8 +45,9 @@ export default function Login() {
     login.mutate(
       { email: data.email, password: data.password },
       {
-        onError: (err: any) => {
-          toast.error(err?.message ?? "Login failed");
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Login failed");
         },
       }
     );

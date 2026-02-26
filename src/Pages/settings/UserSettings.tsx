@@ -72,7 +72,10 @@ export default function UserSettings() {
             onSubmit={form.handleSubmit((values) =>
               mutation.mutate(values, {
                 onSuccess: () => toast.success("Profile updated"),
-                onError: (err: any) => toast.error(err?.message ?? "Failed to update profile"),
+                onError: (err: unknown) => {
+                  const msg = err instanceof Error ? err.message : String(err ?? "");
+                  toast.error(msg || "Failed to update profile");
+                },
               })
             )}
           >
@@ -114,7 +117,10 @@ export default function UserSettings() {
                           form.setValue("imageUrl", res.imageUrl);
                           toast.success("Image uploaded");
                         },
-                        onError: (err: any) => toast.error(err?.message ?? "Upload failed"),
+                        onError: (err: unknown) => {
+                          const msg = err instanceof Error ? err.message : String(err ?? "");
+                          toast.error(msg || "Upload failed");
+                        },
                       });
                     }}
                     disabled={uploadImage.isPending || !file}
@@ -258,7 +264,10 @@ export default function UserSettings() {
                       toast.success("Password updated. Please log in again.");
                       logout.mutate(undefined);
                     },
-                    onError: (err: any) => toast.error(err?.message ?? "Failed to change password"),
+                    onError: (err: unknown) => {
+                      const msg = err instanceof Error ? err.message : String(err ?? "");
+                      toast.error(msg || "Failed to change password");
+                    },
                   }
                 );
               })}

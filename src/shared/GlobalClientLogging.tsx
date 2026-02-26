@@ -8,20 +8,20 @@ export default function GlobalClientLogging() {
       toast.error(msg);
     };
     const onRejection = (e: PromiseRejectionEvent) => {
-      const anyReason: any = (e as any)?.reason;
-      const reason = anyReason?.message || String(anyReason || "");
-      toast.error(reason || "Unhandled rejection");
+      const r: unknown = (e as unknown as { reason?: unknown })?.reason;
+      const msg = r instanceof Error ? r.message : String(r ?? "");
+      toast.error(msg || "Unhandled rejection");
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    console.error = (...args: any[]) => {
+    const originalError: typeof console.error = console.error;
+    const originalWarn: typeof console.warn = console.warn;
+    console.error = (...args: unknown[]) => {
       const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
       if (msg) toast.error(msg);
       originalError(...args);
     };
-    console.warn = (...args: any[]) => {
+    console.warn = (...args: unknown[]) => {
       const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
       if (msg) toast.warning ? toast.warning(msg) : toast.info(msg);
       originalWarn(...args);

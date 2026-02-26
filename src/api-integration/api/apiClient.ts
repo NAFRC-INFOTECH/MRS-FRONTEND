@@ -9,23 +9,21 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = store.getState().auth.accessToken;
   if (token) {
-    (config.headers as any) = {
-      ...(config.headers as any),
-      Authorization: `Bearer ${token}`,
-    };
+    const headers = (config.headers as any) || {};
+    headers.Authorization = `Bearer ${token}`;
+    config.headers = headers;
   }
   return config;
 });
 
 api.interceptors.response.use(
   (res) => res,
-  (error) => {
-    const resp = error?.response;
+  (error: unknown) => {
+    const err = error as { response?: { data?: { message?: string; error?: string } } } | undefined;
     const message =
-      resp?.data?.message ||
-      resp?.data?.error ||
-      error?.message ||
-      "Request failed";
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      (error instanceof Error ? error.message : "Request failed");
     return Promise.reject(new Error(message));
   }
 );

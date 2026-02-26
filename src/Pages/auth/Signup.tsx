@@ -45,7 +45,10 @@ export default function Signup() {
       { fullName: data.fullName, email: data.email, password: data.password },
       {
         onSuccess: () => navigate("/mrs-admin"),
-        onError: (err: any) => toast.error(err?.message ?? "Signup failed"),
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Signup failed");
+        },
       }
     );
   };
