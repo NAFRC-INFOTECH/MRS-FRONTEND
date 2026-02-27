@@ -1,10 +1,9 @@
 import { Drawer, Box, List } from '@mui/material';
 import SuperAdminSideBar from './SuperAdminSideBar';
 import type { SidebarProps } from '@/api-integration/types/types';
-import UserProfile from '@/components/settings/UserProfile';
+import UserProfile from '@/components/userProfile/UserProfile';
 import DoctorsSidebar from './DoctorsSidebar';
 import NursesSidebar from './NursesSidebar';
-import PatientsSidebar from './PatientsSidebar';
 import { useAppSelector } from '@/api-integration/redux/store';
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMobile, isTablet }) => {
@@ -24,9 +23,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
 
       case "nurse":
         return <NursesSidebar />;
-
-      case "patient":
-        return <PatientsSidebar />;
 
       default:
         return null;

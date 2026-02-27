@@ -88,7 +88,6 @@ function Dashboard() {
                         easing: theme.transitions.easing.sharp,
                         duration: theme.transitions.duration.enteringScreen,
                     }),
-                    height: '100vh',
                     overflow: 'auto'
                 }}
                 className="pt-[64px] md:pt-[85px] px-3 md:pl-6 md:pr-9 w-full no-scrollbar" // AppBar height

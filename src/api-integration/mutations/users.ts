@@ -30,3 +30,18 @@ export const useSuspendUserMutation = () => {
     },
   });
 };
+
+export const resetUserPasswordApi = async (id: string): Promise<{ password: string }> => {
+  const res = await api.patch(`/users/${id}/reset-password`);
+  return res.data as { password: string };
+};
+
+export const useResetUserPasswordMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => resetUserPasswordApi(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};

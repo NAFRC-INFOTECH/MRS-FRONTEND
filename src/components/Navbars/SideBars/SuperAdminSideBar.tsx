@@ -9,6 +9,7 @@ import {
   ContactRound,
   FolderOpen,
   LayoutPanelLeft,
+  LibraryBig,
   Pill,
   ShieldUser,
 } from "lucide-react"
@@ -65,7 +66,8 @@ export default function SuperAdminSideBar() {
           { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
           { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
           { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
-          { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser },
+          { text: "Recording Department", path: "/mrs-admin/recordings", icon: LibraryBig },
+          { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser }
         ].map((item) => {
           const active = isRouteActive(item.path)
 

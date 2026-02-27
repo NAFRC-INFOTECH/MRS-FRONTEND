@@ -13,7 +13,7 @@ export const authMiddleware: Middleware = (storeApi) => (next) => (action) => {
         roles: Role[];
         fullName?: string;
       };
-      storeApi.dispatch(setUser({ id: payload.sub, email: payload.email, roles: payload.roles, name: payload.fullName ?? "" }));
+      storeApi.dispatch(setUser({ id: payload.sub, email: payload.email, roles: payload.roles, name: payload.fullName ?? "", imageUrl: "" }));
     } catch {}
     const state = storeApi.getState() as any;
     try {
@@ -28,7 +28,7 @@ export const authMiddleware: Middleware = (storeApi) => (next) => (action) => {
     } catch {}
   }
   if (logout.match(action)) {
-    storeApi.dispatch(setUser({ id: "", email: "", roles: [], name: "" }));
+    storeApi.dispatch(setUser({ id: "", email: "", roles: [], name: "", imageUrl: "" }));
     try {
       localStorage.removeItem("auth");
     } catch {}
