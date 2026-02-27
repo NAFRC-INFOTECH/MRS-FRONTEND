@@ -1,7 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-// import { dummyDoctors } from "@/data/dummyDoctors";
-import type { doctorProfile } from "@/api-integration/types/doctorProfile";
-import { dummyDoctors } from "@/dummyData/dummyDoctor";
+import { useDoctorProfileByIdQuery } from "@/api-integration/queries/doctors";
 
 // SectionCard & Field components
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -14,7 +12,7 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
 const Field = ({ label, value }: { label: string; value?: string }) => (
   <div className="flex flex-col">
     <span className="text-sm text-gray-500">{label}</span>
-    <span className="text-base font-medium text-gray-800">{value || "—"}</span>
+    <span className="text-base font-medium text-gray-800">{value || "NIL"}</span>
   </div>
 );
 
@@ -22,10 +20,17 @@ export default function DoctorProfile() {
   const { id } = useParams(); // get doctor id from route
   const navigate = useNavigate();
 
-  // Find doctor in dummyDoctors array by ID
-  const data = dummyDoctors.find((doc: doctorProfile) => doc.personalInfo.id === id);
+  const { data, isLoading, isError } = useDoctorProfileByIdQuery(id || "", !!id);
 
-  if (!data) {
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-semibold">Loading doctor…</h1>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-semibold">Doctor not found</h1>
@@ -40,22 +45,28 @@ export default function DoctorProfile() {
   }
 
   return (
-    <div className="pb-6 space-y-8 min-h-screen">
+    <div className="pb-6 space-y-4 md:space-y-8 min-h-screen">
       {/* Optional: Doctor name at the top */}
       <h1 className="text-3xl font-bold text-gray-900">{data.personalInfo.fullName}</h1>
 
       {/* Personal Info */}
       <SectionCard title="Personal Information">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Field label="Full Name" value={data.personalInfo.fullName} />
-          <Field label="Date of Birth" value={data.personalInfo.dateOfBirth} />
-          <Field label="Gender" value={data.personalInfo.gender} />
-          <Field label="Nationality" value={data.personalInfo.nationality} />
-          <Field label="Phone" value={data.personalInfo.phone} />
-          <Field label="Email" value={data.personalInfo.email} />
-          <Field label="Address" value={data.personalInfo.address} />
-          <Field label="ID Document" value={data.personalInfo.idDocument} />
-          <Field label="Emergency Contact" value={data.personalInfo.emergencyContact} />
+        <div className="md:flex items-start gap-9 w-full">
+          <div className="flex items-center justify-center w-full md:w-[15rem] !h-full min-h-[13rem] bg-red-100">
+            <img src={data.personalInfo.imageUrl} alt={data.personalInfo.fullName} className="w-full h-[13rem] bg-cover" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 w-full pt-4 md:pt-0">
+            <Field label="Full Name" value={data.personalInfo.fullName} />
+            <Field label="Date of Birth" value={data.personalInfo.dateOfBirth} />
+            <Field label="Gender" value={data.personalInfo.gender} />
+            <Field label="Nationality" value={data.personalInfo.nationality} />
+            <Field label="State" value={data.personalInfo.state} />
+            <Field label="Phone" value={data.personalInfo.phone} />
+            <Field label="Email" value={data.personalInfo.email} />
+            <Field label="Address" value={data.personalInfo.address} />
+            <Field label="ID Document" value={data.personalInfo.idDocument} />
+            <Field label="Emergency Contact" value={data.personalInfo.emergencyContact} />
+          </div>
         </div>
       </SectionCard>
 

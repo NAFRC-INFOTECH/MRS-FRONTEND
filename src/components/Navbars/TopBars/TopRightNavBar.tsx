@@ -2,7 +2,7 @@ import Searchbar from '@/components/searchbar/SearchBar';
 import { useState } from 'react';
 import { CiSearch } from "react-icons/ci";
 import Notification from '../Notification';
-import UserProfile from '@/components/settings/UserProfile';
+import UserProfile from '@/components/userProfile/UserProfile';
 
 
 export default function TopRightNavbar() {

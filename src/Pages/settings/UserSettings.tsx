@@ -52,7 +52,7 @@ export default function UserSettings() {
     },
   });
   const mutation = useProfileUpdateMutation();
-  const avatar = data?.imageUrl;
+  const avatar = data?.imageUrl || "https://placehold.co/120x120";
   const pwdSchema = z.object({
     currentPassword: z.string().min(6, "Current password is required"),
     newPassword: z.string().min(6, "New password must be at least 6 characters"),

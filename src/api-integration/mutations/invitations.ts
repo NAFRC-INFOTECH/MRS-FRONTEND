@@ -42,6 +42,17 @@ export const useCreateNurseDirectMutation = () => {
   });
 };
 
+export const createRecordingDirectApi = async (payload: { name: string; email: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
+  const res = await api.post("/invitations/recording/direct", payload);
+  return res.data as { id: string; email: string; name: string; password: string };
+};
+
+export const useCreateRecordingDirectMutation = () => {
+  return useMutation({
+    mutationFn: createRecordingDirectApi,
+  });
+};
+
 export const inviteNurseApi = async (payload: { email: string }): Promise<InvitationResponse> => {
   const res = await api.post("/invitations/nurse", payload);
   return res.data as InvitationResponse;

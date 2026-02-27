@@ -5,6 +5,7 @@ export type doctorProfile = {
     dateOfBirth: string;
     gender: string;
     nationality: string;
+    state: string;
     phone: string;
     email: string;
     address: string;

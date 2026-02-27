@@ -7,6 +7,7 @@ export default function GlobalRealtimeSync() {
   useEffect(() => {
     const socket = io(`${location.protocol}//${location.hostname}:8000/ws`, {
       withCredentials: true,
+      transports: ["websocket"],
     });
     const invalidateUsers = () => {
       qc.invalidateQueries({ queryKey: ["users"] });
@@ -14,12 +15,19 @@ export default function GlobalRealtimeSync() {
       qc.invalidateQueries({ queryKey: ["users", "nurses"] });
     };
     const invalidateProfiles = () => {
-      qc.invalidateQueries({ queryKey: ["doctor-profiles"] });
+      qc.invalidateQueries({ queryKey: ["users", "doctors"] });
+      qc.invalidateQueries({ queryKey: ["doctor-profile"] });
       qc.invalidateQueries({ queryKey: ["doctor-profile", "me"] });
       qc.invalidateQueries({ queryKey: ["profile", "me"] });
     };
-    const onUserUpdated = () => invalidateUsers();
-    const onUserDeleted = () => invalidateUsers();
+    const onUserUpdated = () => {
+      invalidateUsers();
+      invalidateProfiles();
+    };
+    const onUserDeleted = () => {
+      invalidateUsers();
+      invalidateProfiles();
+    };
     const onProfileUpdated = () => {
       invalidateProfiles();
       invalidateUsers();

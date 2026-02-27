@@ -13,6 +13,7 @@ import { Provider } from "react-redux";
 import { store } from "@/api-integration/redux/store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RequireAuth from "@/api-integration/authGuard/RequireAuth";
+import RequireDoctorProfile from "@/api-integration/authGuard/RequireDoctorProfile";
 import { Toaster } from "@/components/ui/sonner";
 import GlobalErrorBoundary from "./shared/GlobalErrorBoundary";
 import GlobalClientLogging from './shared/GlobalClientLogging';
@@ -25,7 +26,6 @@ import {
   NotFoundPage,
   Dashboard,
   Login,
-  SignUp,
   MultiStepDoctorForm,
   SuperAdminDashboard,
   Nurses,
@@ -35,9 +35,11 @@ import {
   ServiceUsers,
   DoctorsDashboard,
   NursesDashboard,
-  PatientMain,
   PatientsRegistry,
-  UserSettings
+  UserSettings,
+  Recordings,
+  RecordingDashboard,
+  RecordingProfile
 } from './App'
 
 
@@ -61,13 +63,16 @@ const router = createBrowserRouter(
               <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='patients' element={<Patients />} />
               <Route path='service-users' element={<ServiceUsers />} />
+              <Route path='recordings' element={<Recordings />} />
             </Route>
           </Route>
 
           {/* Doctors Routes */}
           <Route element={<RequireAuth roles={["doctor"]} />}>
-            <Route path='doctors-dashboard'>
-              <Route index element={<DoctorsDashboard />} />
+            <Route element={<RequireDoctorProfile />}>
+              <Route path='doctors-dashboard'>
+                <Route index element={<DoctorsDashboard />} />
+              </Route>
             </Route>
           </Route>
 
@@ -78,16 +83,12 @@ const router = createBrowserRouter(
             </Route>
           </Route>
 
-          {/* Patients dashboard */}
-          <Route element={<RequireAuth roles={["patient"]} />}>
-            <Route path='patient-main-profile'>
-              <Route index element={<PatientMain />} />
-            </Route>
-          </Route>
 
           {/* Patients Registery */}
-          <Route path='patients-registry'>
-            <Route index element={<PatientsRegistry />} />
+          <Route path='recordings'>
+            <Route index element={<RecordingDashboard />} />
+            <Route path="patients-registry" element={<PatientsRegistry />} />
+            <Route path="staff/:id" element={<RecordingProfile />} />
           </Route>
 
           {/* Settings */}
@@ -101,7 +102,7 @@ const router = createBrowserRouter(
 
       {/* All Unprotected Route */}
       <Route path='login' element={<Login />} />
-      <Route path='signup' element={<SignUp />} />
+      {/* <Route path='signup' element={<SignUp />} /> */}
       <Route path='invite/accept' element={<AcceptInvite />} />
       <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
     </Route>

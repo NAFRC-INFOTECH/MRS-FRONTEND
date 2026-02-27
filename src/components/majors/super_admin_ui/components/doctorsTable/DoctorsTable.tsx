@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCreateDoctorDirectMutation } from "@/api-integration/mutations/invitations";
-import { useDeleteUserMutation, useSuspendUserMutation } from "@/api-integration/mutations/users";
 import { useUpdateDoctorStatusMutation, useDeleteDoctorProfileMutation, useResetDoctorPasswordMutation } from "@/api-integration/mutations/doctorProfiles";
 import { toast } from "sonner";
 
@@ -25,8 +24,6 @@ export default function DoctorsTable() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const createDoctor = useCreateDoctorDirectMutation();
-  const deleteUser = useDeleteUserMutation();
-  const suspendUser = useSuspendUserMutation();
   const updateStatus = useUpdateDoctorStatusMutation();
   const deleteProfile = useDeleteDoctorProfileMutation();
   const resetPassword = useResetDoctorPasswordMutation();
@@ -47,11 +44,8 @@ export default function DoctorsTable() {
 
   const handleAction = (id: string, action: string) => {
   if (action === "delete") {
-    deleteUser.mutate(id, {
-      onSuccess: () => {
-        deleteProfile.mutate(id);
-        toast.success("Doctor deleted");
-      },
+    deleteProfile.mutate(id, {
+      onSuccess: () => toast.success("Doctor deleted"),
       onError: (err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err ?? "");
         toast.error(msg || "Delete failed");
@@ -77,11 +71,8 @@ export default function DoctorsTable() {
   }
 
   if (action === "suspend") {
-    suspendUser.mutate({ id, suspended: true }, {
-      onSuccess: () => {
-        updateStatus.mutate({ userId: id, status: "suspended" });
-        toast.success("Doctor suspended");
-      },
+    updateStatus.mutate({ userId: id, status: "suspended" }, {
+      onSuccess: () => toast.success("Doctor suspended"),
       onError: (err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err ?? "");
         toast.error(msg || "Suspend failed");

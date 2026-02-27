@@ -2,15 +2,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
 import type { Profile } from "../types/profile";
 
-export const updateProfileApi = async (payload: Profile): Promise<Profile> => {
-  const res = await api.patch("/profile/me", payload);
+export const updateProfileApi = async (
+  payload: Profile
+): Promise<Profile> => {
+  const res = await api.patch(`/profile/me`, payload);
   return res.data as Profile;
 };
 
 export const useProfileUpdateMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: updateProfileApi,
+    mutationFn: (payload: Profile) => updateProfileApi(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile", "me"] });
     },

@@ -7,15 +7,16 @@ import Nurses from './Pages/superAdminPages/Nurses'
 import Doctors from './Pages/superAdminPages/Doctors'
 import Patients from './Pages/superAdminPages/Patients'
 import Login from './Pages/auth/Login'
-import SignUp from './Pages/auth/Signup'
 import MultiStepDoctorForm from './components/hiring-form/MultiStepDoctorForm'
 import DoctorProfile from './Pages/superAdminPages/DoctorProfile'
 import ServiceUsers from './Pages/superAdminPages/ServiceUsers'
 import DoctorsDashboard from './Pages/doctorsPages/DoctorsDashboard'
 import NursesDashboard from './Pages/nursesPages/NursesDashboard'
-import PatientMain from './Pages/patientPages/PatientMain'
 import PatientsRegistry from './Pages/recordingdepartment/PatientsRegistry'
 import UserSettings from './Pages/settings/UserSettings'
+import Recordings from './Pages/superAdminPages/Recordings'
+import RecordingDashboard from './Pages/recordingdepartment/RecordingDashboard'
+import RecordingProfile from './Pages/superAdminPages/RecordingProfile'
 
 
 
@@ -25,7 +26,6 @@ export {
   NotFoundPage,
   Dashboard,
   Login,
-  SignUp,
   MultiStepDoctorForm,
   SuperAdminDashboard,
   Nurses,
@@ -35,7 +35,9 @@ export {
   ServiceUsers,
   DoctorsDashboard,
   NursesDashboard,
-  PatientMain,
   PatientsRegistry,
-  UserSettings
+  UserSettings,
+  Recordings,
+  RecordingDashboard,
+  RecordingProfile
 }
