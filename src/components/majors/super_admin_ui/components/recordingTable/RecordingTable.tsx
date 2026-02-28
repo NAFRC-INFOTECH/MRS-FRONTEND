@@ -86,9 +86,11 @@ export default function RecordingTable() {
       return;
     }
     if (action === "reset-password") {
+      const u = (users as any[]).find((x) => x._id === id);
       resetPwd.mutate(id, {
         onSuccess: (res) => {
-          toast.success(`Temporary password: ${res.password}`);
+          setShowCreds({ open: true, name: u?.name, email: u?.email, password: res.password });
+          toast.success("Temporary password generated");
           try {
             navigator.clipboard.writeText(res.password);
           } catch {}
@@ -173,7 +175,7 @@ export default function RecordingTable() {
                   { email: inviteEmail, name: inviteName },
                   {
                     onSuccess: (res) => {
-                      setShowCreds({ open: true, name: inviteName, email: inviteEmail, password: res.password });
+                      setShowCreds({ open: true, name: inviteName, email: res.email, password: res.password });
                       setInviteEmail("");
                       setInviteName("");
                       setShowInvite(false);
@@ -204,15 +206,18 @@ export default function RecordingTable() {
             <div><strong>Password:</strong> {showCreds.password}</div>
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              onClick={() => {
-                if (showCreds.password) navigator.clipboard.writeText(showCreds.password);
-                toast.success("Copied");
-              }}
-            >
-              Copy
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  if (showCreds.password) navigator.clipboard.writeText(showCreds.password);
+                  toast.success("Password copied");
+                }}
+                className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/70"
+              >
+                Copy Password
+              </Button>
+            </div>
             <Button type="button" variant="outline" onClick={() => setShowCreds({ open: false })}>
               Close
             </Button>
@@ -221,8 +226,8 @@ export default function RecordingTable() {
       </Dialog>
 
       {/* Table */}
-      <div className="rounded-t-xl overflow-hidden">
-        <Table>
+      <div className="rounded-t-lg overflow-hidden">
+        <Table className="">
           <TableHeader className="bg-[#56bbe3] hover:bg-[#56bbe3] rounded-t-lg overflow-hidden">
             <TableRow className="bg-[#56bbe3] hover:bg-[#56bbe3] rounded-t-lg overflow-hidden">
               <TableHead className="text-white font-bold">Image</TableHead>
