@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+
+
+import { useState } from "react";
 import { PlusIcon, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
@@ -7,23 +9,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
-import { usePatientsQuery } from "@/api-integration/queries/patients";
-import { useDeletePatientMutation } from "@/api-integration/mutations/patients";
-import { toast } from "sonner";
+import { dummyPatients } from "@/components/patientsTable/patientsDatas/patientsData";
+import type { PatientCondition, PatientStatus } from "@/components/patientsTable/patientsDatas/types";
+// import { dummyPatients } from "./patientsDatas/patientsData";
+// import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
 
-export default function PatientsRegTable() {
-  const q = usePatientsQuery();
-  const [patients, setPatients] = useState<any[]>([]);
+
+export default function TodaysPatientsList() {
+  const [patients, setPatients] = useState(dummyPatients);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
-  const [searchName, setSearchName] = useState("");
-  const [hiddenIds, setHiddenIds] = useState<string[]>([]);
-  const del = useDeletePatientMutation();
+  const [searchName, setSearchName] = useState(""); // <--- search state
 
   const navigate = useNavigate();
-  useEffect(() => {
-    if (q.data) setPatients(q.data as any);
-  }, [q.data]);
 
   // Map condition to status
   const conditionToStatus = (condition: PatientCondition): PatientStatus => {
@@ -41,22 +38,14 @@ export default function PatientsRegTable() {
   // Handle actions
   const handleAction = (id: string, action: string) => {
     if (action === "delete") {
-      setHiddenIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-      del.mutate(id, {
-        onSuccess: () => toast.success("Patient deleted"),
-        onError: (err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err ?? "");
-          toast.error(msg || "Delete failed");
-          setHiddenIds((prev) => prev.filter((x) => x !== id));
-        },
-      });
+      setPatients((prev) => prev.filter((p) => p.personalInfo.id !== id));
       return;
     }
 
-    // if (action === "profile") {
-    //   navigate(`/hospital-admin/patients/${id}`);
-    //   return;
-    // }
+    if (action === "profile") {
+      navigate(`/hospital-admin/patients/${id}`);
+      return;
+    }
 
     const conditionActionMap: Record<string, PatientCondition> = {
       "activate": "on medication",
@@ -67,20 +56,19 @@ export default function PatientsRegTable() {
 
     if (conditionActionMap[action]) {
       const newCondition = conditionActionMap[action];
-      setPatients((prev: any[]) =>
-        prev.map((p: any) => {
-          const pid = String(p._id || p.personalInfo?.id);
-          if (pid !== id) return p;
-          if (!p.personalInfo) return p;
-          return {
-            ...p,
-            personalInfo: {
-              ...p.personalInfo,
-              condition: newCondition,
-              status: conditionToStatus(newCondition),
-            },
-          };
-        })
+      setPatients((prev) =>
+        prev.map((p) =>
+          p.personalInfo.id === id
+            ? {
+                ...p,
+                personalInfo: {
+                  ...p.personalInfo,
+                  condition: newCondition,
+                  status: conditionToStatus(newCondition),
+                },
+              }
+            : p
+        )
       );
     }
   };
@@ -97,43 +85,35 @@ export default function PatientsRegTable() {
     }
   };
 
-  // Condition colors removed (column hidden). Re-enable if condition is displayed.
+  // Condition colors
+  const getConditionColor = (condition: PatientCondition) => {
+    switch (condition) {
+      case "on medication":
+        return "bg-blue-100 text-blue-800";
+      case "on sick bed":
+        return "bg-yellow-100 text-yellow-800";
+      case "discharged":
+        return "bg-red-100 text-red-800";
+      case "recovered":
+        return "bg-green-100 text-green-800";
+    }
+  };
 
   // Filter by status AND search by name
-  const rows = useMemo(() => {
-    const list = (patients as any[]).map((p) => {
-      const id = String(p._id || p.personalInfo?.id || "");
-      const fullName =
-        p.personalInfo?.fullName ||
-        [p.surname, p.firstname, p.lastname].filter(Boolean).join(" ") ||
-        "";
-      const phone = p.personalInfo?.phone || p.phone || "";
-      const email = p.personalInfo?.email || "";
-      const address = p.personalInfo?.address || p.address || "";
-      const condition: PatientCondition | "" = (p.personalInfo?.condition as PatientCondition) || "";
-      const status: PatientStatus | "" = (p.personalInfo?.status as PatientStatus) || "";
-      const imageUrl = p.personalInfo?.imageUrl || "";
-      return { id, fullName, phone, email, address, condition, status, imageUrl, raw: p };
-    });
-    return list.filter((r) => {
-      if (hiddenIds.includes(r.id)) return false;
-      const nmOk = searchName ? r.fullName.toLowerCase().includes(searchName.toLowerCase()) : true;
-      const stOk = statusFilter ? r.status === statusFilter : true;
-      return nmOk && stOk;
-    });
-  }, [patients, hiddenIds, searchName, statusFilter]);
-
-  // Form moved to PatientBiodataForm component to avoid render loops in this table
+  const filteredPatients = patients.filter(
+    (p) =>
+      (statusFilter ? p.personalInfo.status === statusFilter : true) &&
+      (searchName
+        ? p.personalInfo.fullName.toLowerCase().includes(searchName.toLowerCase())
+        : true)
+  );
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">All Patients</h2>
-        <button
-          onClick={() => navigate("/recordings/patients/new")}
-          className="flex items-center px-4 py-2 bg-[#56bbe3] text-white rounded hover:bg-[#56bbe3]/70 rounded-[8px]"
-        >
+        <h2 className="text-xl font-semibold">View All Patients</h2>
+        <button className="flex items-center px-4 py-2 bg-[#56bbe3] text-white rounded hover:bg-[#56bbe3]/70 rounded-[8px]">
           <PlusIcon className="w-5 h-5 mr-2" /> Add <span className="hidden md:inline-block ml-2">Patient</span>
         </button>
       </div>
@@ -174,46 +154,46 @@ export default function PatientsRegTable() {
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Email</th>
-              {/* <th className="px-4 py-2 text-left">Address</th>
-              <th className="px-4 py-2 text-left">Condition</th> */}
+              <th className="px-4 py-2 text-left">Address</th>
+              <th className="px-4 py-2 text-left">Condition</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="even:bg-[#f9f9f9] border-b border-gray-200">
+            {filteredPatients.map((p) => (
+              <tr key={p.personalInfo.id} className="even:bg-[#f9f9f9] border-b border-gray-200">
                 <td className="px-4 py-2">
                   <div className="w-10 h-10 rounded-full border-2 border-[#56bbe3] p-1 overflow-hidden">
                     <img
-                      src={r.imageUrl || "https://placehold.co/80x80"}
-                      alt={r.fullName}
+                      src={p.personalInfo.imageUrl}
+                      alt={p.personalInfo.fullName}
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.id}</td>
-                <td className="px-4 py-2 font-medium whitespace-nowrap">{r.fullName}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.phone || "-"}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.email || "-"}</td>
-                {/* <td className="px-4 py-2 whitespace-nowrap">{r.address || "-"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.id}</td>
+                <td className="px-4 py-2 font-medium whitespace-nowrap">{p.personalInfo.fullName}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.phone}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.email}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{p.personalInfo.address}</td>
                 <td className="p-2 whitespace-nowrap">
-                  {r.condition ? (
-                    <span className={`px-3 py-1 rounded-full text-xs ${getConditionColor(r.condition)}`}>
-                      {r.condition.toUpperCase()}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
-                </td> */}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs ${getConditionColor(
+                      p.personalInfo.condition
+                    )}`}
+                  >
+                    {p.personalInfo.condition.toUpperCase()}
+                  </span>
+                </td>
                 <td className="p-2">
-                  {r.status ? (
-                    <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(r.status)}`}>
-                      {r.status.toUpperCase()}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs ${getStatusColor(
+                      p.personalInfo.status
+                    )}`}
+                  >
+                    {p.personalInfo.status.toUpperCase()}
+                  </span>
                 </td>
                 <td className="px-4 py-2">
                   <DropdownMenu>
@@ -225,7 +205,7 @@ export default function PatientsRegTable() {
                         <DropdownMenuItem
                           key={action}
                           className={action === "delete" ? "text-red-600" : ""}
-                          onClick={() => handleAction(r.id, action)}
+                          onClick={() => handleAction(p.personalInfo.id, action)}
                         >
                           {action.charAt(0).toUpperCase() + action.slice(1)}
                         </DropdownMenuItem>
@@ -235,7 +215,7 @@ export default function PatientsRegTable() {
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && (
+            {filteredPatients.length === 0 && (
               <tr>
                 <td colSpan={9} className="text-center py-4">
                   No patients found.
@@ -248,3 +228,4 @@ export default function PatientsRegTable() {
     </div>
   );
 }
+

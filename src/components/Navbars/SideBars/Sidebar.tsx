@@ -5,6 +5,7 @@ import UserProfile from '@/components/userProfile/UserProfile';
 import DoctorsSidebar from './DoctorsSidebar';
 import NursesSidebar from './NursesSidebar';
 import { useAppSelector } from '@/api-integration/redux/store';
+import RecordingSideBar from './RecordingSidebar';
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMobile, isTablet }) => {
   const drawerWidth = 272;
@@ -23,6 +24,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
 
       case "nurse":
         return <NursesSidebar />;
+      
+      case "recording":
+        return <RecordingSideBar />;
 
       default:
         return null;

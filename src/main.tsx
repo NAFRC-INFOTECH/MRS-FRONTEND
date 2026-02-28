@@ -41,6 +41,7 @@ import {
   RecordingDashboard,
   RecordingProfile
 } from './App'
+import PatientsBiodataPage from "./components/patientsTable/PatientsBiodataPage";
 
 
 
@@ -88,6 +89,7 @@ const router = createBrowserRouter(
           <Route path='recordings'>
             <Route index element={<RecordingDashboard />} />
             <Route path="patients-registry" element={<PatientsRegistry />} />
+            <Route path="patients/new" element={<PatientsBiodataPage />} />
             <Route path="staff/:id" element={<RecordingProfile />} />
           </Route>
 
