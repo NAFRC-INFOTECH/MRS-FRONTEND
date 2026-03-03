@@ -3,7 +3,7 @@ import SuperAdminSideBar from './SuperAdminSideBar';
 import type { SidebarProps } from '@/api-integration/types/types';
 import UserProfile from '@/components/userProfile/UserProfile';
 import DoctorsSidebar from './DoctorsSidebar';
-import NursesSidebar from './NursesSidebar';
+import  GopdSidebar from './GopdSidebar';
 import { useAppSelector } from '@/api-integration/redux/store';
 import RecordingSideBar from './RecordingSidebar';
 
@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
         return <DoctorsSidebar />;
 
       case "nurse":
-        return <NursesSidebar />;
+        return <GopdSidebar />;
       
       case "recording":
         return <RecordingSideBar />;

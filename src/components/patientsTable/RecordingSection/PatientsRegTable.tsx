@@ -7,9 +7,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
+import type { PatientCondition, PatientStatus } from "../patientsDatas/types";
 import { usePatientsQuery } from "@/api-integration/queries/patients";
-import { useDeletePatientMutation } from "@/api-integration/mutations/patients";
+import { useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
 import { toast } from "sonner";
 
 export default function PatientsRegTable() {
@@ -17,26 +17,16 @@ export default function PatientsRegTable() {
   const [patients, setPatients] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
   const [searchName, setSearchName] = useState("");
+  const [searchCard, setSearchCard] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"" | "civilian" | "personnel">("");
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const del = useDeletePatientMutation();
+  const update = useUpdatePatientMutation();
 
   const navigate = useNavigate();
   useEffect(() => {
     if (q.data) setPatients(q.data as any);
   }, [q.data]);
-
-  // Map condition to status
-  const conditionToStatus = (condition: PatientCondition): PatientStatus => {
-    switch (condition) {
-      case "on medication":
-      case "recovered":
-        return "active";
-      case "on sick bed":
-        return "inactive";
-      case "discharged":
-        return "discharged";
-    }
-  };
 
   // Handle actions
   const handleAction = (id: string, action: string) => {
@@ -53,35 +43,38 @@ export default function PatientsRegTable() {
       return;
     }
 
-    // if (action === "profile") {
-    //   navigate(`/hospital-admin/patients/${id}`);
-    //   return;
-    // }
+    if (action === "edit") {
+      navigate(`/recordings/edit/${id}`);
+      return;
+    }
 
-    const conditionActionMap: Record<string, PatientCondition> = {
-      "activate": "on medication",
-      "deactivate": "on sick bed",
+    if (action === "transfer") {
+      update.mutate({ id, data: { patientQueue: "godp_vitals", patientStatus: "in_queue" as PatientStatus } }, {
+        onSuccess: () => toast.success("Transferred to GOPD patients list"),
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Transfer failed");
+          update.mutate({ id, data: { patientStatus: "ok" as PatientStatus } });
+        },
+      });
+      return;
+    }
+
+    const statusMap: Record<string, PatientStatus> = {
+      "activate": "active",
+      "deactivate": "inactive",
       "discharge": "discharged",
-      "recover": "recovered",
+      "recover": "active",
     };
-
-    if (conditionActionMap[action]) {
-      const newCondition = conditionActionMap[action];
-      setPatients((prev: any[]) =>
-        prev.map((p: any) => {
-          const pid = String(p._id || p.personalInfo?.id);
-          if (pid !== id) return p;
-          if (!p.personalInfo) return p;
-          return {
-            ...p,
-            personalInfo: {
-              ...p.personalInfo,
-              condition: newCondition,
-              status: conditionToStatus(newCondition),
-            },
-          };
-        })
-      );
+    if (statusMap[action]) {
+      update.mutate({ id, data: { patientStatus: statusMap[action] } }, {
+        onSuccess: () => toast.success("Status updated"),
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Update failed");
+        },
+      });
+      return;
     }
   };
 
@@ -94,6 +87,10 @@ export default function PatientsRegTable() {
         return "bg-yellow-100 text-yellow-800";
       case "discharged":
         return "bg-red-100 text-red-800";
+      case "in_queue":
+        return "bg-blue-100 text-blue-800";
+      case "ok":
+        return "bg-green-100 text-green-800";
     }
   };
 
@@ -105,23 +102,29 @@ export default function PatientsRegTable() {
       const id = String(p._id || p.personalInfo?.id || "");
       const fullName =
         p.personalInfo?.fullName ||
-        [p.surname, p.firstname, p.lastname].filter(Boolean).join(" ") ||
+        [p.surname, p.firstname, p.middlename].filter(Boolean).join(" ") ||
         "";
       const phone = p.personalInfo?.phone || p.phone || "";
-      const email = p.personalInfo?.email || "";
       const address = p.personalInfo?.address || p.address || "";
       const condition: PatientCondition | "" = (p.personalInfo?.condition as PatientCondition) || "";
-      const status: PatientStatus | "" = (p.personalInfo?.status as PatientStatus) || "";
+      const status: PatientStatus | "" = (p.patientStatus as PatientStatus) || (p.personalInfo?.status as PatientStatus) || "active";
       const imageUrl = p.personalInfo?.imageUrl || "";
-      return { id, fullName, phone, email, address, condition, status, imageUrl, raw: p };
+      const veteran = !!p.veteran;
+      const cardNumber = veteran ? (p.serviceNumber || "") : (p.membershipNumber || "");
+      const rank = veteran ? (p.rank || "") : "";
+      return { id, fullName, phone, address, condition, status, imageUrl, raw: p, veteran, cardNumber, rank };
     });
     return list.filter((r) => {
       if (hiddenIds.includes(r.id)) return false;
       const nmOk = searchName ? r.fullName.toLowerCase().includes(searchName.toLowerCase()) : true;
       const stOk = statusFilter ? r.status === statusFilter : true;
-      return nmOk && stOk;
+      const catOk = categoryFilter ? (categoryFilter === "personnel" ? r.veteran : !r.veteran) : true;
+      const cardOk = searchCard
+        ? ((r.cardNumber || r.id) as string).toLowerCase().includes(searchCard.toLowerCase())
+        : true;
+      return nmOk && stOk && catOk && cardOk;
     });
-  }, [patients, hiddenIds, searchName, statusFilter]);
+  }, [patients, hiddenIds, searchName, searchCard, statusFilter, categoryFilter]);
 
   // Form moved to PatientBiodataForm component to avoid render loops in this table
 
@@ -139,7 +142,7 @@ export default function PatientsRegTable() {
       </div>
 
       {/* Filters + Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 max-w-[50rem]">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 max-w-[70rem]">
         <select
           className="border p-2 rounded"
           value={statusFilter || "all"}
@@ -154,13 +157,31 @@ export default function PatientsRegTable() {
           <option value="inactive">Inactive</option>
           <option value="discharged">Discharged</option>
         </select>
+        <select
+          className="border p-2 rounded"
+          value={categoryFilter || "all"}
+          onChange={(e) =>
+            setCategoryFilter(e.target.value === "all" ? "" : (e.target.value as "civilian" | "personnel"))
+          }
+        >
+          <option value="all">All Categories</option>
+          <option value="civilian">Civilian</option>
+          <option value="personnel">Veteran</option>
+        </select>
 
         <input
           type="text"
           placeholder="Search by Name"
-          className="border p-2 rounded col-span-2"
+          className="border p-2 rounded"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Search by Card/UUID"
+          className="border p-2 rounded"
+          value={searchCard}
+          onChange={(e) => setSearchCard(e.target.value)}
         />
       </div>
 
@@ -169,43 +190,23 @@ export default function PatientsRegTable() {
         <table className="min-w-full border border-gray-200 rounded-t-[8px] overflow-hidden">
           <thead className="bg-[#56bbe3] text-white">
             <tr>
-              <th className="px-4 py-2 text-left">Image</th>
-              <th className="px-4 py-2 text-left">UUID</th>
+              <th className="px-4 py-2 text-left">S/N</th>
+              <th className="px-4 py-2 text-left">Card No</th>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
-              <th className="px-4 py-2 text-left">Email</th>
-              {/* <th className="px-4 py-2 text-left">Address</th>
-              <th className="px-4 py-2 text-left">Condition</th> */}
+              <th className="px-4 py-2 text-left">Rank</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {rows.map((r, idx) => (
               <tr key={r.id} className="even:bg-[#f9f9f9] border-b border-gray-200">
-                <td className="px-4 py-2">
-                  <div className="w-10 h-10 rounded-full border-2 border-[#56bbe3] p-1 overflow-hidden">
-                    <img
-                      src={r.imageUrl || "https://placehold.co/80x80"}
-                      alt={r.fullName}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  </div>
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.id}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{idx + 1}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{r.cardNumber || "-"}</td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{r.fullName}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.phone || "-"}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.email || "-"}</td>
-                {/* <td className="px-4 py-2 whitespace-nowrap">{r.address || "-"}</td>
-                <td className="p-2 whitespace-nowrap">
-                  {r.condition ? (
-                    <span className={`px-3 py-1 rounded-full text-xs ${getConditionColor(r.condition)}`}>
-                      {r.condition.toUpperCase()}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
-                </td> */}
+                <td className="px-4 py-2 whitespace-nowrap">{r.rank || "-"}</td>
                 <td className="p-2">
                   {r.status ? (
                     <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(r.status)}`}>
@@ -221,13 +222,15 @@ export default function PatientsRegTable() {
                       <MoreVertical className="w-5 h-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {["profile", "activate", "deactivate", "discharge", "recover", "delete"].map((action) => (
+                      {["edit","transfer"].map((action) => (
                         <DropdownMenuItem
                           key={action}
                           className={action === "delete" ? "text-red-600" : ""}
                           onClick={() => handleAction(r.id, action)}
                         >
-                          {action.charAt(0).toUpperCase() + action.slice(1)}
+                          {action === "edit"
+                            ? "Edit Biodata"
+                            : "Transfer to GOPD patients List"}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -237,7 +240,7 @@ export default function PatientsRegTable() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center py-4">
+                <td colSpan={7} className="text-center py-4">
                   No patients found.
                 </td>
               </tr>

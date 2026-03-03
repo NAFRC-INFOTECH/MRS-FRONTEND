@@ -29,6 +29,7 @@ export const useUpdatePatientMutation = () => {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["patients"] });
       qc.invalidateQueries({ queryKey: ["patient", vars.id] });
+      qc.invalidateQueries({ queryKey: ["gopd-queue"] });
     },
   });
 };
