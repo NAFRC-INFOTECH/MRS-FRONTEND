@@ -6,13 +6,16 @@ import DoctorsSidebar from './DoctorsSidebar';
 import  GopdSidebar from './GopdSidebar';
 import { useAppSelector } from '@/api-integration/redux/store';
 import RecordingSideBar from './RecordingSidebar';
+import LabSidebar from './LabSidebar';
+
+
 
 const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMobile, isTablet }) => {
   const drawerWidth = 272;
 
   const { user } = useAppSelector((state) => state.auth);
 
-  // console.log(user)
+  console.log(user)
 
   const drawer = (() => {
     switch (user?.roles?.[0]) {
@@ -23,7 +26,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
         return <DoctorsSidebar />;
 
       case "nurse":
-        return <GopdSidebar />;
+        {
+          const dept = (user?.department || "").toLowerCase();
+          if (dept === "gopd") return <GopdSidebar />;
+          if (dept === "lab") return <LabSidebar />;
+          return null;
+        }
       
       case "recording":
         return <RecordingSideBar />;

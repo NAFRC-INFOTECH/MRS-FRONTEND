@@ -11,16 +11,17 @@ import MultiStepDoctorForm from './components/hiring-form/MultiStepDoctorForm'
 import DoctorProfile from './Pages/superAdminPages/DoctorProfile'
 import ServiceUsers from './Pages/superAdminPages/ServiceUsers'
 import DoctorsDashboard from './Pages/doctorsPages/DoctorsDashboard'
-import GopdDashboard from './Pages/gopdPages/GopdDashboard'
+import GopdDashboard from './Pages/departments/gopdPages/GopdDashboard'
 import PatientsRegistry from './Pages/recordingdepartment/PatientsRegistry'
 import UserSettings from './Pages/settings/UserSettings'
 import Recordings from './Pages/superAdminPages/Recordings'
 import RecordingDashboard from './Pages/recordingdepartment/RecordingDashboard'
 import RecordingProfile from './Pages/superAdminPages/RecordingProfile'
-import PatientsInQueue from './Pages/gopdPages/PatientsInQueue'
+import PatientsInQueue from './Pages/departments/gopdPages/PatientsInQueue'
 import AllDepartments from './Pages/superAdminPages/AllDepartments'
 import PatientsBiodataPage from "./Pages/recordingdepartment/PatientsBiodataPage";
 import PatientsEditPage from "./Pages/recordingdepartment/PatientsEditPage";
+import LabDashboard from "./Pages/departments/labPages/LabDashboard";
 
 
 
@@ -47,5 +48,6 @@ export {
   PatientsInQueue,
   AllDepartments,
   PatientsBiodataPage,
-  PatientsEditPage
+  PatientsEditPage,
+  LabDashboard
 }

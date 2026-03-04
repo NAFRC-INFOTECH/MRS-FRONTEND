@@ -20,7 +20,7 @@ export const useInviteDoctorMutation = () => {
   });
 };
 
-export const createDoctorDirectApi = async (payload: { name: string; email: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
+export const createDoctorDirectApi = async (payload: { name: string; email: string; department?: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
   const res = await api.post("/invitations/doctor/direct", payload);
   return res.data as { id: string; email: string; name: string; password: string };
 };
@@ -31,7 +31,7 @@ export const useCreateDoctorDirectMutation = () => {
   });
 };
 
-export const createNurseDirectApi = async (payload: { name: string; email: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
+export const createNurseDirectApi = async (payload: { name: string; email: string; department?: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
   const res = await api.post("/invitations/nurse/direct", payload);
   return res.data as { id: string; email: string; name: string; password: string };
 };
@@ -42,7 +42,7 @@ export const useCreateNurseDirectMutation = () => {
   });
 };
 
-export const createRecordingDirectApi = async (payload: { name: string; email: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
+export const createRecordingDirectApi = async (payload: { name: string; email: string; department?: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
   const res = await api.post("/invitations/recording/direct", payload);
   return res.data as { id: string; email: string; name: string; password: string };
 };

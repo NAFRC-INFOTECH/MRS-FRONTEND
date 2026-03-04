@@ -12,8 +12,9 @@ export const authMiddleware: Middleware = (storeApi) => (next) => (action) => {
         email: string;
         roles: Role[];
         fullName?: string;
+        department?: string;
       };
-      storeApi.dispatch(setUser({ id: payload.sub, email: payload.email, roles: payload.roles, name: payload.fullName ?? "", imageUrl: "" }));
+      storeApi.dispatch(setUser({ id: payload.sub, email: payload.email, roles: payload.roles, name: payload.fullName ?? "", imageUrl: "", department: payload.department }));
     } catch {}
     const state = storeApi.getState() as any;
     try {

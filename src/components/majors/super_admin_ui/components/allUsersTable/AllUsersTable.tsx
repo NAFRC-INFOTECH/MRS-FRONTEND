@@ -108,9 +108,10 @@ export default function UsersTable() {
           <thead className="bg-[#56bbe3] text-white">
             <tr>
               <th className="px-4 py-2 text-left">Image</th>
-              <th className="px-4 py-2 text-left">UUID</th>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Email</th>
+                  <th className="px-4 py-2 text-left">Phone</th>
+                  <th className="px-4 py-2 text-left">Department</th>
               <th className="px-4 py-2 text-left">Roles</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Action</th>
@@ -138,9 +139,10 @@ export default function UsersTable() {
                     />
                   </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">{u._id}</td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{u.name}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{u.email}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{u.phone || "-"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{u.department || "-"}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{(u.roles || []).join(", ")}</td>
                 <td className="p-2">
                   <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(u.suspended)}`}>

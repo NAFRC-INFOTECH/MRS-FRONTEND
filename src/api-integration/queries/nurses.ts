@@ -7,6 +7,7 @@ export type NurseUser = {
   name: string;
   imageUrl?: string;
   roles: string[];
+  department?: string;
 };
 
 export const getNursesApi = async (): Promise<NurseUser[]> => {

@@ -9,8 +9,16 @@ export interface SidebarProps {
 }
 
 export type Role = "super_admin" | "doctor" | "nurse" | "recording";
+export type Department = {
+  _id: string;
+  name: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export type UserRole = {
   roles?: Role[];
+  department?: Department;
 };
 

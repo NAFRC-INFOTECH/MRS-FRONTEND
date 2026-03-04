@@ -5,10 +5,20 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function GlobalRealtimeSync() {
   const qc = useQueryClient();
   useEffect(() => {
-    const socket = io(`${location.protocol}//${location.hostname}:8000/ws`, {
+    const url = `${location.protocol}//${location.hostname}:8000/ws`;
+    const socket = io(url, {
       withCredentials: true,
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1500,
+      reconnectionAttempts: Infinity,
     });
+    const onConnectError = () => {
+      try {
+        socket.io.opts.transports = ["polling", "websocket"];
+        socket.connect();
+      } catch {}
+    };
     const invalidateUsers = () => {
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["users", "all"] });
@@ -40,7 +50,9 @@ export default function GlobalRealtimeSync() {
     socket.on("user.deleted", onUserDeleted);
     socket.on("profile.updated", onProfileUpdated);
     socket.on("profile.deleted", onProfileDeleted);
+    socket.on("connect_error", onConnectError);
     return () => {
+      socket.off("connect_error", onConnectError);
       socket.disconnect();
     };
   }, [qc]);
