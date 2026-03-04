@@ -59,7 +59,7 @@ export default function Login() {
       const role = user.roles?.[0];
       if (role === "super_admin") navigate("/mrs-admin");
       else if (role === "doctor") navigate("/doctors-dashboard");
-      else if (role === "nurse") navigate("/nurses-dashboard");
+      else if (role === "nurse") navigate("/gopd");
       else if (role === "recording") navigate("/recordings");
       else navigate(to);
     }

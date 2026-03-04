@@ -5,10 +5,11 @@ export type Patient = {
   _id: string;
   surname: string;
   firstname: string;
-  lastname: string;
+  middlename: string;
   veteran?: boolean;
   serviceNumber?: string;
   rank?: string;
+  membershipNumber?: string;
   sex?: string;
   age?: number;
   dateOfBirth?: string;
@@ -22,6 +23,8 @@ export type Patient = {
   occupation?: string;
   genotype?: string;
   bloodGroup?: string;
+  patientStatus?: string;
+  patientQueue?: string;
   nok?: { name?: string; relationship?: string; phone?: string; address?: string };
 };
 

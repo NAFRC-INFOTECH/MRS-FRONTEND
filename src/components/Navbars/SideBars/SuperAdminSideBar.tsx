@@ -10,6 +10,7 @@ import {
   FolderOpen,
   LayoutPanelLeft,
   LibraryBig,
+  Network,
   Pill,
   ShieldUser,
 } from "lucide-react"
@@ -63,6 +64,7 @@ export default function SuperAdminSideBar() {
 
         {[
           { text: "Dashboard", path: "/mrs-admin", icon: LayoutPanelLeft },
+          { text: "All Departments", path: "/mrs-admin/all-departments", icon: Network },
           { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
           { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
           { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },

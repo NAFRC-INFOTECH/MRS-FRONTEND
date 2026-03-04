@@ -34,14 +34,18 @@ import {
   Patients,
   ServiceUsers,
   DoctorsDashboard,
-  NursesDashboard,
+  GopdDashboard,
   PatientsRegistry,
   UserSettings,
   Recordings,
   RecordingDashboard,
-  RecordingProfile
+  RecordingProfile,
+  PatientsInQueue,
+  AllDepartments,
+  PatientsBiodataPage,
+  PatientsEditPage
 } from './App'
-import PatientsBiodataPage from "./components/patientsTable/PatientsBiodataPage";
+
 
 
 
@@ -65,6 +69,7 @@ const router = createBrowserRouter(
               <Route path='patients' element={<Patients />} />
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='recordings' element={<Recordings />} />
+              <Route path='all-departments' element={<AllDepartments/>}/>
             </Route>
           </Route>
 
@@ -79,8 +84,9 @@ const router = createBrowserRouter(
 
           {/* Nurses Dashboard */}
           <Route element={<RequireAuth roles={["nurse"]} />}>
-            <Route path='nurses-dashboard'>
-              <Route index element={<NursesDashboard />} />
+            <Route path='gopd'>
+              <Route index element={<GopdDashboard />} />
+              <Route path="patients-in-queue" element={<PatientsInQueue />} />
             </Route>
           </Route>
 
@@ -90,6 +96,7 @@ const router = createBrowserRouter(
             <Route index element={<RecordingDashboard />} />
             <Route path="patients-registry" element={<PatientsRegistry />} />
             <Route path="patients/new" element={<PatientsBiodataPage />} />
+            <Route path="edit/:id" element={<PatientsEditPage />} />
             <Route path="staff/:id" element={<RecordingProfile />} />
           </Route>
 
