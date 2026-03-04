@@ -43,7 +43,8 @@ import {
   PatientsInQueue,
   AllDepartments,
   PatientsBiodataPage,
-  PatientsEditPage
+  PatientsEditPage,
+  LabDashboard
 } from './App'
 
 
@@ -78,15 +79,23 @@ const router = createBrowserRouter(
             <Route element={<RequireDoctorProfile />}>
               <Route path='doctors-dashboard'>
                 <Route index element={<DoctorsDashboard />} />
+                <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
               </Route>
             </Route>
           </Route>
 
           {/* Nurses Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} />}>
+          <Route element={<RequireAuth roles={["nurse"]} departments={["GOPD"]} />}>
             <Route path='gopd'>
               <Route index element={<GopdDashboard />} />
               <Route path="patients-in-queue" element={<PatientsInQueue />} />
+            </Route>
+          </Route>
+
+          {/* Lab Dashboard */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["lab"]} />}>
+            <Route path='lab'>
+              <Route index element={<LabDashboard />} />
             </Route>
           </Route>
 
@@ -113,7 +122,6 @@ const router = createBrowserRouter(
       <Route path='login' element={<Login />} />
       {/* <Route path='signup' element={<SignUp />} /> */}
       <Route path='invite/accept' element={<AcceptInvite />} />
-      <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
     </Route>
   )
 );

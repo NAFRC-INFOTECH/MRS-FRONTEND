@@ -60,10 +60,11 @@ export const getDoctorProfileByIdApi = async (userId: string): Promise<doctorPro
   return res.data as doctorProfile;
 };
 
-export const useDoctorProfileMeQuery = () => {
+export const useDoctorProfileMeQuery = (enabled = true) => {
   return useQuery({
     queryKey: ["doctor-profile", "me"],
     queryFn: getMyDoctorProfileApi,
+    enabled,
   });
 };
 

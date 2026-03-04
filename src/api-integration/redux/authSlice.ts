@@ -8,6 +8,7 @@ export type User = {
   roles: Role[];
   name: string;
   imageUrl: string;
+  department?: string;
 };
 
 export type AuthState = {

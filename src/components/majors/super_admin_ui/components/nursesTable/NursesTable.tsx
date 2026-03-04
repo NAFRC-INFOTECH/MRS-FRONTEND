@@ -20,7 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useCreateNurseDirectMutation } from "@/api-integration/mutations/invitations";
+import { useDepartmentsQuery } from "@/api-integration/queries/departments";
 import { useNursesQuery } from "@/api-integration/queries/nurses";
+import { useResetUserPasswordMutation } from "@/api-integration/mutations/users";
 
 // Type for nurse status
 type NurseStatus = "active" | "assigned" | "suspended" | "sacked";
@@ -32,20 +34,41 @@ export default function NursesTable() {
   const [filters, setFilters] = useState<{
     status: NurseStatus | "";
     department: string;
+    name: string;
   }>({
     status: "",
     department: "",
+    name: "",
   });
 
   const navigate = useNavigate();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [inviteDept, setInviteDept] = useState("");
   const createNurse = useCreateNurseDirectMutation();
+  const { data: departments = [] } = useDepartmentsQuery();
+  const resetPwd = useResetUserPasswordMutation();
+  const [showReset, setShowReset] = useState(false);
+  const [resetValue, setResetValue] = useState("");
 
   const handleAction = (id: string, action: string) => {
     if (action === "profile") {
       navigate(`/hospital-admin/nurses/${id}`);
+      return;
+    }
+
+    if (action === "reset-password") {
+      resetPwd.mutate(id, {
+        onSuccess: (res) => {
+          setResetValue(res.password);
+          setShowReset(true);
+        },
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Failed to reset password");
+        },
+      });
       return;
     }
 
@@ -72,14 +95,13 @@ export default function NursesTable() {
       imageUrl: u.imageUrl || "",
       status: "active" as NurseStatus, // accepted invite -> user exists
     },
-    department: "",
+    department: u.department || "",
   }));
   const filteredNurses = mapped.filter(
     (n) =>
       (filters.status ? n.personalInfo.status === filters.status : true) &&
-      (filters.department
-        ? n.department.toLowerCase().includes(filters.department.toLowerCase())
-        : true)
+      (filters.department ? n.department === filters.department : true) &&
+      (filters.name ? n.personalInfo.fullName.toLowerCase().includes(filters.name.toLowerCase()) : true)
   );
 
   return (
@@ -114,6 +136,12 @@ export default function NursesTable() {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
             />
+            <Select value={inviteDept} onValueChange={setInviteDept}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                {departments.map((d) => (<SelectItem key={d._id} value={d.name}>{d.name}</SelectItem>))}
+              </SelectGroup></SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button
@@ -130,12 +158,13 @@ export default function NursesTable() {
               onClick={() => {
                 if (!inviteEmail || !inviteName) return;
                 createNurse.mutate(
-                  { email: inviteEmail, name: inviteName },
+                  { email: inviteEmail, name: inviteName, department: inviteDept || undefined },
                   {
                     onSuccess: (res) => {
                       toast.success(`Nurse created. Temp password: ${res.password}`);
                       setInviteEmail("");
                       setInviteName("");
+                      setInviteDept("");
                       setShowInvite(false);
                     },
                     onError: (err: unknown) => {
@@ -145,7 +174,7 @@ export default function NursesTable() {
                   }
                 );
               }}
-              disabled={createNurse.isPending || !inviteEmail || !inviteName}
+              disabled={createNurse.isPending || !inviteEmail || !inviteName || !inviteDept}
             >
               {createNurse.isPending ? "Creating..." : "Create Nurse"}
             </Button>
@@ -154,7 +183,7 @@ export default function NursesTable() {
       </Dialog>
 
       {/* Filters */}
-      <div className="grid grid-cols-2 gap-4 mb-4 max-w-[50rem]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 max-w-[70rem]">
         <Select
           value={filters.status || "all"}
           onValueChange={(value) =>
@@ -178,12 +207,34 @@ export default function NursesTable() {
           </SelectContent>
         </Select>
 
+        <Select
+          value={filters.department || "all"}
+          onValueChange={(value) =>
+            setFilters((prev) => ({
+              ...prev,
+              department: value === "all" ? "" : value,
+            }))
+          }
+        >
+          <SelectTrigger className="w-full py-5">
+            <SelectValue placeholder="All Departments" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d._id} value={d.name}>{d.name}</SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
         <input
           type="text"
-          placeholder="Filter by Department"
+          placeholder="Search by Name"
           className="border p-2 rounded"
-          value={filters.department}
-          onChange={(e) => setFilters((prev) => ({ ...prev, department: e.target.value }))}
+          value={filters.name}
+          onChange={(e) => setFilters((prev) => ({ ...prev, name: e.target.value }))}
         />
       </div>
 
@@ -224,7 +275,7 @@ export default function NursesTable() {
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">{n.personalInfo.id}</td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{n.personalInfo.fullName}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{n.department}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{n.department || "-"}</td>
                 <td className="p-2">
                   <span
                     className={`px-3 py-1 rounded-full text-xs ${getStatusColor(n.personalInfo.status)}`}
@@ -238,7 +289,7 @@ export default function NursesTable() {
                       <MoreVertical className="w-5 h-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {["profile", "activate", "assign", "suspend", "sack", "delete"].map((action) => (
+                      {["profile", "reset-password", "activate", "assign", "suspend", "sack", "delete"].map((action) => (
                         <DropdownMenuItem
                           key={action}
                           className={action === "delete" ? "text-red-600" : ""}
@@ -262,6 +313,37 @@ export default function NursesTable() {
           </tbody>
         </table>
       </div>
+
+      <Dialog open={showReset} onOpenChange={setShowReset}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Temporary Password</DialogTitle>
+            <DialogDescription>Share this temporary password securely with the nurse.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input readOnly value={resetValue} />
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => {
+                  try {
+                    navigator.clipboard.writeText(resetValue);
+                    toast.success("Copied to clipboard");
+                  } catch {}
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setShowReset(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

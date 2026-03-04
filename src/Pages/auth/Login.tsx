@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { routeForRoleDepartment } from "@/lib/utils";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +46,12 @@ export default function Login() {
     login.mutate(
       { email: data.email, password: data.password },
       {
+        onSuccess: (tokens: any) => {
+          try {
+            const target = routeForRoleDepartment(tokens?.role, tokens?.department);
+            if (target) navigate(target);
+          } catch {}
+        },
         onError: (err: unknown) => {
           const msg = err instanceof Error ? err.message : String(err ?? "");
           toast.error(msg || "Login failed");
@@ -57,11 +64,9 @@ export default function Login() {
     if (isAuthenticated && user) {
       const to = (location.state as any)?.from?.pathname ?? "/";
       const role = user.roles?.[0];
-      if (role === "super_admin") navigate("/mrs-admin");
-      else if (role === "doctor") navigate("/doctors-dashboard");
-      else if (role === "nurse") navigate("/gopd");
-      else if (role === "recording") navigate("/recordings");
-      else navigate(to);
+      const dept = (user as any)?.department;
+      const target = routeForRoleDepartment(role, dept) || to;
+      navigate(target);
     }
   }, [isAuthenticated, user, navigate, location.state]);
 

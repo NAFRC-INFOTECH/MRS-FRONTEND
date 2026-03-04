@@ -2,10 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
 import { useAppDispatch } from "../redux/store";
 import { setTokens, logout } from "../redux/authSlice";
-import type { Role } from "../types/types";
+import type { Department, Role } from "../types/types";
 
-export type Tokens = { accessToken: string; refreshToken: string };
-export type CreatedUser = { id: string; email: string; name: string; roles: Role[] };
+export type Tokens = { accessToken: string; refreshToken: string; role: Role; department?: Department;  };
+export type CreatedUser = { id: string; email: string; name: string; roles: Role[]; department?: Department };
 
 export const loginApi = async (payload: { email: string; password: string }): Promise<Tokens> => {
   const res = await api.post("/auth/login", payload);

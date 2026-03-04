@@ -8,6 +8,8 @@ export type UserLite = {
   imageUrl?: string;
   roles: string[];
   suspended?: boolean;
+  phone?: string;
+  department?: string;
 };
 
 export const getUsersApi = async (params?: { role?: string }): Promise<UserLite[]> => {
