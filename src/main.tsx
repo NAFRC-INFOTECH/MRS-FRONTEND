@@ -44,7 +44,9 @@ import {
   AllDepartments,
   PatientsBiodataPage,
   PatientsEditPage,
-  LabDashboard
+  LabDashboard,
+  NursesDailyShift,
+  DoctorsDailyShift,
 } from './App'
 
 
@@ -107,6 +109,8 @@ const router = createBrowserRouter(
             <Route path="patients/new" element={<PatientsBiodataPage />} />
             <Route path="edit/:id" element={<PatientsEditPage />} />
             <Route path="staff/:id" element={<RecordingProfile />} />
+            <Route path="nurses-daily-shift" element={<NursesDailyShift />} />
+            <Route path="doctors-daily-shift" element={<DoctorsDailyShift />} />
           </Route>
 
           {/* Settings */}

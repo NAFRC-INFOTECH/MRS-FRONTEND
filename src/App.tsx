@@ -22,6 +22,9 @@ import AllDepartments from './Pages/superAdminPages/AllDepartments'
 import PatientsBiodataPage from "./Pages/recordingdepartment/PatientsBiodataPage";
 import PatientsEditPage from "./Pages/recordingdepartment/PatientsEditPage";
 import LabDashboard from "./Pages/departments/labPages/LabDashboard";
+import NursesDailyShift from "./Pages/recordingdepartment/NursesDailyShift";
+import DoctorsDailyShift from "./Pages/recordingdepartment/DoctorsDailyShift";
+
 
 
 
@@ -49,5 +52,7 @@ export {
   AllDepartments,
   PatientsBiodataPage,
   PatientsEditPage,
-  LabDashboard
+  LabDashboard,
+  NursesDailyShift,
+  DoctorsDailyShift,
 }

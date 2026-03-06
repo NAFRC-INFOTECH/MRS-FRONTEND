@@ -61,6 +61,8 @@ export default function RecordingSideBar() {
         {[
           { text: "Dashboard", path: "/recordings", icon: LayoutPanelLeft },
           { text: "Patients List", path: "/recordings/patients-registry", icon: ContactRound },
+          { text: "Nurses Daily Shift", path: "/recordings/nurses-daily-shift", icon: ContactRound },
+          { text: "Doctors Daily Shift", path: "/recordings/doctors-daily-shift", icon: ContactRound },
         ].map((item) => {
           const active = isRouteActive(item.path)
 
