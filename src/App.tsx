@@ -24,6 +24,7 @@ import PatientsEditPage from "./Pages/recordingdepartment/PatientsEditPage";
 import LabDashboard from "./Pages/departments/labPages/LabDashboard";
 import NursesDailyShift from "./Pages/recordingdepartment/NursesDailyShift";
 import DoctorsDailyShift from "./Pages/recordingdepartment/DoctorsDailyShift";
+import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
 
 
 
@@ -55,4 +56,5 @@ export {
   LabDashboard,
   NursesDailyShift,
   DoctorsDailyShift,
+  AddVitalsSigns,
 }

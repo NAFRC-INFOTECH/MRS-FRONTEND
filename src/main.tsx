@@ -47,6 +47,7 @@ import {
   LabDashboard,
   NursesDailyShift,
   DoctorsDailyShift,
+  AddVitalsSigns,
 } from './App'
 
 
@@ -91,6 +92,7 @@ const router = createBrowserRouter(
             <Route path='gopd'>
               <Route index element={<GopdDashboard />} />
               <Route path="patients-in-queue" element={<PatientsInQueue />} />
+              <Route path="add-vitals-signs/:patientId" element={<AddVitalsSigns />} />
             </Route>
           </Route>
 

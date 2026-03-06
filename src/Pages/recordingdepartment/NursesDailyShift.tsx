@@ -10,7 +10,7 @@ import { useNursesQuery } from "@/api-integration/queries/nurses";
 import { useUser } from "@/api-integration/redux/selectors";
 import { useDepartmentsQuery } from "@/api-integration/queries/departments";
 import { useDutiesQuery } from "@/api-integration/queries/duties";
-import { useCreateDutyMutation } from "@/api-integration/mutations/duties";
+import { useCreateDutyMutation, useUpdateDutyMutation, useDeleteDutyMutation } from "@/api-integration/mutations/duties";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useAppDispatch } from "@/api-integration/redux/store";
@@ -18,6 +18,7 @@ import { setUser } from "@/api-integration/redux/authSlice";
 import { routeForRoleDepartment } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function NursesDailyShift() {
   const user = useUser();
@@ -43,6 +44,15 @@ export default function NursesDailyShift() {
     shift: shiftFilter && shiftFilter !== "all" ? (shiftFilter as any) : undefined,
   });
   const createDuty = useCreateDutyMutation();
+  const updateDuty = useUpdateDutyMutation();
+  const deleteDuty = useDeleteDutyMutation();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDuty, setEditDuty] = useState<any>(null);
+  const [editDepartmentId, setEditDepartmentId] = useState<string>("");
+  const [editShift, setEditShift] = useState<string>("");
+  const [editTimeIn, setEditTimeIn] = useState<string>("");
+  const [editTimeOut, setEditTimeOut] = useState<string>("");
+  const [editStatus, setEditStatus] = useState<string>("ON_DUTY");
 
   const [role, setRole] = useState<"nurse">("nurse");
   const [staffId, setStaffId] = useState<string>("");
@@ -54,6 +64,30 @@ export default function NursesDailyShift() {
   const [status, setStatus] = useState<string>("ON_DUTY");
 
   const mappedNurses = useMemo(() => nurses.map((u: any) => ({ id: u._id, name: u.name })), [nurses]);
+  const exportCsv = () => {
+    const headers = ["Nurse", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
+    const rows = duties.map((d) => {
+      const nurseName = mappedNurses.find((x) => x.id === d.nurseUserId)?.name || "-";
+      const deptName = departments.find((x) => x._id === d.departmentId)?.name || "-";
+      const dateText = new Date(d.date).toLocaleDateString();
+      const shiftText = d.shift;
+      const timeInText = new Date(d.timeIn).toLocaleString();
+      const timeOutText = new Date(d.timeOut).toLocaleString();
+      const statusText = d.status;
+      return [nurseName, deptName, dateText, shiftText, timeInText, timeOutText, statusText];
+    });
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "\ufeff" + [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nurses_duties_${dateFilter || "today"}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -226,7 +260,9 @@ export default function NursesDailyShift() {
                 </SelectGroup></SelectContent>
               </Select>
             </div>
-            <div />
+            <div className="flex items-end">
+              <Button variant="outline" type="button" onClick={exportCsv} className="bg-[#56bbe3] text-white rounded-[8px]">Export CSV</Button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
@@ -240,6 +276,7 @@ export default function NursesDailyShift() {
                   <th className="px-4 py-2 text-left">Time In</th>
                   <th className="px-4 py-2 text-left">Time Out</th>
                   <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -253,6 +290,37 @@ export default function NursesDailyShift() {
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeIn).toLocaleString()}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeOut).toLocaleString()}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{d.status}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditDuty(d);
+                            setEditOpen(true);
+                            setEditDepartmentId(d.departmentId);
+                            setEditShift(d.shift);
+                            setEditTimeIn(new Date(d.timeIn).toISOString().slice(0,16));
+                            setEditTimeOut(new Date(d.timeOut).toISOString().slice(0,16));
+                            setEditStatus(d.status);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            deleteDuty.mutate(d._id, {
+                              onSuccess: () => toast.success("Duty deleted"),
+                              onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                            });
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {duties.length === 0 && (
@@ -265,6 +333,95 @@ export default function NursesDailyShift() {
           </div>
         </CardContent>
       </Card>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Duty</DialogTitle>
+            <DialogDescription>Update shift, time in/out, and status.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <Label>Department</Label>
+              <Select value={editDepartmentId} onValueChange={setEditDepartmentId}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
+                </SelectGroup></SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label>Shift</Label>
+              <Select value={editShift} onValueChange={setEditShift}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  <SelectItem value="MORNING">Morning</SelectItem>
+                  <SelectItem value="AFTERNOON">Afternoon</SelectItem>
+                  <SelectItem value="NIGHT">Night</SelectItem>
+                </SelectGroup></SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="edit-time-in">Time In</Label>
+              <Input id="edit-time-in" type="datetime-local" value={editTimeIn} onChange={(e) => setEditTimeIn(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="edit-time-out">Time Out</Label>
+              <Input id="edit-time-out" type="datetime-local" value={editTimeOut} onChange={(e) => setEditTimeOut(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select Status" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  <SelectItem value="ON_DUTY">On Duty</SelectItem>
+                  <SelectItem value="COMPLETED">Off Duty</SelectItem>
+                  <SelectItem value="ABSENT">Absent</SelectItem>
+                  <SelectItem value="SWAPPED">Swapped</SelectItem>
+                </SelectGroup></SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (!editDuty) return;
+                updateDuty.mutate(
+                  {
+                    id: editDuty._id,
+                    payload: {
+                      departmentId: editDepartmentId,
+                      shift: editShift as any,
+                      timeIn: editTimeIn,
+                      timeOut: editTimeOut,
+                      status: editStatus as any,
+                    },
+                  },
+                  {
+                    onSuccess: () => {
+                      toast.success("Duty updated");
+                      setEditOpen(false);
+                      if (user?.id && editDuty.nurseUserId === user.id) {
+                        const deptName = departments.find((d) => d._id === editDepartmentId)?.name;
+                        if (deptName) {
+                          const updated = { ...user, department: deptName };
+                          dispatch(setUser(updated as any));
+                          const target = routeForRoleDepartment("nurse", deptName);
+                          if (target) navigate(target);
+                        }
+                      }
+                    },
+                    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                  }
+                );
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
