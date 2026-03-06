@@ -1,9 +1,14 @@
 
 import { useMemo, useState } from "react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Activity, ArrowRightCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useGopdQueueQuery } from "@/api-integration/queries/gopd";
 
 export default function PatientsInQueue() {
   const { data: queue = [] } = useGopdQueueQuery();
+  const navigate = useNavigate();
   const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
 
@@ -59,6 +64,7 @@ export default function PatientsInQueue() {
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Rank</th>
+              <th className="px-4 py-2 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -71,11 +77,31 @@ export default function PatientsInQueue() {
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{r.fullName}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.phone || "-"}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.rank || "-"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="rounded-[8px] flex items-center gap-2">
+                        Select
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => navigate(`/gopd/add-vitals-signs/${r.id}`)} className="flex items-center gap-2">
+                        <Activity className="w-4 h-4" />
+                        <span>Take Vital Sign</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/doctors-dashboard`)} className="flex items-center gap-2">
+                        <ArrowRightCircle className="w-4 h-4" />
+                        <span>Transfer to Doctor</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-4">
+                <td colSpan={6} className="text-center py-4">
                   No patients in queue.
                 </td>
               </tr>
