@@ -50,6 +50,18 @@ export const useDoctorsQuery = () => {
   });
 };
 
+export type DoctorUser = { _id: string; name: string; email: string; roles: string[]; imageUrl?: string; department?: string };
+export const getDoctorUsersApi = async (): Promise<DoctorUser[]> => {
+  const res = await api.get("/doctors");
+  return res.data as DoctorUser[];
+};
+export const useDoctorUsersQuery = (enabled = true) => {
+  return useQuery({
+    queryKey: ["users", "doctors", "list"],
+    queryFn: getDoctorUsersApi,
+    enabled,
+  });
+};
 export const getMyDoctorProfileApi = async (): Promise<doctorProfile> => {
   const res = await api.get("/doctor-profiles/me");
   return res.data as doctorProfile;

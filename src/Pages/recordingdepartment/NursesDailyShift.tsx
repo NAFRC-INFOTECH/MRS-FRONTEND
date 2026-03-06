@@ -1,0 +1,270 @@
+// import React from 'react'
+
+import { useState, useMemo } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useNursesQuery } from "@/api-integration/queries/nurses";
+import { useUser } from "@/api-integration/redux/selectors";
+import { useDepartmentsQuery } from "@/api-integration/queries/departments";
+import { useDutiesQuery } from "@/api-integration/queries/duties";
+import { useCreateDutyMutation } from "@/api-integration/mutations/duties";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useAppDispatch } from "@/api-integration/redux/store";
+import { setUser } from "@/api-integration/redux/authSlice";
+import { routeForRoleDepartment } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label";
+
+export default function NursesDailyShift() {
+  const user = useUser();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const isAdmin = (user?.roles || []).includes("super_admin" as any);
+  const canFetchNurses = isAdmin || (user?.roles || []).includes("recording" as any);
+  const { data: nurses = [] } = useNursesQuery(canFetchNurses);
+  const { data: departments = [] } = useDepartmentsQuery();
+  const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
+  const [shiftFilter, setShiftFilter] = useState<string>("all");
+  const { data: duties = [] } = useDutiesQuery({
+    role: "nurse",
+    departmentId: deptFilter && deptFilter !== "all" ? deptFilter : undefined,
+    date: dateFilter || undefined,
+    shift: shiftFilter && shiftFilter !== "all" ? (shiftFilter as any) : undefined,
+  });
+  const createDuty = useCreateDutyMutation();
+
+  const [role, setRole] = useState<"nurse">("nurse");
+  const [staffId, setStaffId] = useState<string>("");
+  const [departmentId, setDepartmentId] = useState<string>("");
+  const [date, setDate] = useState<string>("");
+  const [shift, setShift] = useState<string>("");
+  const [timeIn, setTimeIn] = useState<string>("");
+  const [timeOut, setTimeOut] = useState<string>("");
+  const [status, setStatus] = useState<string>("ON_DUTY");
+
+  const mappedNurses = useMemo(() => nurses.map((u: any) => ({ id: u._id, name: u.name })), [nurses]);
+
+  return (
+    <div className="p-4 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create Duty Assignment</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-1">
+            <Label>Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select Role" /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                <SelectItem value="nurse">Nurse</SelectItem>
+              </SelectGroup></SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Staff</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" type="button" className="justify-between">
+                  {mappedNurses.find((n) => n.id === staffId)?.name || "Select Staff"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[300px]">
+                <Command>
+                  <CommandInput placeholder="Search staff by name..." />
+                  <CommandList>
+                    <CommandEmpty>No staff found.</CommandEmpty>
+                    <CommandGroup>
+                      {role === "nurse" &&
+                        mappedNurses.map((n) => (
+                          <CommandItem
+                            key={n.id}
+                            value={n.name}
+                            onSelect={() => {
+                              setStaffId(n.id);
+                            }}
+                          >
+                            {n.name}
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Department</Label>
+            <Select value={departmentId} onValueChange={setDepartmentId}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
+              </SelectGroup></SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="duty-date">Duty Date</Label>
+            <Input id="duty-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>Shift</Label>
+            <Select value={shift} onValueChange={setShift}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                <SelectItem value="MORNING">Morning</SelectItem>
+                <SelectItem value="AFTERNOON">Afternoon</SelectItem>
+                <SelectItem value="NIGHT">Night</SelectItem>
+              </SelectGroup></SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="time-in">Time In</Label>
+            <Input id="time-in" type="datetime-local" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="time-out">Time Out</Label>
+            <Input id="time-out" type="datetime-local" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select Status" /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                <SelectItem value="ON_DUTY">On Duty</SelectItem>
+                <SelectItem value="COMPLETED">Completed</SelectItem>
+                <SelectItem value="ABSENT">Absent</SelectItem>
+                <SelectItem value="SWAPPED">Swapped</SelectItem>
+              </SelectGroup></SelectContent>
+            </Select>
+          </div>
+          <Button
+            className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/80"
+            type="button"
+            onClick={() => {
+              if (!role || !staffId || !departmentId || !date || !shift || !timeIn || !timeOut || !status) {
+                toast.error("All fields are required");
+                return;
+              }
+              createDuty.mutate(
+                {
+                  role,
+                  staffId,
+                  departmentId,
+                  date,
+                  shift: shift as any,
+                  timeIn,
+                  timeOut,
+                  status: status as any,
+                  assignedBy: "admin",
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Duty created");
+                    if (user?.id && user.id === staffId) {
+                      const deptName = departments.find((d) => d._id === departmentId)?.name;
+                      if (deptName) {
+                        const updated = { ...user, department: deptName };
+                        dispatch(setUser(updated as any));
+                        const target = routeForRoleDepartment("nurse", deptName);
+                        if (target) navigate(target);
+                      }
+                    }
+                  },
+                  onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                }
+              );
+            }}
+            disabled={createDuty.isPending}
+          >
+            {createDuty.isPending ? "Assigning..." : "Assign Duty"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Duty Records</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-1">
+              <Label>Filter Department</Label>
+              <Select value={deptFilter} onValueChange={setDeptFilter}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  <SelectItem value="all">All</SelectItem>
+                  {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
+                </SelectGroup></SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="filter-date">Filter Date</Label>
+              <Input id="filter-date" type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label>Filter Shift</Label>
+              <Select value={shiftFilter} onValueChange={setShiftFilter}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="MORNING">Morning</SelectItem>
+                  <SelectItem value="AFTERNOON">Afternoon</SelectItem>
+                  <SelectItem value="NIGHT">Night</SelectItem>
+                </SelectGroup></SelectContent>
+              </Select>
+            </div>
+            <div />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
+              <thead className="bg-[#56bbe3] text-white">
+                <tr>
+                  <th className="px-4 py-2 text-left">Role</th>
+                  <th className="px-4 py-2 text-left">Nurse</th>
+                  <th className="px-4 py-2 text-left">Department</th>
+                  <th className="px-4 py-2 text-left">Date</th>
+                  <th className="px-4 py-2 text-left">Shift</th>
+                  <th className="px-4 py-2 text-left">Time In</th>
+                  <th className="px-4 py-2 text-left">Time Out</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {duties.map((d) => (
+                  <tr key={d._id} className="even:bg-[#f9f9f9] border-b border-gray-200">
+                    <td className="px-4 py-2 whitespace-nowrap">{d.nurseUserId ? "Nurse" : "Doctor"}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{mappedNurses.find((x) => x.id === d.nurseUserId)?.name || "-"}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{departments.find((x) => x._id === d.departmentId)?.name || "-"}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{new Date(d.date).toLocaleDateString()}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{d.shift}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeIn).toLocaleString()}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeOut).toLocaleString()}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{d.status}</td>
+                  </tr>
+                ))}
+                {duties.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4">No duties found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
