@@ -5,10 +5,15 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, Activity, ArrowRightCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGopdQueueQuery } from "@/api-integration/queries/gopd";
+import { useAddDoctorDayListMutation } from "@/api-integration/mutations/doctorDayList";
+import { api } from "@/api-integration/api/apiClient";
+import { getVitalsApi } from "@/api-integration/queries/vitals";
+import { toast } from "sonner";
 
 export default function PatientsInQueue() {
   const { data: queue = [] } = useGopdQueueQuery();
   const navigate = useNavigate();
+  const addDaylist = useAddDoctorDayListMutation();
   const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
 
@@ -90,7 +95,26 @@ export default function PatientsInQueue() {
                         <Activity className="w-4 h-4" />
                         <span>Take Vital Sign</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/doctors-dashboard`)} className="flex items-center gap-2">
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          const vitals = await getVitalsApi(r.id);
+                          const today = new Date();
+                          const y = today.getFullYear();
+                          const m = today.getMonth() + 1;
+                          const d = today.getDate();
+                          const hasToday = (vitals as any[]).some((v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d);
+                          if (!hasToday) {
+                            toast.error("Record today's vitals before transfer");
+                            return;
+                          }
+                          await addDaylist.mutateAsync({ patientId: r.id, sourceDepartment: "GOPD" });
+                          try {
+                            await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
+                          } catch {}
+                          navigate(`/gopd/patients-in-queue`);
+                        }}
+                        className="flex items-center gap-2"
+                      >
                         <ArrowRightCircle className="w-4 h-4" />
                         <span>Transfer to Doctor</span>
                       </DropdownMenuItem>

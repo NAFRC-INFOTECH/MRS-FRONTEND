@@ -48,6 +48,9 @@ import {
   NursesDailyShift,
   DoctorsDailyShift,
   AddVitalsSigns,
+  NurseGeneral,
+  PatientMedicalHistory,
+  TodaysPatientsList,
 } from './App'
 
 
@@ -83,12 +86,21 @@ const router = createBrowserRouter(
               <Route path='doctors-dashboard'>
                 <Route index element={<DoctorsDashboard />} />
                 <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
+                <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
+                <Route path='todays-patients-list' element={<TodaysPatientsList />} />
               </Route>
             </Route>
           </Route>
 
+          {/* General Permit Routes */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["general"]} />}>
+            <Route path='general'>
+              <Route index element={<NurseGeneral />} />
+            </Route>
+          </Route>
+
           {/* Nurses Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["GOPD"]} />}>
+          <Route element={<RequireAuth roles={["nurse"]} departments={["GOPD", "general"]} />}>
             <Route path='gopd'>
               <Route index element={<GopdDashboard />} />
               <Route path="patients-in-queue" element={<PatientsInQueue />} />
@@ -97,7 +109,7 @@ const router = createBrowserRouter(
           </Route>
 
           {/* Lab Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["lab"]} />}>
+          <Route element={<RequireAuth roles={["nurse"]} departments={["lab", "general"]} />}>
             <Route path='lab'>
               <Route index element={<LabDashboard />} />
             </Route>

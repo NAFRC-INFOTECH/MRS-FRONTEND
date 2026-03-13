@@ -64,6 +64,52 @@ export default function NursesDailyShift() {
   const [status, setStatus] = useState<string>("ON_DUTY");
 
   const mappedNurses = useMemo(() => nurses.map((u: any) => ({ id: u._id, name: u.name })), [nurses]);
+  const todayStr = useMemo(() => {
+    const t = new Date();
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+  const maxStr = useMemo(() => {
+    const t = new Date();
+    t.setDate(t.getDate() + 3);
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+  const withinThreeDays = (d: string) => {
+    if (!d) return false;
+    const sel = new Date(d);
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const max = new Date(start);
+    max.setDate(max.getDate() + 3);
+    const selStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
+    return selStart >= start && selStart <= max;
+  };
+  const nextDayStr = (d: string) => {
+    const dt = new Date(d);
+    dt.setDate(dt.getDate() + 1);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const applyShiftTimes = (d: string, s: string) => {
+    if (!d || !s) return;
+    if (s === "MORNING") {
+      setTimeIn(`${d}T08:00`);
+      setTimeOut(`${d}T14:00`);
+    } else if (s === "AFTERNOON") {
+      setTimeIn(`${d}T14:00`);
+      setTimeOut(`${d}T21:00`);
+    } else if (s === "NIGHT") {
+      setTimeIn(`${d}T21:00`);
+      setTimeOut(`${nextDayStr(d)}T07:59`);
+    }
+  };
   const exportCsv = () => {
     const headers = ["Nurse", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
     const rows = duties.map((d) => {
@@ -151,11 +197,11 @@ export default function NursesDailyShift() {
 
           <div className="flex flex-col gap-1">
             <Label htmlFor="duty-date">Duty Date</Label>
-            <Input id="duty-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input id="duty-date" type="date" min={todayStr} max={maxStr} value={date} onChange={(e) => { const v = e.target.value; setDate(v); applyShiftTimes(v, shift); }} />
           </div>
           <div className="flex flex-col gap-1">
             <Label>Shift</Label>
-            <Select value={shift} onValueChange={setShift}>
+            <Select value={shift} onValueChange={(v) => { setShift(v); applyShiftTimes(date, v); }}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
               <SelectContent><SelectGroup>
                 <SelectItem value="MORNING">Morning</SelectItem>
@@ -190,6 +236,10 @@ export default function NursesDailyShift() {
             onClick={() => {
               if (!role || !staffId || !departmentId || !date || !shift || !timeIn || !timeOut || !status) {
                 toast.error("All fields are required");
+                return;
+              }
+              if (!withinThreeDays(date)) {
+                toast.error("Duty date must be within the next 3 days");
                 return;
               }
               createDuty.mutate(

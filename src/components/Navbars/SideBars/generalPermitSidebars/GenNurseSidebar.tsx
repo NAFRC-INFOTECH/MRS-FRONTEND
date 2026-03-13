@@ -13,7 +13,7 @@ import {
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 
-export default function DoctorsSidebar() {
+export default function GenNurseSidebar() {
   const location = useLocation()
 
   /** Reusable route active checker */
@@ -59,8 +59,8 @@ export default function DoctorsSidebar() {
         </span>
 
         {[
-          { text: "Dashboard", path: "/doctors-dashboard", icon: LayoutPanelLeft },
-          { text: "Today's Patients List", path: "/doctors-dashboard/todays-patients-list", icon: ContactRound },
+          { text: "GOPD", path: "/gopd", icon: LayoutPanelLeft },
+          { text: "Lab", path: "/lab", icon: ContactRound },
         ].map((item) => {
           const active = isRouteActive(item.path)
 
