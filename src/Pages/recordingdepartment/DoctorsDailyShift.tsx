@@ -57,6 +57,37 @@ export default function DoctorsDailyShift() {
     () => doctors.map((d: any) => ({ id: d._id, name: d.name })),
     [doctors]
   );
+  const withinThreeDays = (d: string) => {
+    if (!d) return false;
+    const sel = new Date(d);
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const max = new Date(start);
+    max.setDate(max.getDate() + 3);
+    const selStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
+    return selStart >= start && selStart <= max;
+  };
+  const nextDayStr = (d: string) => {
+    const dt = new Date(d);
+    dt.setDate(dt.getDate() + 1);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const applyShiftTimes = (d: string, s: string) => {
+    if (!d || !s) return;
+    if (s === "MORNING") {
+      setTimeIn(`${d}T08:00`);
+      setTimeOut(`${d}T14:00`);
+    } else if (s === "AFTERNOON") {
+      setTimeIn(`${d}T14:00`);
+      setTimeOut(`${d}T21:00`);
+    } else if (s === "NIGHT") {
+      setTimeIn(`${d}T21:00`);
+      setTimeOut(`${nextDayStr(d)}T07:59`);
+    }
+  };
   const exportCsv = () => {
     const headers = ["Doctor", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
     const rows = duties.map((d) => {
@@ -144,11 +175,11 @@ export default function DoctorsDailyShift() {
 
           <div className="flex flex-col gap-1">
             <Label htmlFor="doctor-duty-date">Duty Date</Label>
-            <Input id="doctor-duty-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input id="doctor-duty-date" type="date" value={date} onChange={(e) => { const v = e.target.value; setDate(v); applyShiftTimes(v, shift); }} />
           </div>
           <div className="flex flex-col gap-1">
             <Label>Shift</Label>
-            <Select value={shift} onValueChange={setShift}>
+            <Select value={shift} onValueChange={(v) => { setShift(v); applyShiftTimes(date, v); }}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
               <SelectContent><SelectGroup>
                 <SelectItem value="MORNING">Morning</SelectItem>
@@ -183,6 +214,10 @@ export default function DoctorsDailyShift() {
             onClick={() => {
               if (!role || !staffId || !departmentId || !date || !shift || !timeIn || !timeOut || !status) {
                 toast.error("All fields are required");
+                return;
+              }
+              if (!withinThreeDays(date)) {
+                toast.error("Duty date must be within the next 3 days");
                 return;
               }
               createDuty.mutate(

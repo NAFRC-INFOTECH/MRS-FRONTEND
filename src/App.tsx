@@ -25,6 +25,9 @@ import LabDashboard from "./Pages/departments/labPages/LabDashboard";
 import NursesDailyShift from "./Pages/recordingdepartment/NursesDailyShift";
 import DoctorsDailyShift from "./Pages/recordingdepartment/DoctorsDailyShift";
 import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
+import NurseGeneral from "./Pages/generalPermitPages/NurseGeneral";
+import PatientMedicalHistory from "./Pages/doctorsPages/PatientMedicalHistory";
+import TodaysPatientsList from './Pages/doctorsPages/TodaysPatientsList'
 
 
 
@@ -57,4 +60,7 @@ export {
   NursesDailyShift,
   DoctorsDailyShift,
   AddVitalsSigns,
+  NurseGeneral,
+  PatientMedicalHistory,
+  TodaysPatientsList,
 }

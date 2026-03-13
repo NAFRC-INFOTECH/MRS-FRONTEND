@@ -7,6 +7,7 @@ import  GopdSidebar from './GopdSidebar';
 import { useAppSelector } from '@/api-integration/redux/store';
 import RecordingSideBar from './RecordingSidebar';
 import LabSidebar from './LabSidebar';
+import GenNurseSidebar from './generalPermitSidebars/GenNurseSidebar';
 
 
 
@@ -28,8 +29,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
       case "nurse":
         {
           const dept = (user?.department || "").toLowerCase();
-          if (dept === "gopd") return <GopdSidebar />;
-          if (dept === "lab") return <LabSidebar />;
+          if (dept === "gopd" || dept === "general") return <GopdSidebar />;
+          if (dept === "lab" || dept === "general") return <LabSidebar />;
+          if (dept === "general") return <GenNurseSidebar />;
           return null;
         }
       

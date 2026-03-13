@@ -30,7 +30,7 @@ export default function RequireAuth({ roles, departments }: RequireAuthProps) {
   if (departments?.length && user.roles?.includes("nurse" as Role)) {
     const userDept = (user?.department || "").toLowerCase();
     const deptList = departments.map((d) => d.toLowerCase());
-    const okDept = !!userDept && deptList.includes(userDept);
+    const okDept = !!userDept && (userDept === "general" || deptList.includes(userDept));
     if (!okDept) return <Navigate to="/login" replace />;
   }
 
