@@ -19,6 +19,7 @@ import GlobalErrorBoundary from "./shared/GlobalErrorBoundary";
 import GlobalClientLogging from './shared/GlobalClientLogging';
 import GlobalRealtimeSync from "./shared/GlobalRealtimeSync";
 import AcceptInvite from "./Pages/auth/AcceptInvite";
+import LabPatientsList from "./Pages/departments/labPages/LabPatientsList";
 
 import {
   MainLayout,
@@ -112,6 +113,7 @@ const router = createBrowserRouter(
           <Route element={<RequireAuth roles={["nurse"]} departments={["lab", "general"]} />}>
             <Route path='lab'>
               <Route index element={<LabDashboard />} />
+              <Route path="patient-list" element={<LabPatientsList />} />
             </Route>
           </Route>
 

@@ -16,8 +16,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
 
   const { user } = useAppSelector((state) => state.auth);
 
-  console.log(user)
-
   const drawer = (() => {
     switch (user?.roles?.[0]) {
       case "super_admin":

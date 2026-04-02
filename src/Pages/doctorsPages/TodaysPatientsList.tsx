@@ -6,16 +6,20 @@ import { ChevronDown, History, ArrowRightCircle, FlaskConical, Scan } from "luci
 import { useNavigate } from "react-router-dom";
 import { useDoctorDayListQuery } from "@/api-integration/queries/doctorDayList";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import TransferRequestFormModal from "./components/forms/TransferRequestFormModal";
 // import PatientsList2 from "./PatientsList2";
 
 
 export default function TodaysPatientsList() {
   const { data: daylist = [] } = useDoctorDayListQuery("GOPD", "all");
-  console.log(daylist);
   const navigate = useNavigate();
   const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
   const [transferOpen, setTransferOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [destination, setDestination] = useState<"lab" | "xray" | null>(null);
   const rows = useMemo(() => {
     const list = (daylist as any[]).map((q) => {
       const id = String(q.patientId || "");
@@ -63,7 +67,7 @@ export default function TodaysPatientsList() {
           <thead className="bg-[#56bbe3] text-white">
             <tr>
               <th className="px-4 py-2 text-left">S/N</th>
-              <th className="px-4 py-2 text-left">UUID / Svc No</th>
+              <th className="px-4 py-2 text-left whitespace-nowrap">UUID / Svc No</th>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Rank</th>
@@ -94,7 +98,7 @@ export default function TodaysPatientsList() {
                         <span>View Patient History</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => { setTransferOpen(true); }}
+                        onClick={() => { setSelectedPatientId(r.id); setTransferOpen(true); }}
                         className="flex items-center gap-2"
                       >
                         <ArrowRightCircle className="w-4 h-4" />
@@ -126,8 +130,9 @@ export default function TodaysPatientsList() {
               variant="outline"
               className="flex items-center gap-2"
               onClick={() => {
+                setDestination("lab");
                 setTransferOpen(false);
-                navigate("/lab");
+                setFormOpen(true);
               }}
             >
               <FlaskConical className="w-4 h-4" />
@@ -137,8 +142,9 @@ export default function TodaysPatientsList() {
               variant="outline"
               className="flex items-center gap-2"
               onClick={() => {
+                setDestination("xray");
                 setTransferOpen(false);
-                navigate("/xray");
+                setFormOpen(true);
               }}
             >
               <Scan className="w-4 h-4" />
@@ -151,8 +157,16 @@ export default function TodaysPatientsList() {
         </DialogContent>
       </Dialog>
 
-
-      {/* <PatientsList2/> */}
+      <TransferRequestFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        patientId={selectedPatientId}
+        destination={destination}
+        onSubmitted={(dest) => {
+          toast.success(`Request sent to ${dest === "lab" ? "Lab" : "X-ray"}`);
+          navigate(dest === "lab" ? "/lab" : "/xray");
+        }}
+      />
     </div>
   );
 }
