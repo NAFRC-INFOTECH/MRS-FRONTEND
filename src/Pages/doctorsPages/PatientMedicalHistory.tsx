@@ -44,7 +44,7 @@ export default function PatientMedicalHistory() {
       <section className="w-full">
         {/* Section 1 */}
         <div className="flex flex-col lg:flex-row items-start justify-between gap-4 w-full">
-          <Card className="w-full lg:max-w-1/1">
+          <Card className="w-full lg:max-w-1/2 xl:max-w-1/1">
             <CardHeader>
               <CardTitle>Vitals Trend</CardTitle>
             </CardHeader>
@@ -54,9 +54,11 @@ export default function PatientMedicalHistory() {
                   <span className="text-sm">Filter Year</span>
                   <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
                     <SelectTrigger className="w-full"><SelectValue placeholder="Select Year" /></SelectTrigger>
-                    <SelectContent><SelectGroup>
-                      {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                    </SelectGroup></SelectContent>
+                    <SelectContent>
+                      <SelectGroup>
+                        {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                      </SelectGroup>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="md:col-span-2" />
@@ -65,7 +67,7 @@ export default function PatientMedicalHistory() {
             </CardContent>
           </Card>
            
-          <div className="w-full lg:min-w-[20rem] lg:max-w-[25rem] lg:h-[31.2rem] border-2 border-black/9 rounded-lg overflow-hidden shadow-xs">
+          <div className="w-full lg:min-w-[20rem] lg:max-w-[25rem] lg:h-[31.2rem] rounded-lg overflow-hidden">
             <Tabs defaultValue="report" className="w-full h-full flex flex-col">
 
               {/* Tabs Header */}
@@ -95,7 +97,7 @@ export default function PatientMedicalHistory() {
 
               {/* Tab Content */}
               <TabsContent value="report" className="flex-1 overflow-auto">
-                <DoctorReport />
+                <DoctorReport patientId={String(patientId)} />
               </TabsContent>
 
               <TabsContent value="details" className="flex-1 overflow-auto">
