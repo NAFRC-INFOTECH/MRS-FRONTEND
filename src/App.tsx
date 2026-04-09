@@ -27,7 +27,9 @@ import DoctorsDailyShift from "./Pages/recordingdepartment/DoctorsDailyShift";
 import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
 import NurseGeneral from "./Pages/generalPermitPages/NurseGeneral";
 import PatientMedicalHistory from "./Pages/doctorsPages/PatientMedicalHistory";
-import TodaysPatientsList from './Pages/doctorsPages/TodaysPatientsList'
+import TodaysPatientsList from './Pages/doctorsPages/TodaysPatientsList';
+import LabPatientsList from "./Pages/departments/labPages/LabPatientsList";
+import TodayTransferredList from "./Pages/doctorsPages/todayTransferredPatientsList/TodayTransferredList";
 
 
 
@@ -63,4 +65,6 @@ export {
   NurseGeneral,
   PatientMedicalHistory,
   TodaysPatientsList,
+  LabPatientsList,
+  TodayTransferredList,
 }
