@@ -34,3 +34,18 @@ export const useLabReferralsQuery = (status?: string) => {
     queryFn: () => getLabReferralsApi(status),
   });
 };
+
+export const getLabReferralsByDateApi = async (date: string, status?: string): Promise<LabReferral[]> => {
+  const params: Record<string, string> = { date };
+  if (status) params.status = status;
+  const res = await api.get("/lab/referrals", { params });
+  return res.data as LabReferral[];
+};
+
+export const useLabReferralsByDateQuery = (date: string, status?: string) => {
+  return useQuery({
+    queryKey: ["lab-referrals", "by-date", date, status ?? ""],
+    queryFn: () => getLabReferralsByDateApi(date, status),
+    enabled: !!date,
+  });
+};

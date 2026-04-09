@@ -19,7 +19,7 @@ import GlobalErrorBoundary from "./shared/GlobalErrorBoundary";
 import GlobalClientLogging from './shared/GlobalClientLogging';
 import GlobalRealtimeSync from "./shared/GlobalRealtimeSync";
 import AcceptInvite from "./Pages/auth/AcceptInvite";
-import LabPatientsList from "./Pages/departments/labPages/LabPatientsList";
+
 
 import {
   MainLayout,
@@ -52,6 +52,8 @@ import {
   NurseGeneral,
   PatientMedicalHistory,
   TodaysPatientsList,
+  TodayTransferredList,
+  LabPatientsList,
 } from './App'
 
 
@@ -89,6 +91,7 @@ const router = createBrowserRouter(
                 <Route path='hiring-doctor-form' element={<MultiStepDoctorForm />} />
                 <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
                 <Route path='todays-patients-list' element={<TodaysPatientsList />} />
+                <Route path='today-transferred-list' element={<TodayTransferredList />} />
               </Route>
             </Route>
           </Route>

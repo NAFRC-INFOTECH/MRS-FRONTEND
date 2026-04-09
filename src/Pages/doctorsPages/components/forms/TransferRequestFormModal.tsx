@@ -100,7 +100,7 @@ export default function TransferRequestFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-auto mt-15">
+      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-auto mt-15 bg-white">
         <DialogHeader className="text-3xl">
           <DialogTitle>{destination === "lab" ? "Laboratory Request Form" : "X-ray Request Form"}</DialogTitle>
           <DialogDescription>Fill out the request details. Prefilled fields come from the patient profile.</DialogDescription>
