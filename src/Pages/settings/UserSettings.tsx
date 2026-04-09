@@ -244,6 +244,7 @@ export default function UserSettings() {
                     onError: () => toast.error("Logout failed"),
                   })
                 }
+              className="bg-red-400"
               >
                 Logout
               </Button>
