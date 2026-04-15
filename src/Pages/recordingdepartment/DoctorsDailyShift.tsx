@@ -104,7 +104,7 @@ export default function DoctorsDailyShift() {
   };
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="py-4 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Create Duty Assignment</CardTitle>
