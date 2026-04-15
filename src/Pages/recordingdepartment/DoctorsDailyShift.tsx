@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DUTY_SHIFT_OPTIONS, getShiftTimes } from "@/lib/duty-shifts";
 
 export default function DoctorsDailyShift() {
   const { data: doctors = [] } = useDoctorUsersQuery(true);
@@ -67,26 +68,15 @@ export default function DoctorsDailyShift() {
     const selStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
     return selStart >= start && selStart <= max;
   };
-  const nextDayStr = (d: string) => {
-    const dt = new Date(d);
-    dt.setDate(dt.getDate() + 1);
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, "0");
-    const day = String(dt.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  };
   const applyShiftTimes = (d: string, s: string) => {
-    if (!d || !s) return;
-    if (s === "MORNING") {
-      setTimeIn(`${d}T08:00`);
-      setTimeOut(`${d}T14:00`);
-    } else if (s === "AFTERNOON") {
-      setTimeIn(`${d}T14:00`);
-      setTimeOut(`${d}T21:00`);
-    } else if (s === "NIGHT") {
-      setTimeIn(`${d}T21:00`);
-      setTimeOut(`${nextDayStr(d)}T07:59`);
-    }
+    const { timeIn, timeOut } = getShiftTimes(d, s);
+    setTimeIn(timeIn);
+    setTimeOut(timeOut);
+  };
+  const applyEditShiftTimes = (d: string, s: string) => {
+    const { timeIn, timeOut } = getShiftTimes(d, s);
+    setEditTimeIn(timeIn);
+    setEditTimeOut(timeOut);
   };
   const exportCsv = () => {
     const headers = ["Doctor", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
@@ -182,9 +172,9 @@ export default function DoctorsDailyShift() {
             <Select value={shift} onValueChange={(v) => { setShift(v); applyShiftTimes(date, v); }}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
               <SelectContent><SelectGroup>
-                <SelectItem value="MORNING">Morning</SelectItem>
-                <SelectItem value="AFTERNOON">Afternoon</SelectItem>
-                <SelectItem value="NIGHT">Night</SelectItem>
+                {DUTY_SHIFT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectGroup></SelectContent>
             </Select>
           </div>
@@ -271,9 +261,9 @@ export default function DoctorsDailyShift() {
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
                 <SelectContent><SelectGroup>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="MORNING">Morning</SelectItem>
-                  <SelectItem value="AFTERNOON">Afternoon</SelectItem>
-                  <SelectItem value="NIGHT">Night</SelectItem>
+                  {DUTY_SHIFT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectGroup></SelectContent>
               </Select>
             </div>
@@ -368,12 +358,12 @@ export default function DoctorsDailyShift() {
             </div>
             <div className="flex flex-col gap-1">
               <Label>Shift</Label>
-              <Select value={editShift} onValueChange={setEditShift}>
+              <Select value={editShift} onValueChange={(v) => { setEditShift(v); if (editDuty?.date) applyEditShiftTimes(new Date(editDuty.date).toISOString().slice(0, 10), v); }}>
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
                 <SelectContent><SelectGroup>
-                  <SelectItem value="MORNING">Morning</SelectItem>
-                  <SelectItem value="AFTERNOON">Afternoon</SelectItem>
-                  <SelectItem value="NIGHT">Night</SelectItem>
+                  {DUTY_SHIFT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectGroup></SelectContent>
               </Select>
             </div>
