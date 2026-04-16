@@ -9,6 +9,7 @@ export function routeForRoleDepartment(role?: string, department?: string): stri
   const r = (role || "").toLowerCase();
   const d = (department || "").toLowerCase();
   if (r === "super_admin") return "/mrs-admin";
+  if (r === "admin") return "/admin-dashboard";
   if (r === "doctor") return "/doctors-dashboard";
   if (r === "recording") return "/recordings";
   if (r === "nurse") {
