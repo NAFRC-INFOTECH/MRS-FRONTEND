@@ -30,6 +30,9 @@ import PatientMedicalHistory from "./Pages/doctorsPages/PatientMedicalHistory";
 import TodaysPatientsList from './Pages/doctorsPages/TodaysPatientsList';
 import LabPatientsList from "./Pages/departments/labPages/LabPatientsList";
 import TodayTransferredList from "./Pages/doctorsPages/todayTransferredPatientsList/TodayTransferredList";
+import Admins from './Pages/superAdminPages/Admins'
+import AdminDashboard from './Pages/adminPages/AdminDashboard'
+import LandingPage from './Pages/LandingPage/LandingPage'
 
 
 
@@ -38,6 +41,7 @@ export {
   Root,
   MainLayout,
   NotFoundPage,
+  LandingPage,
   Dashboard,
   Login,
   MultiStepDoctorForm,
@@ -67,4 +71,6 @@ export {
   TodaysPatientsList,
   LabPatientsList,
   TodayTransferredList,
+  Admins,
+  AdminDashboard,
 }

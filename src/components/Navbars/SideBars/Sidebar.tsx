@@ -8,6 +8,7 @@ import { useAppSelector } from '@/api-integration/redux/store';
 import RecordingSideBar from './RecordingSidebar';
 import LabSidebar from './LabSidebar';
 import GenNurseSidebar from './generalPermitSidebars/GenNurseSidebar';
+import AdminsSideBar from './AdminsSideBar';
 
 
 
@@ -20,6 +21,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
     switch (user?.roles?.[0]) {
       case "super_admin":
         return <SuperAdminSideBar />;
+      
+      case "admin":
+        return <AdminsSideBar />;
 
       case "doctor":
         return <DoctorsSidebar />;

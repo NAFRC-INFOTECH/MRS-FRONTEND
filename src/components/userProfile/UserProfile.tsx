@@ -11,6 +11,8 @@ export default function UserProfile({className, textSize}: {className?: string, 
   const roleLabel =
     roles.includes("super_admin")
       ? "Super Admin"
+      : roles.includes("admin")
+      ? "Admin"
       : roles.includes("doctor")
       ? "Doctor"
       : roles.includes("nurse")

@@ -25,6 +25,7 @@ import {
   MainLayout,
   Root,
   NotFoundPage,
+  LandingPage,
   Dashboard,
   Login,
   MultiStepDoctorForm,
@@ -54,6 +55,8 @@ import {
   TodaysPatientsList,
   TodayTransferredList,
   LabPatientsList,
+  Admins,
+  AdminDashboard,
 } from './App'
 
 
@@ -64,6 +67,7 @@ const router = createBrowserRouter(
     <Route path='/' element={<Root />} errorElement={<NotFoundPage />}>
 
       {/* <Route index path='/' element={<SuperAdminDashboard />} /> */}
+      <Route index path='/' element={<LandingPage />} />
       
 
       {/* All Protected Routes */}
@@ -72,14 +76,31 @@ const router = createBrowserRouter(
           {/* this is super admin dashboard routes */}
           <Route element={<RequireAuth roles={["super_admin"]} />}>
             <Route path='mrs-admin'>
-              <Route index element={<SuperAdminDashboard/>}/>
+              <Route index element={<SuperAdminDashboard />} />
+              <Route path='admins' element={<Admins />} />
               <Route path='nurses' element={<Nurses />} />
               <Route path='doctors' element={<Doctors />} />
               <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='patients' element={<Patients />} />
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='recordings' element={<Recordings />} />
-              <Route path='all-departments' element={<AllDepartments/>}/>
+              <Route path='all-departments' element={<AllDepartments />} />
+            </Route>
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<RequireAuth roles={["admin"]} />}>
+            <Route path='admin-dashboard'>
+              <Route index element={<AdminDashboard />} />
+              <Route path='all-departments' element={<AllDepartments />} />
+              <Route path='doctors' element={<Doctors />} />
+              <Route path='nurses' element={<Nurses />} />
+              <Route path='patients' element={<Patients />} />
+              <Route path='recordings' element={<Recordings />} />
+              <Route path='service-users' element={<ServiceUsers />} />
+              <Route path='nurses-duty' element={<NursesDailyShift />} />
+              <Route path='doctors-duty' element={<DoctorsDailyShift />} />
+              <Route path='recording-duty' element={<RecordingDashboard />} />
             </Route>
           </Route>
 

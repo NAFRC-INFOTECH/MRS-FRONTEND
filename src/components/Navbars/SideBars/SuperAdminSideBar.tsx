@@ -57,47 +57,51 @@ export default function SuperAdminSideBar() {
   return (
     <section>
       {/* MAIN */}
-      <List>
-        <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
-          MAIN
-        </span>
+      <div className="h-[50vh] md:h-[60vh] overflow-y-scroll w-full">
+        <List>
+          <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
+            MAIN
+          </span>
 
-        {[
-          { text: "Dashboard", path: "/mrs-admin", icon: LayoutPanelLeft },
-          { text: "All Departments", path: "/mrs-admin/all-departments", icon: Network },
-          { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
-          { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
-          { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
-          { text: "Recording Department", path: "/mrs-admin/recordings", icon: LibraryBig },
-          { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser }
-        ].map((item) => {
-          const active = isRouteActive(item.path)
+          {[
+            { text: "Dashboard", path: "/mrs-admin", icon: LayoutPanelLeft },
+            { text: "Admins", path: "/mrs-admin/admins", icon: Pill },
+            { text: "All Departments", path: "/mrs-admin/all-departments", icon: Network },
+            { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
+            { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
+            { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
+            { text: "Recording Dept", path: "/mrs-admin/recordings", icon: LibraryBig },
+            { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser }
+          ].map((item) => {
+            const active = isRouteActive(item.path)
 
-          return (
-            <ListItemButton
-              key={item.text}
-              component={Link}
-              to={item.path}
-              sx={{
-                background: active ? "#56bbe3" : "transparent",
-                color: active ? "#ffffff" : "#6B7280",
-                borderTopRightRadius: "8px",
-                borderBottomRightRadius: "8px",
-                my: 0.5,
-                ":hover": {
-                  background: active ? "#56bbe3" : "#c9c9c91e",
+            return (
+              <ListItemButton
+                key={item.text}
+                component={Link}
+                to={item.path}
+                sx={{
+                  background: active ? "#56bbe3" : "transparent",
                   color: active ? "#ffffff" : "#6B7280",
-                }
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <IconWrapper Icon={item.icon} active={active} />
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          )
-        })}
-      </List>
+                  borderTopRightRadius: "8px",
+                  borderBottomRightRadius: "8px",
+                  my: 0.5,
+                  ":hover": {
+                    background: active ? "#56bbe3" : "#c9c9c91e",
+                    color: active ? "#ffffff" : "#6B7280",
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <IconWrapper Icon={item.icon} active={active} />
+                </ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            )
+          })}
+        </List>
+      </div>
+      
 
       <div className="w-full h-[1px] bg-gray-300 my-2" />
 
@@ -142,8 +146,6 @@ export default function SuperAdminSideBar() {
           </ListItemButton>
         </div>
 
-        {/* Profile */}
-        {/* <UserProfile className="flex" textSize="text-xs" /> */}
       </List>
     </section>
   )
