@@ -28,23 +28,20 @@ export default function LandingNavbar() {
   return (
     <header
       className={`
-      fixed top-0 z-50
-      transition-all duration-300 ease-in-out
-      w-full
-      ${open ? "bg-slate-950 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-white/10" : ""}
-      
-      ${
-        scrolled
-          ? "bg-slate-950 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-white/10"
-          : "bg-slate-950 backdrop-blur-xl lg:backdrop-blur-none shadow-lg lg:shadow-none shadow-black/20 lg:bg-transparent border-b border-transparent "
-      }
+      fixed inset-x-0 top-0 z-50 w-full
+      transition-all duration-500 ease-out
+      ${scrolled || open ? "pt-2 sm:pt-3 px-2" : "pt-0"}
     `}
     >
       <div
         className={`
         mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8
-        transition-all duration-300
-        ${scrolled ? "py-3" : "py-3"}
+        transition-all duration-500 ease-out
+        ${
+          scrolled || open
+            ? "rounded-xl border border-white/10 bg-slate-950 py-3 shadow-2xl shadow-black/10 backdrop-blur-xl"
+            : "border border-transparent bg-slate-950/85 py-3 shadow-lg shadow-black/20 backdrop-blur-xl lg:bg-transparent lg:shadow-none lg:backdrop-blur-none"
+        }
       `}
       >
         {/* LOGO */}
@@ -121,7 +118,7 @@ export default function LandingNavbar() {
       {/* Tabs MENU */}
       <div
         className={`
-        hidden md:block  lg:hidden overflow-hidden transition-all duration-300
+        hidden overflow-hidden transition-all duration-500 ease-out md:block lg:hidden
         ${open ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}
       `}
       >
@@ -151,18 +148,29 @@ export default function LandingNavbar() {
         </div>
       </div>
 
+      <div
+        className={`
+          fixed inset-0 z-40 h-full bg-slate-950/45 backdrop-blur-[2px] transition-opacity duration-500 ease-out md:hidden
+          ${open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}
+        `}
+        onClick={() => setOpen(false)}
+      />
+
       {/* MOBILE MENU */}
       <div
         className={`
-          fixed top-0 left-0 z-50 h-[100vh] w-[75%] max-w-xs
-          bg-slate-950/95 backdrop-blur-xl border-r border-white/10
-          transform transition-transform duration-300 ease-in-out
+          fixed left-0 top-0 z-50 w-[75%] max-w-xs
+          bg-slate-950 backdrop-blur-xl border-r border-white/10
+          transform transition-all duration-500 ease-out
+          h-full
           md:hidden
-          mt-17
+          shadow-2xl shadow-black/30
+          rounded-r-2xl
+          ${scrolled || open ? "h-full" : "h-full"}
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="flex flex-col justify-between gap-2 px-4 py-6 sm:px-6 h-full pb-25 bg-slate-950/95 backdrop-blur-xl border-r border-white/10">
+        <div className="flex h-full flex-col justify-between gap-2 rounded-r-3xl bg-slate-950 px-4 py-6 pb-25 sm:px-6">
           <div className="flex flex-col gap-2">
             {navItems.map((item) => (
               <a
@@ -172,7 +180,10 @@ export default function LandingNavbar() {
                   setActive(item.href);
                   setOpen(false);
                 }}
-                className="rounded-xs px-3 py-3 text-sm text-slate-200 transition hover:bg-white/5"
+                className={`
+                  rounded-xs px-3 py-3 text-sm transition
+                  ${active === item.href ? "bg-white/10 text-white" : "text-slate-200 hover:bg-white/5"}
+                `}
               >
                 {item.label}
               </a>
