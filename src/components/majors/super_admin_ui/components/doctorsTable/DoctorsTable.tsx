@@ -28,6 +28,7 @@ export default function DoctorsTable() {
   const deleteProfile = useDeleteDoctorProfileMutation();
   const resetPassword = useResetDoctorPasswordMutation();
   const [showCreds, setShowCreds] = useState<{ open: boolean; name?: string; email?: string; password?: string }>({ open: false });
+
   const [filters, setFilters] = useState<{
     status: doctorProfile["personalInfo"]["status"] | "";
     hospital: string;
@@ -37,9 +38,7 @@ export default function DoctorsTable() {
     hospital: "",
     specialty: "",
   });
-
-  console.log(data)
-
+  
   const navigate = useNavigate();
 
   const handleAction = (id: string, action: string) => {

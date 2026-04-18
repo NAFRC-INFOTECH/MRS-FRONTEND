@@ -34,7 +34,7 @@ export default function SuperAdminSideBar() {
       <Icon
         size={20}
         variant="Outline"
-        color={active ? "#ffffff" : "#6B7280"}
+        color={active ? "#ffffff" : "#9e9e9edc"}
       />
     )
   }
@@ -59,7 +59,7 @@ export default function SuperAdminSideBar() {
       {/* MAIN */}
       <div className="h-[50vh] md:h-[60vh] overflow-y-scroll w-full">
         <List>
-          <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
+          <span className="block text-start text-xs text-gray-300 pl-4 mb-2">
             MAIN
           </span>
 
@@ -82,7 +82,7 @@ export default function SuperAdminSideBar() {
                 to={item.path}
                 sx={{
                   background: active ? "#56bbe3" : "transparent",
-                  color: active ? "#ffffff" : "#6B7280",
+                  color: active ? "#ffffff" : "#9e9e9edc",
                   borderTopRightRadius: "8px",
                   borderBottomRightRadius: "8px",
                   my: 0.5,
@@ -103,12 +103,12 @@ export default function SuperAdminSideBar() {
       </div>
       
 
-      <div className="w-full h-[1px] bg-gray-300 my-2" />
+      <div className="w-full h-[1px] bg-gray-500 my-2" />
 
       {/* OTHER */}
       <List className="flex flex-1 flex-col justify-between h-full">
         <div className="w-full">
-          <span className="block text-start text-xs text-gray-500 pl-4 mb-2 uppercase">
+          <span className="block text-start text-xs text-gray-300 pl-4 mb-2 uppercase">
             Other
           </span>
 
@@ -123,7 +123,7 @@ export default function SuperAdminSideBar() {
                 : "transparent",
               color: isRouteActive("mrs-admin/drugs-list")
                 ? "#ffffff"
-                : "#6B7280",
+                : "#9e9e9edc",
               ":hover": {
                 background: isRouteActive("mrs-admin/drugs-list")
                   ? "#56bbe3"
@@ -134,11 +134,12 @@ export default function SuperAdminSideBar() {
               }
             }}
           >
+            {/* drugs list icon */}
             <ListItemIcon sx={{ minWidth: 40 }}>
               <Pill
                 size={20}
                 color={
-                  isRouteActive("mrs-admin/settings") ? "#56bbe3" : "#6B7280"
+                  isRouteActive("mrs-admin/drugs-list") ? "#56bbe3" : "#9e9e9edc"
                 }
               />
             </ListItemIcon>

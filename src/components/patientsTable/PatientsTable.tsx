@@ -9,11 +9,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { dummyPatients } from "./patientsDatas/patientsData";
 import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function PatientsTable() {
   const [patients, setPatients] = useState(dummyPatients);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
-  const [searchName, setSearchName] = useState("");
+  const { query } = useSearch();
+
 
   const navigate = useNavigate();
 
@@ -94,14 +96,13 @@ export default function PatientsTable() {
     }
   };
 
-  // Filter by status AND search by name
   const filteredPatients = patients.filter(
     (p) =>
       (statusFilter ? p.personalInfo.status === statusFilter : true) &&
-      (searchName
+      (query
         ? p.personalInfo.fullName
             .toLowerCase()
-            .includes(searchName.toLowerCase())
+            .includes(query.toLowerCase())
         : true)
   );
 
@@ -129,13 +130,13 @@ export default function PatientsTable() {
           <option value="discharged">Discharged</option>
         </select>
 
-        <input
+        {/* <input
           type="text"
           placeholder="Search by Name"
           className="border p-2 rounded col-span-2"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
-        />
+        /> */}
       </div>
 
       {/* Patients Table */}

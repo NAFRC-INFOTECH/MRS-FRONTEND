@@ -58,6 +58,7 @@ import {
   Admins,
   AdminDashboard,
 } from './App'
+import { SearchProvider } from './contexts/SearchContext';
 
 
 
@@ -180,7 +181,9 @@ ReactDom.createRoot(document.getElementById("root")!).render(
           <GlobalClientLogging />
           <GlobalRealtimeSync />
           <Toaster position="top-right" richColors />
-          <RouterProvider router={router}/>
+          <SearchProvider>
+            <RouterProvider router={router}/>
+          </SearchProvider>
         </GlobalErrorBoundary>
       </QueryClientProvider>
     </Provider>

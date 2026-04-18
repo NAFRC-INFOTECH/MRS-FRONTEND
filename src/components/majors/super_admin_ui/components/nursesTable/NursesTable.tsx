@@ -23,6 +23,7 @@ import { useCreateNurseDirectMutation } from "@/api-integration/mutations/invita
 import { useDepartmentsQuery } from "@/api-integration/queries/departments";
 import { useNursesQuery } from "@/api-integration/queries/nurses";
 import { useResetUserPasswordMutation } from "@/api-integration/mutations/users";
+import { useSearch } from "@/contexts/SearchContext";
 
 // Type for nurse status
 type NurseStatus = "active" | "assigned" | "suspended" | "sacked";
@@ -51,6 +52,8 @@ export default function NursesTable() {
   const resetPwd = useResetUserPasswordMutation();
   const [showReset, setShowReset] = useState(false);
   const [resetValue, setResetValue] = useState("");
+  const { query } = useSearch();
+
 
   const handleAction = (id: string, action: string) => {
     if (action === "profile") {
@@ -101,7 +104,7 @@ export default function NursesTable() {
     (n) =>
       (filters.status ? n.personalInfo.status === filters.status : true) &&
       (filters.department ? n.department === filters.department : true) &&
-      (filters.name ? n.personalInfo.fullName.toLowerCase().includes(filters.name.toLowerCase()) : true)
+      (query ? n.personalInfo.fullName.toLowerCase().includes(query.toLowerCase()) : true)
   );
 
   return (
@@ -228,14 +231,6 @@ export default function NursesTable() {
             </SelectGroup>
           </SelectContent>
         </Select>
-
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border p-2 rounded"
-          value={filters.name}
-          onChange={(e) => setFilters((prev) => ({ ...prev, name: e.target.value }))}
-        />
       </div>
 
       {/* Nurses Table */}

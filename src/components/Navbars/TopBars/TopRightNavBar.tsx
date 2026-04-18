@@ -17,17 +17,17 @@ export default function TopRightNavbar() {
             showSearch ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`}
         >
-            <Searchbar />
+            <Searchbar/>
         </div>
 
         <button
             onClick={toggleSearch}
-            className='flex items-center justify-center min-w-10 min-h-10 rounded-lg focus:bg-[#F5F7FA] hover:bg-gray-50 transition duration-200'
+            className='flex items-center justify-center min-w-10 min-h-10 rounded-lg focus:bg-bg-gray-50/20 hover:bg-gray-50/20 transition duration-200'
         >
-            <CiSearch className="w-7 h-7" />
+            <CiSearch className="w-7 h-7 text-gray-300" />
         </button>
         
-        <div className='flex items-center justify-end gap-2'>
+        <div className='flex items-center justify-end gap-2 text-gray-300'>
             <Notification />
             <UserProfile className='hidden md:flex border-r-2 border-gray-300'/>
         </div>
