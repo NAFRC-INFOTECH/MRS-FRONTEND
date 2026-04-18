@@ -11,6 +11,7 @@ import type { PatientCondition, PatientStatus } from "../patientsDatas/types";
 import { usePatientsQuery } from "@/api-integration/queries/patients";
 import { useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
 import { toast } from "sonner";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function PatientsRegTable() {
   const q = usePatientsQuery();
@@ -22,6 +23,7 @@ export default function PatientsRegTable() {
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const del = useDeletePatientMutation();
   const update = useUpdatePatientMutation();
+  const { query } = useSearch();
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function PatientsRegTable() {
     });
     return list.filter((r) => {
       if (hiddenIds.includes(r.id)) return false;
-      const nmOk = searchName ? r.fullName.toLowerCase().includes(searchName.toLowerCase()) : true;
+      const nmOk = query ? r.fullName.toLowerCase().includes(query.toLowerCase()) : true;
       const stOk = statusFilter ? r.status === statusFilter : true;
       const catOk = categoryFilter ? (categoryFilter === "personnel" ? r.veteran : !r.veteran) : true;
       const cardOk = searchCard
@@ -124,7 +126,7 @@ export default function PatientsRegTable() {
         : true;
       return nmOk && stOk && catOk && cardOk;
     });
-  }, [patients, hiddenIds, searchName, searchCard, statusFilter, categoryFilter]);
+  }, [patients, hiddenIds, query, searchCard, statusFilter, categoryFilter]);
 
   // Form moved to PatientBiodataForm component to avoid render loops in this table
 
@@ -169,13 +171,6 @@ export default function PatientsRegTable() {
           <option value="personnel">Veteran</option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border p-2 rounded"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
         <input
           type="text"
           placeholder="Search by Card/UUID"

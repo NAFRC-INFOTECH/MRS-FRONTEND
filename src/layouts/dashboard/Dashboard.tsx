@@ -32,7 +32,7 @@ function Dashboard() {
                 position="fixed" 
                 sx={{ 
                     zIndex: (theme) => theme.zIndex.drawer + 1, 
-                    backgroundColor: 'white !important',
+                    backgroundColor: '#03081a !important',
                     color: 'black',
                     backdropFilter: 'blur(30px)', // Adding blur effect to the background
                     boxShadow: 'none',
@@ -55,7 +55,7 @@ function Dashboard() {
                                 onClick={handleDrawerToggle}
                                 sx={{ mr: 1 }}
                             >
-                                {mobileOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+                                {mobileOpen ? <CloseIcon className="w-6 h-6 text-gray-300" /> : <MenuIcon className="w-6 h-6 text-gray-300" />}
                             </IconButton>
                         )}
                         {/* <Typography variant="h6" noWrap component="div">
