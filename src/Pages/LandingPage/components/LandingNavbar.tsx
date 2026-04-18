@@ -118,7 +118,7 @@ export default function LandingNavbar() {
         </button>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* Tabs MENU */}
       <div
         className={`
         hidden md:block  lg:hidden overflow-hidden transition-all duration-300
@@ -181,7 +181,7 @@ export default function LandingNavbar() {
 
           <Button
             asChild
-            className="mt-2 w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400 rounded-xs"
+            className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400 rounded-xs mb-8"
           >
             <Link to="/login">Login</Link>
           </Button>
