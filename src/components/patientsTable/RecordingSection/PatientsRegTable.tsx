@@ -17,7 +17,6 @@ export default function PatientsRegTable() {
   const q = usePatientsQuery();
   const [patients, setPatients] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
-  const [searchName, setSearchName] = useState("");
   const [searchCard, setSearchCard] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"" | "civilian" | "personnel">("");
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);

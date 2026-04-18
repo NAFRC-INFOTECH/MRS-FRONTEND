@@ -14,7 +14,6 @@ import { useSearch } from "@/contexts/SearchContext";
 export default function PatientsTable() {
   const [patients, setPatients] = useState(dummyPatients);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
-  const [searchName, setSearchName] = useState("");
   const { query } = useSearch();
 
 
