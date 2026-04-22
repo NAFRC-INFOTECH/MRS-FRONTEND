@@ -95,6 +95,7 @@ const router = createBrowserRouter(
               <Route index element={<AdminDashboard />} />
               <Route path='all-departments' element={<AllDepartments />} />
               <Route path='doctors' element={<Doctors />} />
+              <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='nurses' element={<Nurses />} />
               <Route path='patients' element={<Patients />} />
               <Route path='recordings' element={<Recordings />} />
@@ -150,8 +151,6 @@ const router = createBrowserRouter(
             <Route path="patients/new" element={<PatientsBiodataPage />} />
             <Route path="edit/:id" element={<PatientsEditPage />} />
             <Route path="staff/:id" element={<RecordingProfile />} />
-            <Route path="nurses-daily-shift" element={<NursesDailyShift />} />
-            <Route path="doctors-daily-shift" element={<DoctorsDailyShift />} />
           </Route>
 
           {/* Settings */}
@@ -165,7 +164,6 @@ const router = createBrowserRouter(
 
       {/* All Unprotected Route */}
       <Route path='login' element={<Login />} />
-      {/* <Route path='signup' element={<SignUp />} /> */}
       <Route path='invite/accept' element={<AcceptInvite />} />
     </Route>
   )

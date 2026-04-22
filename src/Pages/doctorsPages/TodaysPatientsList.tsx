@@ -8,13 +8,14 @@ import { useDoctorDayListQuery } from "@/api-integration/queries/doctorDayList";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import TransferRequestFormModal from "./components/forms/TransferRequestFormModal";
+import { useSearch } from "@/contexts/SearchContext";
 // import PatientsList2 from "./PatientsList2";
 
 
 export default function TodaysPatientsList() {
+  const { query } = useSearch();
   const { data: daylist = [] } = useDoctorDayListQuery("GOPD", "all");
   const navigate = useNavigate();
-  const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
   const [transferOpen, setTransferOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -30,14 +31,14 @@ export default function TodaysPatientsList() {
       return { id, fullName, phone, cardNumber, rank };
     });
     return list.filter((r) => {
-      const nmOk = searchName ? r.fullName.toLowerCase().includes(searchName.toLowerCase()) : true;
+      const nmOk = query ? r.fullName.toLowerCase().includes(query.toLowerCase()) : true;
       const idOk = searchIdService
         ? r.id.toLowerCase().includes(searchIdService.toLowerCase()) ||
           r.cardNumber.toLowerCase().includes(searchIdService.toLowerCase())
         : true;
       return nmOk && idOk;
     });
-  }, [daylist, searchName, searchIdService]);
+  }, [daylist, query, searchIdService]);
 
   return (
     <div className="p-4">
@@ -46,13 +47,6 @@ export default function TodaysPatientsList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 max-w-[60rem]">
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border p-2 rounded"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
         <input
           type="text"
           placeholder="Search by UUID / Service Number"

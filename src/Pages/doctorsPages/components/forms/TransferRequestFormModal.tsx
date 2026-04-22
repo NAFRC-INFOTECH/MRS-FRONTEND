@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCreateLabReferralMutation } from "@/api-integration/mutations/labReferrals";
+import MultiSelectLabTests from "../multiSelect/MultiSelectLabTests";
 
 export default function TransferRequestFormModal({
   open,
@@ -155,10 +156,27 @@ export default function TransferRequestFormModal({
               <Input value={form.specimen} onChange={onChange("specimen")} />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-gray-600">Examination Required</label>
-            <Input value={form.examinationRequired} onChange={onChange("examinationRequired")} />
-          </div>
+          
+          {destination === "lab" ? (
+            <div>
+              <label className="text-xs text-gray-600">Examination Required</label>
+              <div className="mt-1">
+                <MultiSelectLabTests
+                  onChange={(selected) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      examinationRequired: selected.map((test) => test.name).join(", "),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs text-gray-600">Examination Required</label>
+              <Input value={form.examinationRequired} onChange={onChange("examinationRequired")} />
+            </div>
+          )}
           <div>
             <label className="text-xs text-gray-600">Diagnosis</label>
             <Input value={form.diagnosis} onChange={onChange("diagnosis")} />
@@ -177,6 +195,8 @@ export default function TransferRequestFormModal({
               <Input type="date" value={form.previousReportDate} onChange={onChange("previousReportDate")} />
             </div>
           </div>
+
+          {/* <MultiSelectLabTests onChange={onChange("labTests")} /> */}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

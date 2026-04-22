@@ -48,11 +48,11 @@ export default function LabPatientsList() {
             <tr>
               <th className="px-4 py-2 text-left">S/N</th>
               <th className="px-4 py-2 text-left">Date</th>
-              <th className="px-4 py-2 text-left">Service No / UUID</th>
+              <th className="px-4 py-2 text-left whitespace-nowrap">Service No / UUID</th>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Age</th>
               <th className="px-4 py-2 text-left">Specimen</th>
-              <th className="px-4 py-2 text-left">Examination</th>
+              {/* <th className="px-4 py-2 text-left">Examination</th> */}
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
@@ -71,7 +71,7 @@ export default function LabPatientsList() {
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{r.name}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.age}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.specimen}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{r.examinationRequired}</td>
+                {/* <td className="px-4 py-2 whitespace-nowrap">{r.examinationRequired}</td> */}
                 <td className="px-4 py-2 whitespace-nowrap">{r.status}</td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">

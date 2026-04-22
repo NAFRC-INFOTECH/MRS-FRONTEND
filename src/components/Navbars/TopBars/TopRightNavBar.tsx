@@ -6,7 +6,7 @@ import UserProfile from '@/components/userProfile/UserProfile';
 
 
 export default function TopRightNavbar() {
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSearch, setShowSearch] = useState(true);
 
   const toggleSearch = () => setShowSearch(prev => !prev);
 
@@ -22,7 +22,7 @@ export default function TopRightNavbar() {
 
         <button
             onClick={toggleSearch}
-            className='flex items-center justify-center min-w-10 min-h-10 rounded-lg focus:bg-bg-gray-50/20 hover:bg-gray-50/20 transition duration-200'
+            className='flex items-center justify-center min-w-10 min-h-10 rounded-lg bg-gray-50/15 focus:bg-bg-gray-50/20 hover:bg-gray-50/20 transition duration-200'
         >
             <CiSearch className="w-7 h-7 text-gray-300" />
         </button>

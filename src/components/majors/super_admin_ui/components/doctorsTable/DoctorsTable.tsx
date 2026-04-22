@@ -16,10 +16,12 @@ import { Button } from "@/components/ui/button";
 import { useCreateDoctorDirectMutation } from "@/api-integration/mutations/invitations";
 import { useUpdateDoctorStatusMutation, useDeleteDoctorProfileMutation, useResetDoctorPasswordMutation } from "@/api-integration/mutations/doctorProfiles";
 import { toast } from "sonner";
+import { useRoles } from "@/api-integration/redux/selectors";
 
 
 export default function DoctorsTable() {
   const { data, isLoading, isError } = useDoctorsQuery();
+  const roles = useRoles();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -40,6 +42,7 @@ export default function DoctorsTable() {
   });
   
   const navigate = useNavigate();
+  const doctorProfileBasePath = roles.includes("admin") ? "/admin-dashboard/doctors" : "/mrs-admin/doctors";
 
   const handleAction = (id: string, action: string) => {
   if (action === "delete") {
@@ -54,7 +57,7 @@ export default function DoctorsTable() {
   }
 
   if (action === "profile") {
-    navigate(`/mrs-admin/doctors/${id}`);
+    navigate(`${doctorProfileBasePath}/${id}`);
     return;
   }
 

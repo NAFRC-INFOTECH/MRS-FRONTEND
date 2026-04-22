@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
@@ -7,65 +7,64 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { dummyPatients } from "./patientsDatas/patientsData";
 import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
 import { useSearch } from "@/contexts/SearchContext";
+import { useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
+import { usePatientsQuery } from "@/api-integration/queries/patients";
+import { toast } from "sonner";
 
 export default function PatientsTable() {
-  const [patients, setPatients] = useState(dummyPatients);
+  const q = usePatientsQuery();
+  const [patients, setPatients] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<PatientStatus | "">("");
+  const [searchServiceNo, setSearchServiceNo] = useState("");
+  const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const { query } = useSearch();
-
+  const del = useDeletePatientMutation();
+  const update = useUpdatePatientMutation();
 
   const navigate = useNavigate();
 
-  // Map condition to status
-  const conditionToStatus = (condition: PatientCondition): PatientStatus => {
-    switch (condition) {
-      case "on medication":
-      case "recovered":
-        return "active";
-      case "on sick bed":
-        return "inactive";
-      case "discharged":
-        return "discharged";
-    }
-  };
-
+  useEffect(() => {
+    if (q.data) setPatients(q.data as any[]);
+  }, [q.data]);
   // Handle actions
   const handleAction = (id: string, action: string) => {
     if (action === "delete") {
-      setPatients((prev) => prev.filter((p) => p.personalInfo.id !== id));
+      setHiddenIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      del.mutate(id, {
+        onSuccess: () => toast.success("Patient deleted"),
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Delete failed");
+          setHiddenIds((prev) => prev.filter((x) => x !== id));
+        },
+      });
       return;
     }
 
     if (action === "profile") {
-      navigate(`/hospital-admin/patients/${id}`);
+      navigate(`/recordings/edit/${id}`);
       return;
     }
 
-    const conditionActionMap: Record<string, PatientCondition> = {
-      activate: "on medication",
-      deactivate: "on sick bed",
+    const statusMap: Record<string, PatientStatus> = {
+      activate: "active",
+      deactivate: "inactive",
       discharge: "discharged",
-      recover: "recovered",
+      recover: "active",
     };
 
-    if (conditionActionMap[action]) {
-      const newCondition = conditionActionMap[action];
-      setPatients((prev) =>
-        prev.map((p) =>
-          p.personalInfo.id === id
-            ? {
-                ...p,
-                personalInfo: {
-                  ...p.personalInfo,
-                  condition: newCondition,
-                  status: conditionToStatus(newCondition),
-                },
-              }
-            : p
-        )
+    if (statusMap[action]) {
+      update.mutate(
+        { id, data: { patientStatus: statusMap[action] } },
+        {
+          onSuccess: () => toast.success("Patient status updated"),
+          onError: (err: unknown) => {
+            const msg = err instanceof Error ? err.message : String(err ?? "");
+            toast.error(msg || "Update failed");
+          },
+        }
       );
     }
   };
@@ -96,15 +95,48 @@ export default function PatientsTable() {
     }
   };
 
-  const filteredPatients = patients.filter(
-    (p) =>
-      (statusFilter ? p.personalInfo.status === statusFilter : true) &&
-      (query
-        ? p.personalInfo.fullName
-            .toLowerCase()
-            .includes(query.toLowerCase())
-        : true)
-  );
+  const filteredPatients = useMemo(() => {
+    const rows = (patients as any[]).map((p) => {
+      const id = String(p._id || p.personalInfo?.id || "");
+      const veteran = !!p.veteran;
+      const fullName =
+        p.personalInfo?.fullName ||
+        [p.surname, p.firstname, p.middlename].filter(Boolean).join(" ") ||
+        "";
+      const phone = p.personalInfo?.phone || p.phone || "";
+      const email = p.personalInfo?.email || p.email || "";
+      const address = p.personalInfo?.address || p.address || "";
+      const serviceNumber = veteran
+        ? (p.serviceNumber || "")
+        : (p.membershipNumber || p.memberNumber || "");
+      const rawCondition = (p.personalInfo?.condition as PatientCondition | undefined) || undefined;
+      const status = (p.patientStatus as PatientStatus | undefined) || (p.personalInfo?.status as PatientStatus | undefined) || "active";
+      const condition =
+        rawCondition ||
+        (status === "inactive"
+          ? "on sick bed"
+          : status === "discharged"
+          ? "discharged"
+          : status === "active"
+          ? "on medication"
+          : "recovered");
+      const imageUrl = p.personalInfo?.imageUrl || "";
+      return { id, fullName, phone, email, address, serviceNumber, condition, status, imageUrl };
+    });
+
+    return rows.filter(
+      (p) =>
+        !hiddenIds.includes(p.id) &&
+        (statusFilter ? p.status === statusFilter : true) &&
+        (searchServiceNo
+          ? `${p.serviceNumber} ${p.id}`.toLowerCase().includes(searchServiceNo.toLowerCase())
+          : true) &&
+        (query ? p.fullName.toLowerCase().includes(query.toLowerCase()) : true)
+    );
+  }, [patients, hiddenIds, query, searchServiceNo, statusFilter]);
+
+
+  console.log(filteredPatients)
 
   return (
     <div>
@@ -130,13 +162,13 @@ export default function PatientsTable() {
           <option value="discharged">Discharged</option>
         </select>
 
-        {/* <input
+        <input
           type="text"
-          placeholder="Search by Name"
+          placeholder="Search by Service No/UUID"
           className="border p-2 rounded col-span-2"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        /> */}
+          value={searchServiceNo}
+          onChange={(e) => setSearchServiceNo(e.target.value)}
+        />
       </div>
 
       {/* Patients Table */}
@@ -144,8 +176,7 @@ export default function PatientsTable() {
         <table className="min-w-full border border-gray-200 rounded-t-[8px] overflow-hidden">
           <thead className="bg-[#56bbe3] text-white">
             <tr>
-              <th className="px-4 py-2 text-left">Image</th>
-              <th className="px-4 py-2 text-left">UUID</th>
+              <th className="px-4 py-2 text-left whitespace-nowrap">Service No / UUID</th>
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Email</th>
@@ -156,51 +187,56 @@ export default function PatientsTable() {
             </tr>
           </thead>
           <tbody>
-            {filteredPatients.map((p) => (
+            {q.isLoading && (
+              <tr>
+                <td colSpan={9} className="text-center py-4">
+                  Loading patients...
+                </td>
+              </tr>
+            )}
+            {q.isError && !q.isLoading && (
+              <tr>
+                <td colSpan={9} className="text-center py-4 text-red-600">
+                  Failed to load patients.
+                </td>
+              </tr>
+            )}
+            {!q.isLoading && !q.isError && filteredPatients.map((p) => (
               <tr
-                key={p.personalInfo.id}
+                key={p.id}
                 className="even:bg-[#f9f9f9] border-b border-gray-200"
               >
-                <td className="px-4 py-2">
-                  <div className="w-10 h-10 rounded-full border-2 border-[#56bbe3] p-1 overflow-hidden">
-                    <img
-                      src={p.personalInfo.imageUrl}
-                      alt={p.personalInfo.fullName}
-                      className="w-full h-full object-cover rounded-full"
-                    />
+                
+                <td className="px-4 py-2 whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <span className="font-medium">{p.serviceNumber || "-"}</span>
+                    {/* <span className="text-xs text-gray-500">{p.id}</span> */}
                   </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">
-                  {p.personalInfo.id}
-                </td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">
-                  {p.personalInfo.fullName}
+                  {p.fullName}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">
-                  {p.personalInfo.phone}
+                  {p.phone || "-"}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">
-                  {p.personalInfo.email}
+                  {p.email || "-"}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap">
-                  {p.personalInfo.address}
+                  {p.address || "-"}
                 </td>
                 <td className="p-2 whitespace-nowrap">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs ${getConditionColor(
-                      p.personalInfo.condition
-                    )}`}
+                    className={`px-3 py-1 rounded-full text-xs ${getConditionColor(p.condition)}`}
                   >
-                    {p.personalInfo.condition.toUpperCase()}
+                    {p.condition.toUpperCase()}
                   </span>
                 </td>
                 <td className="p-2">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs ${getStatusColor(
-                      p.personalInfo.status
-                    )}`}
+                    className={`px-3 py-1 rounded-full text-xs ${getStatusColor(p.status)}`}
                   >
-                    {p.personalInfo.status.toUpperCase()}
+                    {p.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-4 py-2">
@@ -221,7 +257,7 @@ export default function PatientsTable() {
                           key={action}
                           className={action === "delete" ? "text-red-600" : ""}
                           onClick={() =>
-                            handleAction(p.personalInfo.id, action)
+                            handleAction(p.id, action)
                           }
                         >
                           {action.charAt(0).toUpperCase() + action.slice(1)}
@@ -233,7 +269,7 @@ export default function PatientsTable() {
               </tr>
             ))}
 
-            {filteredPatients.length === 0 && (
+            {!q.isLoading && !q.isError && filteredPatients.length === 0 && (
               <tr>
                 <td colSpan={9} className="text-center py-4">
                   No patients found.

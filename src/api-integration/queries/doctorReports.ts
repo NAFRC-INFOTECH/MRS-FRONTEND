@@ -5,7 +5,11 @@ export type DoctorReport = {
   id: string;
   patientId: string;
   senderId: string;
+  senderName?: string;
+  doctorName?: string;
   text?: string;
+  clinicalNote?: string;
+  diagnosis?: string;
   imageUrl?: string;
   replyToId?: string;
   createdAt: string;

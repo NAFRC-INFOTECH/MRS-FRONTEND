@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
 
-export const addDoctorReportApi = async (payload: { patientId: string; text?: string; imageUrl?: string; replyToId?: string }) => {
+export const addDoctorReportApi = async (payload: {
+  patientId: string;
+  text?: string;
+  clinicalNote?: string;
+  diagnosis?: string;
+  imageUrl?: string;
+  replyToId?: string;
+}) => {
   const res = await api.post("/doctors/reports", payload);
   return res.data;
 };
@@ -16,8 +23,20 @@ export const useAddDoctorReportMutation = () => {
   });
 };
 
-export const updateDoctorReportApi = async (payload: { id: string; patientId: string; text?: string; imageUrl?: string }) => {
-  const res = await api.put(`/doctors/reports/${encodeURIComponent(payload.id)}`, { text: payload.text, imageUrl: payload.imageUrl });
+export const updateDoctorReportApi = async (payload: {
+  id: string;
+  patientId: string;
+  text?: string;
+  clinicalNote?: string;
+  diagnosis?: string;
+  imageUrl?: string;
+}) => {
+  const res = await api.put(`/doctors/reports/${encodeURIComponent(payload.id)}`, {
+    text: payload.text,
+    clinicalNote: payload.clinicalNote,
+    diagnosis: payload.diagnosis,
+    imageUrl: payload.imageUrl,
+  });
   return res.data;
 };
 

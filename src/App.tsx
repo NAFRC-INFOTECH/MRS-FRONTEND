@@ -22,8 +22,8 @@ import AllDepartments from './Pages/superAdminPages/AllDepartments'
 import PatientsBiodataPage from "./Pages/recordingdepartment/PatientsBiodataPage";
 import PatientsEditPage from "./Pages/recordingdepartment/PatientsEditPage";
 import LabDashboard from "./Pages/departments/labPages/LabDashboard";
-import NursesDailyShift from "./Pages/recordingdepartment/NursesDailyShift";
-import DoctorsDailyShift from "./Pages/recordingdepartment/DoctorsDailyShift";
+import NursesDailyShift from "./Pages/adminPages/NursesDailyShift";
+import DoctorsDailyShift from "./Pages/adminPages/DoctorsDailyShift";
 import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
 import NurseGeneral from "./Pages/generalPermitPages/NurseGeneral";
 import PatientMedicalHistory from "./Pages/doctorsPages/PatientMedicalHistory";

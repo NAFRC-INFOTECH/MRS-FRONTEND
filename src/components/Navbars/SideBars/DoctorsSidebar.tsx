@@ -60,8 +60,8 @@ export default function DoctorsSidebar() {
 
         {[
           { text: "Dashboard", path: "/doctors-dashboard", icon: LayoutPanelLeft },
-          { text: "Today's Patients List", path: "/doctors-dashboard/todays-patients-list", icon: ContactRound },
-          { text: "Transferred Patients Today", path: "/doctors-dashboard/today-transferred-list", icon: ContactRound },
+          { text: "Consultations", path: "/doctors-dashboard/todays-patients-list", icon: ContactRound },
+          { text: "Transferred Patients", path: "/doctors-dashboard/today-transferred-list", icon: ContactRound },
         ].map((item) => {
           const active = isRouteActive(item.path)
 
