@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, MoreVertical } from "lucide-react";
+import { Plus, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,16 @@ import { useDeleteUserMutation, useSuspendUserMutation, useResetUserPasswordMuta
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useCreateRecordingDirectMutation } from "@/api-integration/mutations/invitations";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function RecordingTable() {
+  const {query} = useSearch();
   const navigate = useNavigate();
   const { data: users = [], isLoading, isError } = useUsersQuery("recording");
   const del = useDeleteUserMutation();
   const suspend = useSuspendUserMutation();
   const resetPwd = useResetUserPasswordMutation();
   const createRecording = useCreateRecordingDirectMutation();
-  const [search, setSearch] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -40,9 +41,9 @@ export default function RecordingTable() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: any) =>
-      (user.name || "").toLowerCase().includes(search.toLowerCase())
+      (user.name || "").toLowerCase().includes(query.toLowerCase())
     );
-  }, [users, search]);
+  }, [users, query]);
 
   const getStatusColor = (suspended?: boolean) => {
     if (suspended) return "bg-yellow-100 text-yellow-800";
@@ -51,7 +52,7 @@ export default function RecordingTable() {
 
   const handleAction = (id: string, action: string) => {
     if (action === "view") {
-      navigate(`/mrs-admin/users/${id}`);
+      navigate(`/recordings/staff/${id}`);
       return;
     }
     if (action === "activate") {
@@ -115,19 +116,6 @@ export default function RecordingTable() {
         <h2 className="text-2xl font-semibold">Recording Staffs</h2>
 
         <div className="flex gap-3 items-center">
-          {/* Search */}
-          <div className="relative w-[250px]">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8"
-            />
-          </div>
 
           {/* Add Button */}
           <Button onClick={() => setShowInvite(true)} className="flex gap-2 bg-[#56bbe3] text-white hover:bg-[#56bbe3]">

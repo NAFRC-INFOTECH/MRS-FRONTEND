@@ -7,8 +7,10 @@ import { useDepartmentsQuery } from "@/api-integration/queries/departments";
 import { useCreateDepartmentMutation, useDeleteDepartmentMutation, useUpdateDepartmentMutation } from "@/api-integration/mutations/departments";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function AllDepartments() {
+  const { query } = useSearch();
   const { data: departments = [], isLoading } = useDepartmentsQuery();
   const createDept = useCreateDepartmentMutation();
   const deleteDept = useDeleteDepartmentMutation();
@@ -20,6 +22,13 @@ export default function AllDepartments() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+
+  const filteredRows = useMemo(() => {
+    if (!query) {
+      return rows;
+    }
+    return rows.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+  }, [query, rows]);
 
   return (
     <div className="">
@@ -72,13 +81,13 @@ export default function AllDepartments() {
             {isLoading && (
               <div className="text-center py-6">Loading...</div>
             )}
-            {!isLoading && rows.length === 0 && (
+            {!isLoading && filteredRows.length === 0 && (
               <div className="text-center py-4">No departments found.</div>
             )}
-            {!isLoading && rows.length > 0 && (
+            {!isLoading && filteredRows.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {rows.map((d) => (
-                  <Card key={d._id} className="border border-gray-200">
+                {filteredRows.map((d) => (
+                  <Card key={d._id} className="border border-gray-200 rounded-md">
                     <CardHeader>
                       <CardTitle className="text-lg">{d.name}</CardTitle>
                     </CardHeader>

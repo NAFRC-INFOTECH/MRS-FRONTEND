@@ -170,7 +170,7 @@ export default function LandingNavbar() {
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="flex h-full flex-col justify-between gap-2 rounded-r-3xl bg-slate-950 px-4 py-6 pb-25 sm:px-6">
+        <div className="flex h-full flex-col justify-between gap-2 rounded-r-3xl bg-slate-950 px-4 py-6 sm:px-6">
           <div className="flex flex-col gap-2">
             {navItems.map((item) => (
               <a
@@ -192,7 +192,7 @@ export default function LandingNavbar() {
 
           <Button
             asChild
-            className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400 rounded-xs mb-8"
+            className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400 rounded-xs"
           >
             <Link to="/login">Login</Link>
           </Button>

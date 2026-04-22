@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { toast } from "sonner";
 import { useUsersQuery } from "@/api-integration/queries/users";
 import { useDeleteUserMutation, useSuspendUserMutation } from "@/api-integration/mutations/users";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function UsersTable() {
+  const {query} = useSearch();
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const { data: users = [], isLoading, isError } = useUsersQuery(roleFilter === "all" ? undefined : roleFilter);
-  const [searchName, setSearchName] = useState("");
   const del = useDeleteUserMutation();
   const suspend = useSuspendUserMutation();
 
@@ -63,9 +64,9 @@ export default function UsersTable() {
   const filteredUsers = useMemo(
     () =>
       (users ?? []).filter((u) =>
-        searchName ? (u.name || "").toLowerCase().includes(searchName.toLowerCase()) : true
+        query ? (u.name || "").toLowerCase().includes(query.toLowerCase()) : true
       ),
-    [users, searchName]
+    [users, query]
   );
 
   return (
@@ -93,13 +94,6 @@ export default function UsersTable() {
             </SelectGroup>
           </SelectContent>
         </Select>
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border-2 p-2 rounded-[8px] col-span-2 outline-none"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
       </div>
 
       {/* Users Table */}

@@ -80,7 +80,7 @@ export default function PatientMedicalHistory() {
                   data-[state=active]:text-[#00b2cb]
                   data-[state=active]:shadow-sm"
                 >
-                  Give Report
+                  Clinical Notes
                 </TabsTrigger>
 
                 <TabsTrigger
@@ -96,7 +96,7 @@ export default function PatientMedicalHistory() {
               </TabsList>
 
               {/* Tab Content */}
-              <TabsContent value="report" className="flex-1 overflow-auto">
+              <TabsContent value="report" className="flex-1 border-2 border-black/10 rounded-2xl overflow-auto">
                 <DoctorReport patientId={String(patientId)} />
               </TabsContent>
 
