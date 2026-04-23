@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCreateLabReferralMutation } from "@/api-integration/mutations/labReferrals";
 import MultiSelectLabTests from "../multiSelect/MultiSelectLabTests";
+import { xrayTests } from "./datas/xrayTests";
 
 export default function TransferRequestFormModal({
   open,
@@ -162,6 +163,24 @@ export default function TransferRequestFormModal({
               <label className="text-xs text-gray-600">Examination Required</label>
               <div className="mt-1">
                 <MultiSelectLabTests
+                  onChange={(selected) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      examinationRequired: selected.map((test) => test.name).join(", "),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : destination === "xray" ? (
+            <div>
+              <label className="text-xs text-gray-600">Examination Required</label>
+              <div className="mt-1">
+                <MultiSelectLabTests
+                  testsData={xrayTests}
+                  buttonLabel="Search or select X-ray test"
+                  searchPlaceholder="Search or add X-ray test..."
+                  addLabel="Add X-ray test"
                   onChange={(selected) =>
                     setForm((prev) => ({
                       ...prev,

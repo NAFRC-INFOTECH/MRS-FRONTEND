@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 // import { labTests as initialTests } from "../../forms/labTests";
-import {labTests} from "../forms/datas/LabTests";
+import { labTests } from "../forms/datas/LabTests";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -17,11 +17,21 @@ type Test = {
 };
 
 type Props = {
+  testsData?: Test[];
+  buttonLabel?: string;
+  searchPlaceholder?: string;
+  addLabel?: string;
   onChange?: (selected: Test[]) => void;
 };
 
-export default function MultiSelectLabTests({ onChange }: Props) {
-  const [tests, setTests] = useState<Test[]>(labTests);
+export default function MultiSelectLabTests({
+  testsData = labTests,
+  buttonLabel = "Search or select lab test",
+  searchPlaceholder = "Search or add lab test...",
+  addLabel = "Add",
+  onChange,
+}: Props) {
+  const [tests, setTests] = useState<Test[]>(testsData);
   const [selected, setSelected] = useState<Test[]>([]);
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
@@ -90,7 +100,7 @@ export default function MultiSelectLabTests({ onChange }: Props) {
               variant="outline"
               className="w-full justify-between font-normal"
             >
-              {input || "Search or select lab test"}
+              {input || buttonLabel}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[18rem] p-0" align="start">
@@ -98,7 +108,7 @@ export default function MultiSelectLabTests({ onChange }: Props) {
               <CommandInput
                 value={input}
                 onValueChange={setInput}
-                placeholder="Search or add lab test..."
+                placeholder={searchPlaceholder}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !filteredTests.length) {
                     e.preventDefault();
@@ -114,7 +124,7 @@ export default function MultiSelectLabTests({ onChange }: Props) {
                     onClick={addOrSelectTest}
                     className="w-full px-2 py-2 text-left text-sm text-blue-600"
                   >
-                    Add "{input}"
+                    {addLabel} "{input}"
                   </button>
                 </CommandEmpty>
                 {filteredTests.map((test) => (
