@@ -47,6 +47,10 @@ import {
   PatientsBiodataPage,
   PatientsEditPage,
   LabDashboard,
+  LabPatientTestsPage,
+  XrayDashboard,
+  XrayPatientsList,
+  XrayPatientTestsPage,
   NursesDailyShift,
   DoctorsDailyShift,
   AddVitalsSigns,
@@ -140,6 +144,16 @@ const router = createBrowserRouter(
             <Route path='lab'>
               <Route index element={<LabDashboard />} />
               <Route path="patient-list" element={<LabPatientsList />} />
+              <Route path="patient-list/:patientId" element={<LabPatientTestsPage />} />
+            </Route>
+          </Route>
+
+          {/* X-Ray Dashboard */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["xray", "general"]} />}>
+            <Route path='xray'>
+              <Route index element={<XrayDashboard />} />
+              <Route path="patient-list" element={<XrayPatientsList />} />
+              <Route path="patient-list/:patientId" element={<XrayPatientTestsPage />} />
             </Route>
           </Route>
 

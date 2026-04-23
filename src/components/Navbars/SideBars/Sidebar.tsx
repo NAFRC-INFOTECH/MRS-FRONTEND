@@ -9,6 +9,7 @@ import RecordingSideBar from './RecordingSidebar';
 import LabSidebar from './LabSidebar';
 import GenNurseSidebar from './generalPermitSidebars/GenNurseSidebar';
 import AdminsSideBar from './AdminsSideBar';
+import XraySidebar from './XraySidebar';
 
 
 
@@ -49,6 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
           if (dept === "gopd" || dept === "general") return <GopdSidebar />;
           if (dept === "lab" || dept === "general") return <LabSidebar />;
           if (dept === "general") return <GenNurseSidebar />;
+          if (dept === "xray" || dept === "general") return <XraySidebar />;
           return null;
         }
       

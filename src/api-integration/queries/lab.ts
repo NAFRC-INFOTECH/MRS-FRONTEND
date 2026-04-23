@@ -20,6 +20,7 @@ export type LabReferral = {
   statement?: string;
   previousReportNos?: string;
   previousReportDate?: string;
+  testResults?: Record<string, string>;
   status: "PENDING" | "RECEIVED" | "COMPLETED";
 };
  

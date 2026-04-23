@@ -50,3 +50,24 @@ export const useUpdateLabReferralStatusMutation = () => {
     },
   });
 };
+
+export const updateLabReferralResultsApi = async (
+  id: string,
+  testResults: Record<string, string>
+): Promise<{ id: string; testResults: Record<string, string> }> => {
+  const res = await api.put(`/lab/referrals/${encodeURIComponent(id)}/results`, {
+    testResults,
+  });
+  return res.data as { id: string; testResults: Record<string, string> };
+};
+
+export const useUpdateLabReferralResultsMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, testResults }: { id: string; testResults: Record<string, string> }) =>
+      updateLabReferralResultsApi(id, testResults),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lab-referrals"] });
+    },
+  });
+};

@@ -22,6 +22,10 @@ import AllDepartments from './Pages/superAdminPages/AllDepartments'
 import PatientsBiodataPage from "./Pages/recordingdepartment/PatientsBiodataPage";
 import PatientsEditPage from "./Pages/recordingdepartment/PatientsEditPage";
 import LabDashboard from "./Pages/departments/labPages/LabDashboard";
+import LabPatientTestsPage from "./Pages/departments/labPages/LabPatientTestsPage";
+import XrayDashboard from "./Pages/departments/X_rayPages/XrayDashboard";
+import XrayPatientsList from "./Pages/departments/X_rayPages/XrayPatientsList";
+import XrayPatientTestsPage from "./Pages/departments/X_rayPages/XrayPatientTestsPage";
 import NursesDailyShift from "./Pages/adminPages/NursesDailyShift";
 import DoctorsDailyShift from "./Pages/adminPages/DoctorsDailyShift";
 import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
@@ -63,6 +67,10 @@ export {
   PatientsBiodataPage,
   PatientsEditPage,
   LabDashboard,
+  LabPatientTestsPage,
+  XrayDashboard,
+  XrayPatientsList,
+  XrayPatientTestsPage,
   NursesDailyShift,
   DoctorsDailyShift,
   AddVitalsSigns,
