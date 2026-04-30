@@ -61,6 +61,7 @@ import {
   LabPatientsList,
   Admins,
   AdminDashboard,
+  RecordingDailyShift,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
 
@@ -106,7 +107,7 @@ const router = createBrowserRouter(
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='nurses-duty' element={<NursesDailyShift />} />
               <Route path='doctors-duty' element={<DoctorsDailyShift />} />
-              <Route path='recording-duty' element={<RecordingDashboard />} />
+              <Route path='recording-duty' element={<RecordingDailyShift />} />
             </Route>
           </Route>
 

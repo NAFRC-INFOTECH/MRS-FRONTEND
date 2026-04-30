@@ -37,6 +37,7 @@ import TodayTransferredList from "./Pages/doctorsPages/todayTransferredPatientsL
 import Admins from './Pages/superAdminPages/Admins'
 import AdminDashboard from './Pages/adminPages/AdminDashboard'
 import LandingPage from './Pages/LandingPage/LandingPage'
+import RecordingDailyShift from './Pages/adminPages/RecordingDailyShift'
 
 
 
@@ -81,4 +82,5 @@ export {
   TodayTransferredList,
   Admins,
   AdminDashboard,
+  RecordingDailyShift,
 }

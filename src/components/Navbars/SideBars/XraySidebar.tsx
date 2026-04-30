@@ -28,7 +28,7 @@ export default function XraySidebar() {
     },
   ];
 
-  // ✅ Get most specific (longest) matching path
+  // Get most specific (longest) matching path
   const getActivePath = (paths: string[]) => {
     return paths
       .filter(
@@ -41,7 +41,7 @@ export default function XraySidebar() {
 
   const activePath = getActivePath(routes.map((r) => r.path));
 
-  // ✅ Icon wrapper
+  //  Icon wrapper
   const IconWrapper = ({
     Icon,
     active,
@@ -57,7 +57,7 @@ export default function XraySidebar() {
     );
   };
 
-  // ✅ Midnight auto refresh
+  //  Midnight auto refresh
   const getMillisecondsUntilMidnight = () => {
     const now = new Date();
     const midnight = new Date();

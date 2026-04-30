@@ -75,9 +75,12 @@ export default function Login() {
       <div className=" w-full h-full bg-transparent overflow-hidden">
         <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZG9jdG9yfGVufDB8fDB8fHww" alt="o" className="w-full h-screen bg-cover"/>
       </div>
-      <div className="absolute bg-black/50 px-4 backdrop-blur-lg h-full w-full flex items-center justify-center">
-        <Card className="w-full max-w-md bg-white/95 rounded-lg backdrop-blur-xl border border-white/20 shadow-md">
-          <CardHeader className="mb-3">
+      <div className="absolute bg-black/10 px-4 backdrop-blur-lg h-full w-full flex items-center justify-center">
+        <Card className="w-full max-w-md bg-white rounded-lg backdrop-blur-xl border border-white/20 shadow-md">
+          <CardHeader className="mb-3 flex flex-col items-center">
+            <section className="max-w-[8rem]">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiNe-eaPxVCApARZeOX0YeFew0Rk43opVD3g&s" alt="logo"/>
+            </section>
             <CardTitle className="text-2xl font-semibold text-[#56bbe3]">
               Welcome back
             </CardTitle>
