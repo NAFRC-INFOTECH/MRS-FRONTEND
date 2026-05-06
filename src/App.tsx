@@ -36,8 +36,13 @@ import LabPatientsList from "./Pages/departments/labPages/LabPatientsList";
 import TodayTransferredList from "./Pages/doctorsPages/todayTransferredPatientsList/TodayTransferredList";
 import Admins from './Pages/superAdminPages/Admins'
 import AdminDashboard from './Pages/adminPages/AdminDashboard'
+import CreatePriceList from './Pages/adminPages/createPriceListsPage/CreatePriceList'
 import LandingPage from './Pages/LandingPage/LandingPage'
 import RecordingDailyShift from './Pages/adminPages/RecordingDailyShift'
+import NHIADashboard from './Pages/departments/nhiaPages/NHIADashboard'
+import NHIAPatientsList from './Pages/departments/nhiaPages/NHIAPatientsList'
+import PaypointDashboard from './Pages/departments/paypointPages/PaypointDashboard'
+import PaypointPatientsList from './Pages/departments/paypointPages/PaypointPatientsList'
 
 
 
@@ -82,5 +87,10 @@ export {
   TodayTransferredList,
   Admins,
   AdminDashboard,
+  CreatePriceList,
   RecordingDailyShift,
+  NHIADashboard,
+  NHIAPatientsList,
+  PaypointDashboard,
+  PaypointPatientsList,
 }

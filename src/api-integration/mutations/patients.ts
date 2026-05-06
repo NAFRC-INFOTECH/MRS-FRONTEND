@@ -28,6 +28,8 @@ export const useUpdatePatientMutation = () => {
     mutationFn: ({ id, data }: { id: string; data: Partial<Patient> }) => updatePatientApi(id, data),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: ["patients"] });
+      qc.invalidateQueries({ queryKey: ["patients", "paypoint"] });
+      qc.invalidateQueries({ queryKey: ["patients", "nhia"] });
       qc.invalidateQueries({ queryKey: ["patient", vars.id] });
       qc.invalidateQueries({ queryKey: ["gopd-queue"] });
     },
@@ -45,6 +47,8 @@ export const useDeletePatientMutation = () => {
     mutationFn: deletePatientApi,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients"] });
+      qc.invalidateQueries({ queryKey: ["patients", "paypoint"] });
+      qc.invalidateQueries({ queryKey: ["patients", "nhia"] });
     },
   });
 };

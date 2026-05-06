@@ -27,6 +27,9 @@ export default function NursesDailyShift() {
   const navigate = useNavigate();
   const isAdmin = (user?.roles || []).includes("super_admin" as any);
   const canFetchNurses = isAdmin || (user?.roles || []).includes("recording" as any);
+  
+  const [openCombobox, setOpenCombobox] = useState(false);
+
   const { data: nurses = [] } = useNursesQuery(canFetchNurses);
   const { data: departments = [] } = useDepartmentsQuery();
   const [deptFilter, setDeptFilter] = useState<string>("all");
@@ -144,7 +147,7 @@ export default function NursesDailyShift() {
 
           <div className="flex flex-col gap-1">
             <Label>Staff</Label>
-            <Popover>
+            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
               <PopoverTrigger asChild>
                 <Button variant="outline" type="button" className="justify-between">
                   {mappedNurses.find((n) => n.id === staffId)?.name || "Select Staff"}
@@ -163,6 +166,7 @@ export default function NursesDailyShift() {
                             value={n.name}
                             onSelect={() => {
                               setStaffId(n.id);
+                              setOpenCombobox(false);
                             }}
                           >
                             {n.name}

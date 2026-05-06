@@ -5,21 +5,13 @@ import {
   ListItemText,
 } from "@mui/material"
 import {
-  Calendar,
   ContactRound,
-  FolderOpen,
   LayoutPanelLeft,
-  LibraryBig,
-  Network,
-  ShieldUser,
-  ClipboardList,
-  ReceiptText,
-  Stethoscope,
 } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
 
-export default function AdminsSideBar() {
+export default function NHIASidebar() {
   const location = useLocation()
 
   const isRouteActive = (path: string) => location.pathname === path
@@ -35,7 +27,7 @@ export default function AdminsSideBar() {
       <Icon
         size={20}
         variant="Outline"
-        color={active ? "#ffffff" : "#6B7280"}
+        color={active ? "#ffffff" : "#9e9e9edc"}
       />
     )
   }
@@ -57,24 +49,15 @@ export default function AdminsSideBar() {
 
   return (
     <section>
-      <div className="h-[50vh] md:h-[70vh] overflow-y-scroll w-full">
+      <div className="h-[50vh] md:h-[60vh] overflow-y-scroll w-full">
         <List>
-          <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
+          <span className="block text-start text-xs text-gray-300 pl-4 mb-2">
             MAIN
           </span>
 
           {[
-            { text: "Dashboard", path: "/admin-dashboard", icon: LayoutPanelLeft },
-            { text: "All Departments", path: "/admin-dashboard/all-departments", icon: Network },
-            { text: "Doctors", path: "/admin-dashboard/doctors", icon: FolderOpen },
-            { text: "Nurses", path: "/admin-dashboard/nurses", icon: Calendar },
-            { text: "All Patients", path: "/admin-dashboard/patients", icon: ContactRound },
-            { text: "Recordings", path: "/admin-dashboard/recordings", icon: LibraryBig },
-            { text: "Service Users", path: "/admin-dashboard/service-users", icon: ShieldUser },
-            { text: "Price List", path: "/admin-dashboard/price-list", icon: ReceiptText },
-            { text: "Nurses Duty", path: "/admin-dashboard/nurses-duty", icon: ClipboardList },
-            { text: "Doctors Duty", path: "/admin-dashboard/doctors-duty", icon: Stethoscope },
-            { text: "Recording Duty", path: "/admin-dashboard/recording-duty", icon: ClipboardList },
+            { text: "Dashboard", path: "/nhia", icon: LayoutPanelLeft },
+            { text: "Patients List", path: "/nhia/patients", icon: ContactRound },
           ].map((item) => {
             const active = isRouteActive(item.path)
 
@@ -85,7 +68,7 @@ export default function AdminsSideBar() {
                 to={item.path}
                 sx={{
                   background: active ? "#56bbe3" : "transparent",
-                  color: active ? "#ffffff" : "#6B7280",
+                  color: active ? "#ffffff" : "#9e9e9edc",
                   borderTopRightRadius: "8px",
                   borderBottomRightRadius: "8px",
                   my: 0.5,

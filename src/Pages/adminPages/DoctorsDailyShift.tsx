@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DUTY_SHIFT_OPTIONS, getShiftTimes } from "@/lib/duty-shifts";
 
 export default function DoctorsDailyShift() {
+  const [openCombobox, setOpenCombobox] = useState(false);
   const { data: doctors = [] } = useDoctorUsersQuery(true);
   const { data: departments = [] } = useDepartmentsQuery();
   const [deptFilter, setDeptFilter] = useState<string>("all");
@@ -122,7 +123,7 @@ export default function DoctorsDailyShift() {
 
           <div className="flex flex-col gap-1">
             <Label>Staff</Label>
-            <Popover>
+            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
               <PopoverTrigger asChild>
                 <Button variant="outline" type="button" className="justify-between">
                   {mappedDoctors.find((n) => n.id === staffId)?.name || "Select Staff"}
@@ -141,6 +142,7 @@ export default function DoctorsDailyShift() {
                             value={n.name}
                             onSelect={() => {
                               setStaffId(n.id);
+                              setOpenCombobox(false);
                             }}
                           >
                             {n.name}

@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import type { PatientCondition, PatientStatus } from "./patientsDatas/types";
+import type { PatientCondition, PatientStatus } from "../patientsDatas/types";
 import { useSearch } from "@/contexts/SearchContext";
 import { useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
 import { usePatientsQuery } from "@/api-integration/queries/patients";
@@ -78,6 +78,16 @@ export default function PatientsTable() {
         return "bg-yellow-100 text-yellow-800";
       case "discharged":
         return "bg-red-100 text-red-800";
+      case "in_queue":
+        return "bg-blue-100 text-blue-800";
+      case "gopd":
+        return "bg-sky-100 text-sky-800";
+      case "nhia":
+        return "bg-purple-100 text-purple-800";
+      case "paypoint":
+        return "bg-orange-100 text-orange-800";
+      case "ok":
+        return "bg-green-100 text-green-800";
     }
   };
 
@@ -160,6 +170,9 @@ export default function PatientsTable() {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
           <option value="discharged">Discharged</option>
+          <option value="gopd">GOPD</option>
+          <option value="nhia">NHIA</option>
+          <option value="paypoint">Paypoint</option>
         </select>
 
         <input

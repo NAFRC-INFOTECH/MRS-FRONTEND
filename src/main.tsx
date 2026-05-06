@@ -61,7 +61,12 @@ import {
   LabPatientsList,
   Admins,
   AdminDashboard,
+  CreatePriceList,
   RecordingDailyShift,
+  NHIADashboard,
+  NHIAPatientsList,
+  PaypointDashboard,
+  PaypointPatientsList,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
 
@@ -99,6 +104,7 @@ const router = createBrowserRouter(
             <Route path='admin-dashboard'>
               <Route index element={<AdminDashboard />} />
               <Route path='all-departments' element={<AllDepartments />} />
+              <Route path='price-list' element={<CreatePriceList />} />
               <Route path='doctors' element={<Doctors />} />
               <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='nurses' element={<Nurses />} />
@@ -155,6 +161,22 @@ const router = createBrowserRouter(
               <Route index element={<XrayDashboard />} />
               <Route path="patient-list" element={<XrayPatientsList />} />
               <Route path="patient-list/:patientId" element={<XrayPatientTestsPage />} />
+            </Route>
+          </Route>
+
+          {/* NHIA Dashboard */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["nhia", "general"]} />}>
+            <Route path='nhia'>
+              <Route index element={<NHIADashboard />} />
+              <Route path="patients" element={<NHIAPatientsList />} />
+            </Route>
+          </Route>
+
+          {/* Paypoint Dashboard */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["paypoint", "general"]} />}>
+            <Route path='paypoint'>
+              <Route index element={<PaypointDashboard />} />
+              <Route path="patients" element={<PaypointPatientsList />} />
             </Route>
           </Route>
 
