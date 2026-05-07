@@ -33,6 +33,16 @@ export const getPatientsApi = async (q?: string): Promise<Patient[]> => {
   return res.data as Patient[];
 };
 
+export const getPaypointReferredPatientsApi = async (q?: string): Promise<Patient[]> => {
+  const res = await api.get("/patients/paypoint/referred", { params: q ? { q } : undefined });
+  return res.data as Patient[];
+};
+
+export const getNHIAReferredPatientsApi = async (q?: string): Promise<Patient[]> => {
+  const res = await api.get("/patients/nhia/referred", { params: q ? { q } : undefined });
+  return res.data as Patient[];
+};
+
 export const getPatientByIdApi = async (id: string): Promise<Patient> => {
   const res = await api.get(`/patients/${encodeURIComponent(id)}`);
   return res.data as Patient;
@@ -42,5 +52,19 @@ export const usePatientsQuery = (q?: string) => {
   return useQuery({
     queryKey: ["patients", q ?? ""],
     queryFn: () => getPatientsApi(q),
+  });
+};
+
+export const usePaypointReferredPatientsQuery = (q?: string) => {
+  return useQuery({
+    queryKey: ["patients", "paypoint", q ?? ""],
+    queryFn: () => getPaypointReferredPatientsApi(q),
+  });
+};
+
+export const useNHIAReferredPatientsQuery = (q?: string) => {
+  return useQuery({
+    queryKey: ["patients", "nhia", q ?? ""],
+    queryFn: () => getNHIAReferredPatientsApi(q),
   });
 };

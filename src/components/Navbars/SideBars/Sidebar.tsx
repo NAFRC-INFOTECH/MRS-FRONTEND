@@ -10,6 +10,8 @@ import LabSidebar from './LabSidebar';
 import GenNurseSidebar from './generalPermitSidebars/GenNurseSidebar';
 import AdminsSideBar from './AdminsSideBar';
 import XraySidebar from './XraySidebar';
+import NHIASidebar from './NHIASidebar';
+import PaypointSidebar from './PaypointSidebar';
 
 
 
@@ -51,6 +53,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
           if (dept === "lab" || dept === "general") return <LabSidebar />;
           if (dept === "general") return <GenNurseSidebar />;
           if (dept === "xray" || dept === "general") return <XraySidebar />;
+          if (dept === "nhia" || dept === "general") return <NHIASidebar />;
+          if (dept === "paypoint" || dept === "general") return <PaypointSidebar />;
           return null;
         }
       

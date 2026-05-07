@@ -4,8 +4,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import type { PatientCondition, PatientStatus } from "../patientsDatas/types";
 import { usePatientsQuery } from "@/api-integration/queries/patients";
@@ -23,6 +34,26 @@ export default function PatientsRegTable() {
   const del = useDeletePatientMutation();
   const update = useUpdatePatientMutation();
   const { query } = useSearch();
+  const transferOptions = {
+    gopd: {
+      label: "GOPD",
+      queue: "godp_vitals",
+      status: "gopd" as PatientStatus,
+      successMessage: "Transferred to GOPD patients list",
+    },
+    nhia: {
+      label: "NHIA",
+      queue: "nhia",
+      status: "nhia" as PatientStatus,
+      successMessage: "Transferred to NHIA patients list",
+    },
+    paypoint: {
+      label: "Paypoint",
+      queue: "paypoint",
+      status: "paypoint" as PatientStatus,
+      successMessage: "Transferred to Paypoint patients list",
+    },
+  } as const;
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -49,9 +80,10 @@ export default function PatientsRegTable() {
       return;
     }
 
-    if (action === "transfer") {
-      update.mutate({ id, data: { patientQueue: "godp_vitals", patientStatus: "in_queue" as PatientStatus } }, {
-        onSuccess: () => toast.success("Transferred to GOPD patients list"),
+    if (action in transferOptions) {
+      const destination = transferOptions[action as keyof typeof transferOptions];
+      update.mutate({ id, data: { patientQueue: destination.queue, patientStatus: destination.status } }, {
+        onSuccess: () => toast.success(destination.successMessage),
         onError: (err: unknown) => {
           const msg = err instanceof Error ? err.message : String(err ?? "");
           toast.error(msg || "Transfer failed");
@@ -90,6 +122,12 @@ export default function PatientsRegTable() {
         return "bg-red-100 text-red-800";
       case "in_queue":
         return "bg-blue-100 text-blue-800";
+      case "gopd":
+        return "bg-sky-100 text-sky-800";
+      case "nhia":
+        return "bg-purple-100 text-purple-800";
+      case "paypoint":
+        return "bg-orange-100 text-orange-800";
       case "ok":
         return "bg-green-100 text-green-800";
     }
@@ -144,36 +182,44 @@ export default function PatientsRegTable() {
 
       {/* Filters + Search */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 max-w-[70rem]">
-        <select
-          className="border p-2 rounded"
+        <Select
           value={statusFilter || "all"}
-          onChange={(e) =>
-            setStatusFilter(
-              e.target.value === "all" ? "" : (e.target.value as PatientStatus)
-            )
+          onValueChange={(value) =>
+            setStatusFilter(value === "all" ? "" : (value as PatientStatus))
           }
         >
-          <option value="all">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="discharged">Discharged</option>
-        </select>
-        <select
-          className="border p-2 rounded"
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="discharged">Discharged</SelectItem>
+            <SelectItem value="gopd">GOPD</SelectItem>
+            <SelectItem value="nhia">NHIA</SelectItem>
+            <SelectItem value="paypoint">Paypoint</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
           value={categoryFilter || "all"}
-          onChange={(e) =>
-            setCategoryFilter(e.target.value === "all" ? "" : (e.target.value as "civilian" | "personnel"))
+          onValueChange={(value) =>
+            setCategoryFilter(value === "all" ? "" : (value as "civilian" | "personnel"))
           }
         >
-          <option value="all">All Categories</option>
-          <option value="civilian">Civilian</option>
-          <option value="personnel">Veteran</option>
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="civilian">Civilian</SelectItem>
+            <SelectItem value="personnel">Personnel / Veteran</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <input
+        <Input
           type="text"
           placeholder="Search by Card/UUID"
-          className="border p-2 rounded"
           value={searchCard}
           onChange={(e) => setSearchCard(e.target.value)}
         />
@@ -216,17 +262,24 @@ export default function PatientsRegTable() {
                       <MoreVertical className="w-5 h-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {["edit","transfer"].map((action) => (
-                        <DropdownMenuItem
-                          key={action}
-                          className={action === "delete" ? "text-red-600" : ""}
-                          onClick={() => handleAction(r.id, action)}
-                        >
-                          {action === "edit"
-                            ? "Edit Biodata"
-                            : "Transfer to GOPD patients List"}
-                        </DropdownMenuItem>
-                      ))}
+                      <DropdownMenuItem onClick={() => handleAction(r.id, "edit")}>
+                        Edit Biodata
+                      </DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          Transfer
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {Object.entries(transferOptions).map(([key, option]) => (
+                            <DropdownMenuItem
+                              key={key}
+                              onClick={() => handleAction(r.id, key)}
+                            >
+                              {option.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>

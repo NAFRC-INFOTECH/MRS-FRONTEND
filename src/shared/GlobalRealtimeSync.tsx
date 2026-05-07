@@ -8,16 +8,14 @@ export default function GlobalRealtimeSync() {
     const url = `${location.protocol}//${location.hostname}:8000/ws`;
     const socket = io(url, {
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 1500,
       reconnectionAttempts: Infinity,
     });
-    const onConnectError = () => {
-      try {
-        socket.io.opts.transports = ["polling", "websocket"];
-        socket.connect();
-      } catch {}
+    
+    const onConnectError = (err: Error) => {
+      console.error("Socket.io connect error:", err.message);
     };
     const invalidateUsers = () => {
       qc.invalidateQueries({ queryKey: ["users"] });
@@ -29,6 +27,12 @@ export default function GlobalRealtimeSync() {
       qc.invalidateQueries({ queryKey: ["doctor-profile"] });
       qc.invalidateQueries({ queryKey: ["doctor-profile", "me"] });
       qc.invalidateQueries({ queryKey: ["profile", "me"] });
+    };
+    const invalidatePatients = () => {
+      qc.invalidateQueries({ queryKey: ["patients"] });
+      qc.invalidateQueries({ queryKey: ["patients", "paypoint"] });
+      qc.invalidateQueries({ queryKey: ["patient"] });
+      qc.invalidateQueries({ queryKey: ["gopd-queue"] });
     };
     const onUserUpdated = () => {
       invalidateUsers();
@@ -46,12 +50,21 @@ export default function GlobalRealtimeSync() {
       invalidateProfiles();
       invalidateUsers();
     };
+    const onPatientChanged = () => {
+      invalidatePatients();
+    };
     socket.on("user.updated", onUserUpdated);
     socket.on("user.deleted", onUserDeleted);
     socket.on("profile.updated", onProfileUpdated);
     socket.on("profile.deleted", onProfileDeleted);
+    socket.on("patient.created", onPatientChanged);
+    socket.on("patient.updated", onPatientChanged);
+    socket.on("patient.deleted", onPatientChanged);
     socket.on("connect_error", onConnectError);
     return () => {
+      socket.off("patient.created", onPatientChanged);
+      socket.off("patient.updated", onPatientChanged);
+      socket.off("patient.deleted", onPatientChanged);
       socket.off("connect_error", onConnectError);
       socket.disconnect();
     };
