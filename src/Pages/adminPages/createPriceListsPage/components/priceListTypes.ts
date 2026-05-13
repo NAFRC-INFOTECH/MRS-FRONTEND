@@ -19,6 +19,10 @@ export type PriceItem = {
   unit: string;
   price: number;
   isActive: boolean;
+  stockQuantity?: number;
+  soldQuantity?: number;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type PriceForm = {
@@ -28,14 +32,25 @@ export type PriceForm = {
   unit: string;
   price: string;
   isActive: boolean;
+  stockQuantity?: string;
+  soldQuantity?: string;
 };
 
+export type SummaryPeriod = "monthly" | "yearly";
+
 export type PriceSummary = {
+  period?: SummaryPeriod;
+  from?: string;
+  to?: string;
   totalItems: number;
   activeItems: number;
   drugs: number;
   services: number;
   totalValue: number;
+  totalDrugs: number;
+  totalDrugsInStock: number;
+  totalDrugsSold: number;
+  totalDrugsSoldValue: number;
 };
 
 export type PriceTemplate = Omit<PriceItem, "_id">;
@@ -63,6 +78,8 @@ export const defaultForm: PriceForm = {
   unit: "per item",
   price: "",
   isActive: true,
+  stockQuantity: "",
+  soldQuantity: "",
 };
 
 export const quickAddTemplates: PriceTemplate[] = [
@@ -98,3 +115,64 @@ export const formatCurrency = (value: number) =>
     currency: "NGN",
     maximumFractionDigits: 2,
   }).format(value);
+
+export const calculatePriceSummary = (
+  items: PriceItem[], 
+  period: SummaryPeriod, 
+  referenceDate: string
+): PriceSummary => {
+  const filteredItems = items.filter((item) => {
+    if (!item.createdAt) return true;
+    const itemDate = new Date(item.createdAt);
+    if (period === "monthly") {
+      const [year, month] = referenceDate.split("-");
+      const itemYear = itemDate.getFullYear();
+      const itemMonth = itemDate.getMonth() + 1;
+      return itemYear === Number(year) && itemMonth === Number(month);
+    } else {
+      const itemYear = itemDate.getFullYear();
+      return itemYear === Number(referenceDate);
+    }
+  });
+
+  const totalItems = filteredItems.length;
+  const activeItemsArray = filteredItems.filter((item) => item.isActive);
+  const activeItems = activeItemsArray.length;
+  const drugItems = filteredItems.filter((item) => item.category === "drug");
+  const services = filteredItems.filter((item) => item.category !== "drug").length;
+
+  const totalValue = activeItemsArray.reduce((sum: number, item: PriceItem) => {
+    const price = Number(item.price) || 0;
+    const multiplier = item.category === "drug" ? (Number(item.stockQuantity) || 0) : 1;
+    return sum + price * multiplier;
+  }, 0);
+
+  const totalDrugsInStock = drugItems.reduce((sum: number, item: PriceItem) => {
+    return sum + (Number(item.stockQuantity) || 0);
+  }, 0);
+
+  const totalDrugsSold = drugItems.reduce((sum: number, item: PriceItem) => {
+    return sum + (Number(item.soldQuantity) || 0);
+  }, 0);
+
+  const totalDrugsSoldValue = drugItems.reduce((sum: number, item: PriceItem) => {
+    const price = Number(item.price) || 0;
+    const sold = Number(item.soldQuantity) || 0;
+    return sum + price * sold;
+  }, 0);
+
+  return {
+    period,
+    from: "",
+    to: "",
+    totalItems,
+    activeItems,
+    drugs: drugItems.length,
+    totalDrugs: drugItems.length,
+    services,
+    totalValue,
+    totalDrugsInStock,
+    totalDrugsSold,
+    totalDrugsSoldValue,
+  };
+};

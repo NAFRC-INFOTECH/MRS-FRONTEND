@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
-import type { Patient } from "../queries/patients";
+import type { Patient, DrugItem } from "../queries/patients";
+import { addPatientToPharmacyApi, updatePharmacyDeskStateApi } from "../queries/patients";
 
 export const createPatientApi = async (payload: Partial<Patient>): Promise<Patient> => {
   const res = await api.post("/patients", payload);
@@ -49,6 +50,26 @@ export const useDeletePatientMutation = () => {
       qc.invalidateQueries({ queryKey: ["patients"] });
       qc.invalidateQueries({ queryKey: ["patients", "paypoint"] });
       qc.invalidateQueries({ queryKey: ["patients", "nhia"] });
+    },
+  });
+};
+
+export const useAddPatientToPharmacyMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ patientId, prescription, drugs }: { patientId: string; prescription?: string; drugs?: DrugItem[] }) => addPatientToPharmacyApi(patientId, { prescription, drugs }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["patients", "pharmacy"] });
+    },
+  });
+};
+
+export const useUpdatePharmacyDeskStateMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ patientId, deskState, prescription, drugs }: { patientId: string; deskState: string; prescription?: string; drugs?: DrugItem[] }) => updatePharmacyDeskStateApi(patientId, deskState, { prescription, drugs }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["patients", "pharmacy"] });
     },
   });
 };

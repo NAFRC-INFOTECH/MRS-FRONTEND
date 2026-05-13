@@ -43,6 +43,9 @@ import NHIADashboard from './Pages/departments/nhiaPages/NHIADashboard'
 import NHIAPatientsList from './Pages/departments/nhiaPages/NHIAPatientsList'
 import PaypointDashboard from './Pages/departments/paypointPages/PaypointDashboard'
 import PaypointPatientsList from './Pages/departments/paypointPages/PaypointPatientsList'
+import PharmacyDashboard from './Pages/departments/pharmacyPages/PharmacyDashboard'
+import ReferredPatientsList from './Pages/departments/pharmacyPages/ReferredPatientsList'
+import ViewPrescription from './Pages/departments/pharmacyPages/ViewPrescription'
 
 
 
@@ -93,4 +96,7 @@ export {
   NHIAPatientsList,
   PaypointDashboard,
   PaypointPatientsList,
+  PharmacyDashboard,
+  ReferredPatientsList,
+  ViewPrescription,
 }

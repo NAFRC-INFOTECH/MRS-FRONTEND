@@ -27,6 +27,21 @@ export default function PriceTableRow({
       </TableCell>
       <TableCell>{item.unit}</TableCell>
       <TableCell>{formatCurrency(item.price)}</TableCell>
+      {item.category === "drug" ? (
+        <>
+          <TableCell>{item.stockQuantity ?? 0}</TableCell>
+          <TableCell>{item.soldQuantity ?? 0}</TableCell>
+          <TableCell className={(item.stockQuantity ?? 0) - (item.soldQuantity ?? 0) <= 0 ? "text-red-600 font-semibold" : ""}>
+            {(item.stockQuantity ?? 0) - (item.soldQuantity ?? 0)}
+          </TableCell>
+        </>
+      ) : (
+        <>
+          <TableCell>-</TableCell>
+          <TableCell>-</TableCell>
+          <TableCell>-</TableCell>
+        </>
+      )}
       <TableCell>
         <button type="button" onClick={() => onToggleStatus(item._id)} className="inline-flex">
           <Badge
