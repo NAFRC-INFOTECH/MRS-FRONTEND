@@ -12,6 +12,7 @@ import AdminsSideBar from './AdminsSideBar';
 import XraySidebar from './XraySidebar';
 import NHIASidebar from './NHIASidebar';
 import PaypointSidebar from './PaypointSidebar';
+import PharmacySidebar from './PharmacySidebar';
 
 
 
@@ -55,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
           if (dept === "xray" || dept === "general") return <XraySidebar />;
           if (dept === "nhia" || dept === "general") return <NHIASidebar />;
           if (dept === "paypoint" || dept === "general") return <PaypointSidebar />;
+          if (dept === "pharmacy" || dept === "general") return <PharmacySidebar />;
           return null;
         }
       

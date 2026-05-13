@@ -1,16 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
-import type { PriceCategory } from "../../Pages/adminPages/createPriceListsPage/components/priceListTypes";
-import type { PriceItem } from "../queries/priceList";
+import { savePriceSummaryApi, type PriceItem } from "../queries/priceList";
 
 export type CreatePriceItemPayload = {
   name: string;
-  category: PriceCategory;
+  category: string;
   description?: string;
   unit?: string;
   price: number;
   isActive?: boolean;
   sortOrder?: number;
+  stockQuantity?: number;
+  soldQuantity?: number;
 };
 
 export type UpdatePriceItemPayload = Partial<CreatePriceItemPayload>;
@@ -41,7 +42,8 @@ export const useCreatePriceItemMutation = () => {
   return useMutation({
     mutationFn: createPriceItemApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-list"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
     },
   });
 };
@@ -51,8 +53,9 @@ export const useUpdatePriceItemMutation = () => {
   return useMutation({
     mutationFn: updatePriceItemApi,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["price-list"] });
-      queryClient.invalidateQueries({ queryKey: ["price-list", data._id] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "detail", data._id] });
     },
   });
 };
@@ -62,7 +65,18 @@ export const useDeletePriceItemMutation = () => {
   return useMutation({
     mutationFn: deletePriceItemApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["price-list"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+    },
+  });
+};
+
+export const useSavePriceSummaryMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: savePriceSummaryApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
     },
   });
 };

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePriceItemsQuery } from "@/api-integration/queries/priceList";
+import { usePriceItemsQuery, usePriceSummariesQuery } from "@/api-integration/queries/priceList";
 import {
   useCreatePriceItemMutation,
   useDeletePriceItemMutation,
@@ -16,22 +16,24 @@ const PriceListFilters = lazy(() =>
 const PriceListFormCard = lazy(() =>
   import("./components/PriceListFormCard").then((m) => ({ default: m.PriceListFormCard }))
 );
-const PriceListSummaryCards = lazy(() =>
-  import("./components/PriceListSummaryCards").then((m) => ({ default: m.PriceListSummaryCards }))
-);
+const PriceListSummaryCards = lazy(() => import("./components/PriceListSummaryCards"));
 const PriceListTable = lazy(() =>
   import("./components/PriceListTable").then((m) => ({ default: m.PriceListTable }))
 );
 const PriceListTemplates = lazy(() =>
   import("./components/PriceListTemplates").then((m) => ({ default: m.PriceListTemplates }))
 );
+
 import {
   defaultForm,
   quickAddTemplates,
+  calculatePriceSummary,
   type PriceCategory,
   type PriceForm,
   type PriceItem,
   type PriceTemplate,
+  type PriceSummary,
+  type SummaryPeriod,
 } from "./components/priceListTypes";
 
 export default function CreatePriceList() {
@@ -40,6 +42,14 @@ export default function CreatePriceList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<"all" | PriceCategory>("all");
   const [activeOnly, setActiveOnly] = useState(false);
+  const [monthlyDate, setMonthlyDate] = useState(() => new Date().toISOString().slice(0, 7));
+  const [yearlyDate, setYearlyDate] = useState(() => String(new Date().getFullYear()));
+
+  const { data: allItems = [] } = usePriceItemsQuery({
+    q: undefined,
+    category: "all",
+    activeOnly: false,
+  });
 
   const { data: items = [], isLoading } = usePriceItemsQuery({
     q: searchTerm,
@@ -47,29 +57,31 @@ export default function CreatePriceList() {
     activeOnly,
   });
 
+  const { isLoading: isSummariesLoading } = usePriceSummariesQuery({
+    monthlyDate,
+    yearlyDate,
+  });
+
+  const resolvedSummaries = useMemo((): Record<SummaryPeriod, PriceSummary> => {
+    const localMonthly = calculatePriceSummary(allItems, "monthly", monthlyDate);
+    const localYearly = calculatePriceSummary(allItems, "yearly", yearlyDate);
+    return {
+      monthly: localMonthly,
+      yearly: localYearly,
+    };
+  }, [allItems, monthlyDate, yearlyDate]);
+
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
-    items.forEach((item) => cats.add(item.category));
-    // Ensure predefined ones are also there if not in items
+    allItems.forEach((item) => cats.add(item.category));
     const predefined = ["drug", "consultation", "bed", "procedure", "laboratory", "other"];
     predefined.forEach((p) => cats.add(p));
     return Array.from(cats).sort();
-  }, [items]);
+  }, [allItems]);
 
   const createMutation = useCreatePriceItemMutation();
   const updateMutation = useUpdatePriceItemMutation();
   const deleteMutation = useDeletePriceItemMutation();
-
-  const summary = useMemo(() => {
-    const activeItems = items.filter((item) => item.isActive);
-    return {
-      totalItems: items.length,
-      activeItems: activeItems.length,
-      drugs: items.filter((item) => item.category === "drug").length,
-      services: items.filter((item) => item.category !== "drug").length,
-      totalValue: activeItems.reduce((sum, item) => sum + item.price, 0),
-    };
-  }, [items]);
 
   const updateForm = (updates: Partial<PriceForm>) => {
     setForm((current) => ({ ...current, ...updates }));
@@ -101,6 +113,8 @@ export default function CreatePriceList() {
       unit: form.unit.trim() || "per item",
       price,
       isActive: form.isActive,
+      stockQuantity: Number(form.stockQuantity) || 0,
+      soldQuantity: Number(form.soldQuantity) || 0,
     };
 
     try {
@@ -126,6 +140,8 @@ export default function CreatePriceList() {
       unit: item.unit,
       price: String(item.price),
       isActive: item.isActive,
+      stockQuantity: String(item.stockQuantity ?? ""),
+      soldQuantity: String(item.soldQuantity ?? ""),
     });
   };
 
@@ -173,6 +189,8 @@ export default function CreatePriceList() {
       unit: template.unit,
       price: String(template.price),
       isActive: template.isActive,
+      stockQuantity: template.stockQuantity !== undefined ? String(template.stockQuantity) : "",
+      soldQuantity: template.soldQuantity !== undefined ? String(template.soldQuantity) : "",
     });
     setEditingId(null);
   };
@@ -188,14 +206,14 @@ export default function CreatePriceList() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">{isLoading ? "Syncing..." : "Live Server Data"}</Badge>
+          <Badge variant="outline">{isLoading ? "Syncing..." : ""}</Badge>
         </div>
       </div>
 
       <Suspense
         fallback={
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-6 space-y-3">
                   <Skeleton className="h-4 w-1/2" />
@@ -206,7 +224,14 @@ export default function CreatePriceList() {
           </div>
         }
       >
-        <PriceListSummaryCards summary={summary} />
+        <PriceListSummaryCards
+          summaries={resolvedSummaries}
+          isLoading={isSummariesLoading}
+          monthlyDate={monthlyDate}
+          yearlyDate={yearlyDate}
+          onMonthlyDateChange={setMonthlyDate}
+          onYearlyDateChange={setYearlyDate}
+        />
       </Suspense>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

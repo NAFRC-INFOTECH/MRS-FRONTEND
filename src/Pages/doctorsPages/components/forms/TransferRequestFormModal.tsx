@@ -19,8 +19,8 @@ export default function TransferRequestFormModal({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   patientId: string | null;
-  destination: "lab" | "xray" | null;
-  onSubmitted: (dest: "lab" | "xray") => void;
+  destination: "lab" | "xray" | "nhia" | "paypoint" | null;
+  onSubmitted: (dest: "lab" | "xray" | "nhia" | "paypoint") => void;
 }) {
   const { data: patient, isLoading } = useQuery({
     queryKey: ["patient", patientId],
@@ -61,6 +61,11 @@ export default function TransferRequestFormModal({
   useEffect(() => {
     if (patient) {
       const p = patient as Patient;
+      let toDest = "";
+      if (destination === "lab") toDest = "Lab";
+      else if (destination === "xray") toDest = "X-ray";
+      else if (destination === "nhia") toDest = "NHIA";
+      else if (destination === "paypoint") toDest = "Paypoint";
       setForm((prev) => ({
         ...prev,
         serviceNoOrUUID: p.serviceNumber || p.membershipNumber || p._id,
@@ -68,7 +73,7 @@ export default function TransferRequestFormModal({
         forenames: [p.firstname, p.middlename].filter(Boolean).join(" "),
         surname: p.surname || "",
         age: p.age ? String(p.age) : computeAgeFromDob(p.dateOfBirth),
-        to: destination ? (destination === "lab" ? "Lab" : "X-ray") : prev.to,
+        to: toDest || prev.to,
       }));
     }
   }, [patient, destination]);
@@ -78,24 +83,26 @@ export default function TransferRequestFormModal({
 
   const onSubmit = async () => {
     if (!destination) return;
-    await createReferral.mutateAsync({
-      patientId,
-      date: form.date,
-      serviceNoOrUUID: form.serviceNoOrUUID,
-      rank: form.rank,
-      forenames: form.forenames,
-      surname: form.surname,
-      wardNo: form.wardNo,
-      hospitalUnit: form.hospitalUnit,
-      age: form.age,
-      to: form.to,
-      specimen: form.specimen,
-      examinationRequired: form.examinationRequired,
-      diagnosis: form.diagnosis,
-      statement: form.statement,
-      previousReportNos: form.previousReportNos,
-      previousReportDate: form.previousReportDate,
-    }).catch(() => void 0);
+    if (destination === "lab" || destination === "xray") {
+      await createReferral.mutateAsync({
+        patientId,
+        date: form.date,
+        serviceNoOrUUID: form.serviceNoOrUUID,
+        rank: form.rank,
+        forenames: form.forenames,
+        surname: form.surname,
+        wardNo: form.wardNo,
+        hospitalUnit: form.hospitalUnit,
+        age: form.age,
+        to: form.to,
+        specimen: form.specimen,
+        examinationRequired: form.examinationRequired,
+        diagnosis: form.diagnosis,
+        statement: form.statement,
+        previousReportNos: form.previousReportNos,
+        previousReportDate: form.previousReportDate,
+      }).catch(() => void 0);
+    }
     onOpenChange(false);
     onSubmitted(destination);
   };

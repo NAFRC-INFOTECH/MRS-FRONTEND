@@ -67,6 +67,9 @@ import {
   NHIAPatientsList,
   PaypointDashboard,
   PaypointPatientsList,
+  PharmacyDashboard,
+  ReferredPatientsList,
+  ViewPrescription,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
 
@@ -177,6 +180,15 @@ const router = createBrowserRouter(
             <Route path='paypoint'>
               <Route index element={<PaypointDashboard />} />
               <Route path="patients" element={<PaypointPatientsList />} />
+            </Route>
+          </Route>
+
+          {/* Pharmacy Dashboard */}
+          <Route element={<RequireAuth roles={["nurse"]} departments={["pharmacy", "general"]} />}>
+            <Route path='pharmacy'>
+              <Route index element={<PharmacyDashboard />} />
+              <Route path="patientsList" element={<ReferredPatientsList />} />
+              <Route path="prescription/:patientId" element={<ViewPrescription />} />
             </Route>
           </Route>
 

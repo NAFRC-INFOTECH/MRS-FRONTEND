@@ -201,6 +201,35 @@ export function PriceListFormCard({
           />
         </div>
 
+        {form.category === "drug" && (
+          <div className="grid grid-cols-1 gap-4 rounded-lg border p-3">
+            <div className="space-y-2">
+              <Label htmlFor="stock-quantity">Stock Quantity</Label>
+              <Input
+                id="stock-quantity"
+                type="number"
+                min="0"
+                value={form.stockQuantity}
+                onChange={(e) => onFormChange({ stockQuantity: e.target.value })}
+                placeholder="e.g. 1000"
+              />
+              <p className="text-xs text-muted-foreground">Total received in stock</p>
+            </div>
+            {/* <div className="space-y-2">
+              <Label htmlFor="sold-quantity">Sold Quantity</Label>
+              <Input
+                id="sold-quantity"
+                type="number"
+                min="0"
+                value={form.soldQuantity}
+                onChange={(e) => onFormChange({ soldQuantity: e.target.value })}
+                placeholder="e.g. 250"
+              />
+              <p className="text-xs text-muted-foreground">Total sold/dispensed</p>
+            </div> */}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={onSubmit} className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/80 hover:text-white transition-colors duration-300">
             {editingId ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}

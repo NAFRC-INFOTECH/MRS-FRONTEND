@@ -32,6 +32,9 @@ export function PriceListTable({
           <TableHead className="text-white">Category</TableHead>
           <TableHead className="text-white">Unit</TableHead>
           <TableHead className="text-white">Price</TableHead>
+          <TableHead className="text-white">Stock</TableHead>
+          <TableHead className="text-white">Sold</TableHead>
+          <TableHead className="text-white">Remaining</TableHead>
           <TableHead className="text-white">Status</TableHead>
           <TableHead className="text-white">Description</TableHead>
           <TableHead className="text-right text-white">Actions</TableHead>
@@ -51,7 +54,7 @@ export function PriceListTable({
 
         {items.length === 0 && (
           <TableRow>
-            <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+            <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
               No price items match the current filters.
             </TableCell>
           </TableRow>
