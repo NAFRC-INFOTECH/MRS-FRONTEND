@@ -35,6 +35,11 @@ export const createInvoiceApi = async (patientId: string, drugs: InvoiceDrugItem
   return res.data as Invoice;
 };
 
+export const getAllInvoicesApi = async (): Promise<Invoice[]> => {
+  const res = await api.get("/invoices");
+  return res.data as Invoice[];
+};
+
 export const getInvoicesByPatientIdApi = async (patientId: string): Promise<Invoice[]> => {
   const res = await api.get(`/invoices/patient/${encodeURIComponent(patientId)}`);
   return res.data as Invoice[];
@@ -51,6 +56,13 @@ export const updateInvoicePaymentStatusApi = async (
 ): Promise<Invoice> => {
   const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/payment-status`, { paymentStatus });
   return res.data as Invoice;
+};
+
+export const useAllInvoicesQuery = () => {
+  return useQuery({
+    queryKey: ["invoices", "all"],
+    queryFn: getAllInvoicesApi,
+  });
 };
 
 export const useInvoicesByPatientIdQuery = (patientId?: string) => {

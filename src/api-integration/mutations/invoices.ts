@@ -32,7 +32,7 @@ export const useUpdateInvoicePaymentStatusMutation = () => {
       invoiceId: string;
       paymentStatus: PaymentStatus;
     }) => updateInvoicePaymentStatusApi(invoiceId, paymentStatus),
-    onSuccess: (_data, vars) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
     },
   });

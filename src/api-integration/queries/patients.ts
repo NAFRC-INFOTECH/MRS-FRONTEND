@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
 
 export type DrugItem = {
+  priceItemId?: string;
   name: string;
   dosage: string;
   quantity: number;
   instructions?: string;
+  dispensed?: boolean;
 };
 
 export type Patient = {
