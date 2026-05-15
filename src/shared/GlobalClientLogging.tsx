@@ -14,23 +14,28 @@ export default function GlobalClientLogging() {
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
+    const isDev = Boolean((import.meta as any).env?.DEV);
     const originalError: typeof console.error = console.error;
     const originalWarn: typeof console.warn = console.warn;
-    console.error = (...args: unknown[]) => {
-      const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
-      if (msg) toast.error(msg);
-      originalError(...args);
-    };
-    console.warn = (...args: unknown[]) => {
-      const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
-      if (msg) toast.warning ? toast.warning(msg) : toast.info(msg);
-      originalWarn(...args);
-    };
+    if (isDev) {
+      console.error = (...args: unknown[]) => {
+        const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
+        if (msg) toast.error(msg);
+        originalError(...args);
+      };
+      console.warn = (...args: unknown[]) => {
+        const msg = args?.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
+        if (msg) toast.warning ? toast.warning(msg) : toast.info(msg);
+        originalWarn(...args);
+      };
+    }
     return () => {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
-      console.error = originalError;
-      console.warn = originalWarn;
+      if (isDev) {
+        console.error = originalError;
+        console.warn = originalWarn;
+      }
     };
   }, []);
   return null;
