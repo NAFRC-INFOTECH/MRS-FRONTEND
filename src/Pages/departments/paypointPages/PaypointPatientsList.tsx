@@ -225,14 +225,16 @@ export default function PaypointPatientsList() {
                             </tr>
                           </thead>
                           <tbody>
-                            {selectedInvoice.drugs.map((drug, idx) => (
+                            {(selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items : selectedInvoice.drugs).map(
+                              (drug, idx) => (
                               <tr key={idx} className="border-b border-gray-200">
                                 <td className="px-2 py-1">{drug.name}</td>
                                 <td className="px-2 py-1">{drug.quantity}</td>
                                 <td className="px-2 py-1">{formatCurrency(drug.unitPrice)}</td>
                                 <td className="px-2 py-1">{formatCurrency(drug.totalPrice)}</td>
                               </tr>
-                            ))}
+                              )
+                            )}
                           </tbody>
                         </table>
                       </div>

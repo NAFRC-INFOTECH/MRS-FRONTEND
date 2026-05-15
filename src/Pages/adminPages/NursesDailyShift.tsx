@@ -25,8 +25,9 @@ export default function NursesDailyShift() {
   const user = useUser();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const isAdmin = (user?.roles || []).includes("super_admin" as any);
-  const canFetchNurses = isAdmin || (user?.roles || []).includes("recording" as any);
+  const roles = user?.roles || [];
+  const isAdmin = roles.includes("super_admin" as any) || roles.includes("admin" as any);
+  const canFetchNurses = user ? isAdmin || roles.includes("recording" as any) : true;
   
   const [openCombobox, setOpenCombobox] = useState(false);
 
@@ -67,7 +68,7 @@ export default function NursesDailyShift() {
   const [timeOut, setTimeOut] = useState<string>("");
   const [status, setStatus] = useState<string>("ON_DUTY");
 
-  const mappedNurses = useMemo(() => nurses.map((u: any) => ({ id: u._id, name: u.name })), [nurses]);
+  const mappedNurses = useMemo(() => nurses.map((u: any) => ({ id: String(u._id), name: String(u.name || "") })), [nurses]);
   const todayStr = useMemo(() => {
     const t = new Date();
     const y = t.getFullYear();

@@ -69,7 +69,7 @@ export default function NHIAPatientsList() {
 
   const completeDeskReview = (id: string) => {
     update.mutate(
-      { id, data: { patientStatus: "active", patientQueue: "" } },
+      { id, data: { patientStatus: "active", patientQueue: "", nhiaStatus: "cleared", nhiaUpdatedAt: new Date().toISOString() } },
       {
         onSuccess: () => toast.success("Patient cleared from NHIA desk"),
         onError: (err: unknown) => {
@@ -80,20 +80,27 @@ export default function NHIAPatientsList() {
     );
   };
 
-  const getDeskStateBadge = (deskState: NHIARow["deskState"]) => {
-    if (deskState === "awaiting-clearance") {
-      return (
-        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">
-          Awaiting Verification
-        </Badge>
-      );
-    }
-
-    return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-        Completed
-      </Badge>
+  const markNotCleared = (id: string) => {
+    update.mutate(
+      { id, data: { patientStatus: "active", patientQueue: "", nhiaStatus: "not_cleared", nhiaUpdatedAt: new Date().toISOString() } },
+      {
+        onSuccess: () => toast.success("Patient marked as not cleared by NHIA"),
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Unable to update NHIA status");
+        },
+      }
     );
+  };
+
+  const getNHIAResultBadge = (row: NHIARow) => {
+    if (row.nhiaStatus === "cleared") {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Cleared</Badge>;
+    }
+    if (row.nhiaStatus === "not_cleared") {
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Not Cleared</Badge>;
+    }
+    return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Awaiting</Badge>;
   };
 
   return (
@@ -173,7 +180,7 @@ export default function NHIAPatientsList() {
                   <th className="px-4 py-3 text-left whitespace-nowrap">Rank</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">Coverage Category</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">NHIA Lane</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Queue</th>
+                  {/* <th className="px-4 py-3 text-left whitespace-nowrap">Queue</th> */}
                   <th className="px-4 py-3 text-left whitespace-nowrap">Desk State</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">Action</th>
                 </tr>
@@ -208,22 +215,25 @@ export default function NHIAPatientsList() {
                         <Badge variant="outline">{row.categoryLabel}</Badge>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{row.coverageLane}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{row.queueLabel}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{getDeskStateBadge(row.deskState)}</td>
+                      {/* <td className="px-4 py-3 whitespace-nowrap text-sm">{row.queueLabel}</td> */}
+                      <td className="px-4 py-3 whitespace-nowrap">{getNHIAResultBadge(row)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <DropdownMenu>
                           <DropdownMenuTrigger className="rounded p-2 hover:bg-gray-100">
                             <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/recordings/edit/${row.id}`)}>
-                              View Biodata
-                            </DropdownMenuItem>
                             <DropdownMenuItem
                               disabled={row.deskState === "completed"}
                               onClick={() => completeDeskReview(row.id)}
                             >
                               Mark Verification Complete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={row.deskState === "completed"}
+                              onClick={() => markNotCleared(row.id)}
+                            >
+                              Mark Not Cleared
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

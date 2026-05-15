@@ -5,20 +5,21 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState, useEffect } from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { buildPatientData } from "./petientsMedHistory/patientDataAdapter";
-import { useDoctorDayListQuery } from "@/api-integration/queries/doctorDayList";
+import { usePatientByIdQuery } from "@/api-integration/queries/patients";
 import RecentVitalSign from "./petientsMedHistory/recentVitalSigns/RecentVitalSign";
 import BloodPressureChart from "./petientsMedHistory/charts/BloodPressureChart";
 import type { MonthlyData } from "./types/patientstypes";
 import PatientProfileDetails from "./components/patientProfile/PatientProfileDetails";
 import DoctorReport from "./components/doctorReport/DoctorReport";
+import LabResultsTable from "./components/LabResultsTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function PatientMedicalHistory() {
   const { patientId } = useParams();
   const navigate = useNavigate();
   const { data: vitals = [] } = useVitalsQuery(patientId);
-  const { data: daylist = [] } = useDoctorDayListQuery();
-  const patientBasic = useMemo(() => (daylist as any[]).find((d) => String(d.patientId) === String(patientId)) || {}, [daylist, patientId]);
+  const patientQuery = usePatientByIdQuery(patientId);
+  const patientBasic = useMemo(() => patientQuery.data || {}, [patientQuery.data]);
   const structured = useMemo(() => buildPatientData(patientBasic, vitals as any[]), [patientBasic, vitals]);
   const years = useMemo(() => (structured.yearly_data || []).map((y) => y.year), [structured]);
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -71,7 +72,7 @@ export default function PatientMedicalHistory() {
             <Tabs defaultValue="report" className="w-full h-full flex flex-col">
 
               {/* Tabs Header */}
-              <TabsList className="grid grid-cols-2 w-full bg-gray-100 rounded-t-none rounded-b-lg pt-1 pb-2">
+              <TabsList className="grid grid-cols-3 w-full bg-gray-100 rounded-t-none rounded-b-lg pt-1 pb-2">
             
                 <TabsTrigger
                   value="report"
@@ -81,6 +82,16 @@ export default function PatientMedicalHistory() {
                   data-[state=active]:shadow-sm"
                 >
                   Clinical Notes
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="lab"
+                  className="rounded-t-none rounded-b-lg text-sm font-medium transition-all
+                  data-[state=active]:bg-white
+                  data-[state=active]:text-[#56bbe3]
+                  data-[state=active]:shadow-sm"
+                >
+                  Lab Results
                 </TabsTrigger>
 
                 <TabsTrigger
@@ -100,6 +111,12 @@ export default function PatientMedicalHistory() {
                 <DoctorReport patientId={String(patientId)} />
               </TabsContent>
 
+              <TabsContent value="lab" className="flex-1 border-2 border-black/10 rounded-2xl overflow-auto">
+                <div className="p-3">
+                  <LabResultsTable patientId={String(patientId)} />
+                </div>
+              </TabsContent>
+
               <TabsContent value="details" className="flex-1 overflow-auto">
                 <PatientProfileDetails patientBasic={patientBasic} />
               </TabsContent>
@@ -109,7 +126,6 @@ export default function PatientMedicalHistory() {
           
         </div>
         
-
         {/* Section 2 ( Patient Details)*/}
         <RecentVitalSign />
       </section>

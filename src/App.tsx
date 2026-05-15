@@ -46,6 +46,7 @@ import PaypointPatientsList from './Pages/departments/paypointPages/PaypointPati
 import PharmacyDashboard from './Pages/departments/pharmacyPages/PharmacyDashboard'
 import ReferredPatientsList from './Pages/departments/pharmacyPages/ReferredPatientsList'
 import ViewPrescription from './Pages/departments/pharmacyPages/ViewPrescription'
+import DoctorsReportTable from './Pages/recordingdepartment/DoctorsReportTable'
 
 
 
@@ -99,4 +100,5 @@ export {
   PharmacyDashboard,
   ReferredPatientsList,
   ViewPrescription,
+  DoctorsReportTable,
 }

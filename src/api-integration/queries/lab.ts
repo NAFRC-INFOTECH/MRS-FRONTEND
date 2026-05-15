@@ -5,6 +5,8 @@ export type LabReferral = {
   id: string;
   patientId: string;
   senderId: string;
+  senderName?: string;
+  senderEmail?: string;
   date: string;
   serviceNoOrUUID?: string;
   rank?: string;
@@ -22,6 +24,8 @@ export type LabReferral = {
   previousReportDate?: string;
   testResults?: Record<string, string>;
   status: "PENDING" | "RECEIVED" | "COMPLETED";
+  createdAt?: string;
+  updatedAt?: string;
 };
  
 export const getLabReferralsApi = async (status?: string): Promise<LabReferral[]> => {
@@ -48,5 +52,24 @@ export const useLabReferralsByDateQuery = (date: string, status?: string) => {
     queryKey: ["lab-referrals", "by-date", date, status ?? ""],
     queryFn: () => getLabReferralsByDateApi(date, status),
     enabled: !!date,
+  });
+};
+
+export const getLabReferralsByPatientApi = async (
+  patientId: string,
+  params?: { period?: "daily" | "monthly" | "yearly"; value?: string; status?: string }
+): Promise<LabReferral[]> => {
+  const res = await api.get(`/lab/referrals`, { params: { ...params, patientId } });
+  return res.data as LabReferral[];
+};
+
+export const useLabReferralsByPatientQuery = (
+  patientId?: string,
+  params?: { period?: "daily" | "monthly" | "yearly"; value?: string; status?: string }
+) => {
+  return useQuery({
+    queryKey: ["lab-referrals", "patient", patientId ?? "none", params?.period ?? "daily", params?.value ?? "", params?.status ?? ""],
+    queryFn: () => getLabReferralsByPatientApi(patientId || "", params),
+    enabled: !!patientId,
   });
 };

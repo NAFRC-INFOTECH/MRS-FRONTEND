@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRightLeft, CreditCard, ReceiptText, ShieldCheck, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useNHIAReferredPatientsQuery } from "@/api-integration/queries/patients";
+import { useNHIAReferredPatientsQuery, useNHIAStatsQuery } from "@/api-integration/queries/patients";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,14 +10,70 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { buildNHIARows, summarizeNHIARows } from "./nhiaPatients";
+
+type Period = "daily" | "monthly" | "yearly";
 
 export default function NHIADashboard() {
   const navigate = useNavigate();
   const q = useNHIAReferredPatientsQuery();
 
+  const [period, setPeriod] = useState<Period>("daily");
+  const [dailyDate, setDailyDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
+  const [monthlyDate, setMonthlyDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  });
+  const [yearlyDate, setYearlyDate] = useState(() => String(new Date().getFullYear()));
+
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 15 }, (_, idx) => String(currentYear - idx));
+  }, []);
+
+  const statsParams = useMemo(() => {
+    const value = period === "daily" ? dailyDate : period === "monthly" ? monthlyDate : yearlyDate;
+    return { period, value };
+  }, [period, dailyDate, monthlyDate, yearlyDate]);
+
+  const statsQuery = useNHIAStatsQuery(statsParams);
+
   const rows = useMemo(() => buildNHIARows((q.data as any[]) || []), [q.data]);
   const summary = useMemo(() => summarizeNHIARows(rows), [rows]);
+
+  const nhiaStats = useMemo(() => {
+    const s = statsQuery.data;
+    const awaiting = s?.awaiting ?? summary.awaiting;
+    const civilianAwaiting = s?.awaitingCivilian ?? summary.civilian;
+    const personnelAwaiting = s?.awaitingPersonnel ?? summary.personnel;
+    const cleared = s?.cleared ?? 0;
+    const clearedCivilian = s?.clearedCivilian ?? 0;
+    const clearedPersonnel = s?.clearedPersonnel ?? 0;
+    const notCleared = s?.notCleared ?? 0;
+    const notClearedCivilian = s?.notClearedCivilian ?? 0;
+    const notClearedPersonnel = s?.notClearedPersonnel ?? 0;
+    return {
+      awaiting,
+      civilianAwaiting,
+      personnelAwaiting,
+      cleared,
+      clearedCivilian,
+      clearedPersonnel,
+      notCleared,
+      notClearedCivilian,
+      notClearedPersonnel,
+    };
+  }, [statsQuery.data, summary]);
 
   return (
     <div className="p-6 space-y-6">
@@ -35,59 +91,121 @@ export default function NHIADashboard() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Total NHIA Patients</CardTitle>
-              <CardDescription>All active records under NHIA workflow</CardDescription>
-            </div>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{summary.total}</div>
-          </CardContent>
-        </Card>
+      <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList className="grid w-full grid-cols-3 max-w-[360px]">
+            <TabsTrigger value="daily">Daily</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Awaiting Verification</CardTitle>
-              <CardDescription>Records still pending NHIA desk completion</CardDescription>
-            </div>
-            <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{summary.awaiting}</div>
-          </CardContent>
-        </Card>
+          {period === "daily" && (
+            <input
+              type="date"
+              value={dailyDate}
+              onChange={(e) => setDailyDate(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            />
+          )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Personnel Desk</CardTitle>
-              <CardDescription>Veteran and service-member NHIA lane</CardDescription>
-            </div>
-            <CreditCard className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{summary.personnel}</div>
-          </CardContent>
-        </Card>
+          {period === "monthly" && (
+            <input
+              type="month"
+              value={monthlyDate}
+              onChange={(e) => setMonthlyDate(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            />
+          )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Civilian Desk</CardTitle>
-              <CardDescription>Civilian and dependent NHIA lane</CardDescription>
-            </div>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{summary.civilian}</div>
-          </CardContent>
-        </Card>
-      </div>
+          {period === "yearly" && (
+            <Select value={yearlyDate} onValueChange={setYearlyDate}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Card className="bg-green-50 dark:bg-green-900/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Total Cleared</CardTitle>
+                <CardDescription>All-time NHIA cleared patients</CardDescription>
+              </div>
+              <CreditCard className="h-5 w-5 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{nhiaStats.cleared}</div>
+            </CardContent>
+          </Card>
+            
+          <Card className="bg-yellow-50 dark:bg-yellow-900/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Awaiting Verification</CardTitle>
+                <CardDescription>Patients currently in NHIA queue</CardDescription>
+              </div>
+              <ShieldCheck className="h-5 w-5 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{nhiaStats.awaiting}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-red-50 dark:bg-red-900/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Not Cleared</CardTitle>
+                <CardDescription>All-time NHIA not cleared patients</CardDescription>
+              </div>
+              <CreditCard className="h-5 w-5 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{nhiaStats.notCleared}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-purple-50 dark:bg-purple-900/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Personnel Desk</CardTitle>
+                <CardDescription>
+                  Awaiting: {nhiaStats.personnelAwaiting} • Not cleared:{" "}
+                  {nhiaStats.notClearedPersonnel}
+                </CardDescription>
+              </div>
+              <CreditCard className="h-5 w-5 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{nhiaStats.clearedPersonnel}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-blue-50 dark:bg-blue-900/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Civilian Desk</CardTitle>
+                <CardDescription>
+                  Awaiting: {nhiaStats.civilianAwaiting} • Not cleared:{" "}
+                  {nhiaStats.notClearedCivilian}
+                </CardDescription>
+              </div>
+              <Users className="h-5 w-5 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{nhiaStats.clearedCivilian}</div>
+            </CardContent>
+          </Card>
+        </div>
+      </Tabs>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
@@ -128,10 +246,18 @@ export default function NHIADashboard() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-sm font-medium">Completed Desk Reviews</p>
-                <p className="text-xs text-muted-foreground">Patients already cleared from NHIA</p>
+                <p className="text-sm font-medium">Awaiting Verification</p>
+                <p className="text-xs text-muted-foreground">Patients still pending NHIA decision</p>
               </div>
-              <span className="text-xl font-semibold">{summary.completed}</span>
+              <span className="text-xl font-semibold">{nhiaStats.awaiting}</span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Total Cleared</p>
+                <p className="text-xs text-muted-foreground">All-time NHIA cleared patients</p>
+              </div>
+              <span className="text-xl font-semibold">{nhiaStats.cleared}</span>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -145,11 +271,11 @@ export default function NHIADashboard() {
               </Button>
             </div>
 
-            {q.isLoading && (
+            {(q.isLoading || statsQuery.isLoading) && (
               <p className="text-sm text-muted-foreground">Loading NHIA dashboard data...</p>
             )}
 
-            {q.isError && !q.isLoading && (
+            {(q.isError || statsQuery.isError) && !(q.isLoading || statsQuery.isLoading) && (
               <p className="text-sm text-red-600">Unable to load NHIA dashboard data.</p>
             )}
           </CardContent>
