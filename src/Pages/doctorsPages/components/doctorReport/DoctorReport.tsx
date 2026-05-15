@@ -81,6 +81,7 @@ export default function DoctorReport({ patientId }: { patientId: string }) {
         patientId,
         diagnosis: draft.diagnosis.trim(),
         clinicalNote: draft.clinicalNote.trim(),
+        senderName: doctorName,
       },
       {
         onSuccess: () => {
@@ -198,7 +199,7 @@ export default function DoctorReport({ patientId }: { patientId: string }) {
                         Diagnosis: {note.diagnosis || "Not specified"}
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
-                        Added by {doctorName || note.senderName || "Doctor"} on{" "}
+                        Added by {note.senderName || doctorName} on{" "}
                         {new Date(note.createdAt).toLocaleString()}
                       </div>
                     </div>

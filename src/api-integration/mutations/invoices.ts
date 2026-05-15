@@ -3,6 +3,7 @@ import {
   createInvoiceApi,
   updateInvoicePaymentStatusApi,
   type InvoiceDrugItem,
+  type InvoiceItem,
   type PaymentStatus,
 } from "../queries/invoices";
 
@@ -12,12 +13,15 @@ export const useCreateInvoiceMutation = () => {
     mutationFn: ({
       patientId,
       drugs,
+      items,
     }: {
       patientId: string;
-      drugs: InvoiceDrugItem[];
-    }) => createInvoiceApi(patientId, drugs),
-    onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: ["invoices", "patient", vars.patientId] });
+      drugs?: InvoiceDrugItem[];
+      items?: InvoiceItem[];
+    }) => createInvoiceApi({ patientId, drugs, items }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["invoices", "patient", data.patientId] });
+      qc.invalidateQueries({ queryKey: ["invoices", "all"] });
     },
   });
 };
@@ -32,7 +36,7 @@ export const useUpdateInvoicePaymentStatusMutation = () => {
       invoiceId: string;
       paymentStatus: PaymentStatus;
     }) => updateInvoicePaymentStatusApi(invoiceId, paymentStatus),
-    onSuccess: (_data, vars) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
     },
   });

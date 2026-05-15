@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
 
 export type DrugItem = {
+  priceItemId?: string;
   name: string;
   dosage: string;
   quantity: number;
   instructions?: string;
+  dispensed?: boolean;
 };
 
 export type Patient = {
@@ -32,6 +34,10 @@ export type Patient = {
   bloodGroup?: string;
   patientStatus?: string;
   patientQueue?: string;
+  nhiaStatus?: string;
+  nhiaUpdatedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   nok?: { name?: string; relationship?: string; phone?: string; address?: string };
 };
 
@@ -56,9 +62,36 @@ export const getNHIAReferredPatientsApi = async (q?: string): Promise<Patient[]>
   return res.data as Patient[];
 };
 
+export type NHIAStats = {
+  period?: "daily" | "monthly" | "yearly";
+  value?: string;
+  awaiting: number;
+  awaitingCivilian: number;
+  awaitingPersonnel: number;
+  cleared: number;
+  clearedCivilian: number;
+  clearedPersonnel: number;
+  notCleared: number;
+  notClearedCivilian: number;
+  notClearedPersonnel: number;
+};
+
+export const getNHIAStatsApi = async (params?: { period?: "daily" | "monthly" | "yearly"; value?: string }): Promise<NHIAStats> => {
+  const res = await api.get("/patients/nhia/stats", { params });
+  return res.data as NHIAStats;
+};
+
 export const getPatientByIdApi = async (id: string): Promise<Patient> => {
   const res = await api.get(`/patients/${encodeURIComponent(id)}`);
   return res.data as Patient;
+};
+
+export const usePatientByIdQuery = (id?: string) => {
+  return useQuery({
+    queryKey: ["patient", id ?? "none"],
+    queryFn: () => getPatientByIdApi(id || ""),
+    enabled: !!id,
+  });
 };
 
 export const usePatientsQuery = (q?: string) => {
@@ -79,6 +112,13 @@ export const useNHIAReferredPatientsQuery = (q?: string) => {
   return useQuery({
     queryKey: ["patients", "nhia", q ?? ""],
     queryFn: () => getNHIAReferredPatientsApi(q),
+  });
+};
+
+export const useNHIAStatsQuery = (params?: { period?: "daily" | "monthly" | "yearly"; value?: string }) => {
+  return useQuery({
+    queryKey: ["patients", "nhia", "stats", params?.period ?? "daily", params?.value ?? ""],
+    queryFn: () => getNHIAStatsApi(params),
   });
 };
 

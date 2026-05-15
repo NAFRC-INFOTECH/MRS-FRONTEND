@@ -32,6 +32,17 @@ export const updatePriceItemApi = async ({
   return res.data as PriceItem;
 };
 
+export const dispensePriceItemApi = async ({
+  id,
+  quantity,
+}: {
+  id: string;
+  quantity: number;
+}): Promise<PriceItem> => {
+  const res = await api.patch(`/price-list/${id}/dispense`, { quantity });
+  return res.data as PriceItem;
+};
+
 export const deletePriceItemApi = async (id: string): Promise<{ ok: boolean }> => {
   const res = await api.delete(`/price-list/${id}`);
   return res.data as { ok: boolean };
@@ -52,6 +63,18 @@ export const useUpdatePriceItemMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updatePriceItemApi,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "detail", data._id] });
+    },
+  });
+};
+
+export const useDispensePriceItemMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: dispensePriceItemApi,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
       queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });

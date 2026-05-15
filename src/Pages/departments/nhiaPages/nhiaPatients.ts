@@ -15,6 +15,7 @@ export type NHIARow = {
   queueLabel: string;
   deskState: Exclude<DeskFilter, "all">;
   status: PatientStatus;
+  nhiaStatus: string;
 };
 
 export function buildNHIARows(patients: any[]): NHIARow[] {
@@ -25,7 +26,8 @@ export function buildNHIARows(patients: any[]): NHIARow[] {
         (p.personalInfo?.status as PatientStatus | undefined) ||
         "active") as PatientStatus;
       const queue = String(p.patientQueue || "").toLowerCase();
-      const isNHIAPatient = queue === "nhia" || status === "nhia";
+      const nhiaStatus = String(p.nhiaStatus || p.personalInfo?.nhiaStatus || "");
+      const isNHIAPatient = queue === "nhia" || status === "nhia" || nhiaStatus === "cleared" || nhiaStatus === "not_cleared";
 
       if (!isNHIAPatient) return null;
 
@@ -45,13 +47,14 @@ export function buildNHIARows(patients: any[]): NHIARow[] {
         rank: veteran ? (p.rank || "") : "",
         category,
         categoryLabel: veteran ? "Personnel / Veteran" : "Civilian / Dependent",
-        coverageLane: veteran ? "Military NHIA Desk" : "Civilian NHIA Desk",
+        coverageLane: veteran ? "Military Desk" : "Civilian Desk",
         queueLabel: queue === "nhia" ? "NHIA Queue" : "Transferred to NHIA",
-        deskState: status === "nhia" ? "awaiting-clearance" : "completed",
+        deskState: queue === "nhia" || status === "nhia" ? "awaiting-clearance" : "completed",
         status,
+        nhiaStatus,
       };
     })
-    .filter((row): row is NHIARow => Boolean(row));
+    .filter((row): row is NHIARow => row !== null);
 }
 
 export function summarizeNHIARows(rows: NHIARow[]) {

@@ -1,7 +1,7 @@
 // import React from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePatientsQuery, type Patient as PatientDoc } from "@/api-integration/queries/patients";
+import { usePatientByIdQuery } from "@/api-integration/queries/patients";
 import { useMemo } from "react";
 
 type PatientBasic = {
@@ -19,21 +19,23 @@ type PatientProps = {
 
 export default function PatientProfileDetails({patientBasic}: PatientProps) {
 
-  const { data: patients = [] } = usePatientsQuery();
+  const pid = useMemo(() => {
+    return String((patientBasic as any)?.patientId || (patientBasic as any)?._id || "");
+  }, [patientBasic]);
+
+  const patientQuery = usePatientByIdQuery(pid || undefined);
   const resolved = useMemo<PatientBasic>(() => {
-    const pid = (patientBasic as any)?.patientId || (patientBasic as any)?._id;
-    const match = patients.find((p: PatientDoc) => String(p._id) === String(pid));
-    if (match) {
-      const fullName = [match.surname, match.firstname, match.middlename].filter(Boolean).join(" ");
-      return {
-        fullName: fullName || patientBasic.fullName,
-        phone: match.phone || patientBasic.phone,
-        dateOfBirth: match.dateOfBirth || patientBasic.dateOfBirth,
-        gender: match.sex || patientBasic.gender,
-      };
-    }
-    return patientBasic;
-  }, [patients, patientBasic]);
+    const match: any = patientQuery.data;
+    if (!match) return patientBasic;
+    const fullName = [match.surname, match.firstname, match.middlename].filter(Boolean).join(" ");
+    return {
+      fullName: fullName || patientBasic.fullName,
+      phone: match.phone || patientBasic.phone,
+      dateOfBirth: match.dateOfBirth || patientBasic.dateOfBirth,
+      gender: match.sex || patientBasic.gender,
+    };
+  }, [patientBasic, patientQuery.data]);
+
   return (
     <Card className="w-full border-none">
       <CardHeader>

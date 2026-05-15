@@ -25,7 +25,7 @@ export function PriceListTable({
   onToggleStatus,
 }: PriceListTableProps) {
   return (
-    <Table>
+    <Table className="">
       <TableHeader>
         <TableRow className="bg-[#56bbe3] hover:bg-[#56bbe3] text-white">
           <TableHead className="text-white">Item</TableHead>

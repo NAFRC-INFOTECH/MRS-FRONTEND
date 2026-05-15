@@ -18,21 +18,48 @@ export type InvoiceDrugItem = {
   totalPrice: number;
 };
 
+export type InvoiceItem = {
+  priceItemId?: string;
+  category?: string;
+  unit?: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+};
+
 export type Invoice = {
   _id: string;
   patientId: string;
+  createdByRole?: string;
+  createdByUserId?: string;
   patientName: string;
   patientCardNumber: string;
   drugs: InvoiceDrugItem[];
+  items?: InvoiceItem[];
   totalCost: number;
   paymentStatus: PaymentStatus;
   createdAt: string;
   updatedAt: string;
 };
 
-export const createInvoiceApi = async (patientId: string, drugs: InvoiceDrugItem[]): Promise<Invoice> => {
-  const res = await api.post("/invoices", { patientId, drugs });
+export const createInvoiceApi = async (payload: {
+  patientId: string;
+  drugs?: InvoiceDrugItem[];
+  items?: InvoiceItem[];
+}): Promise<Invoice> => {
+  const res = await api.post("/invoices", payload);
   return res.data as Invoice;
+};
+
+export const getAllInvoicesApi = async (): Promise<Invoice[]> => {
+  const res = await api.get("/invoices");
+  return res.data as Invoice[];
+};
+
+export const getInvoicesApi = async (params?: { createdByRole?: string; createdByUserId?: string }): Promise<Invoice[]> => {
+  const res = await api.get("/invoices", { params });
+  return res.data as Invoice[];
 };
 
 export const getInvoicesByPatientIdApi = async (patientId: string): Promise<Invoice[]> => {
@@ -51,6 +78,20 @@ export const updateInvoicePaymentStatusApi = async (
 ): Promise<Invoice> => {
   const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/payment-status`, { paymentStatus });
   return res.data as Invoice;
+};
+
+export const useAllInvoicesQuery = () => {
+  return useQuery({
+    queryKey: ["invoices", "all"],
+    queryFn: getAllInvoicesApi,
+  });
+};
+
+export const useInvoicesQuery = (params?: { createdByRole?: string; createdByUserId?: string }) => {
+  return useQuery({
+    queryKey: ["invoices", "list", params?.createdByRole ?? "", params?.createdByUserId ?? ""],
+    queryFn: () => getInvoicesApi(params),
+  });
 };
 
 export const useInvoicesByPatientIdQuery = (patientId?: string) => {

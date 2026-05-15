@@ -70,6 +70,7 @@ import {
   PharmacyDashboard,
   ReferredPatientsList,
   ViewPrescription,
+  DoctorsReportTable,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
 
@@ -82,7 +83,6 @@ const router = createBrowserRouter(
 
       {/* <Route index path='/' element={<SuperAdminDashboard />} /> */}
       <Route index path='/' element={<LandingPage />} />
-      
 
       {/* All Protected Routes */}
       <Route element={<Dashboard />}>
@@ -199,6 +199,7 @@ const router = createBrowserRouter(
             <Route path="patients-registry" element={<PatientsRegistry />} />
             <Route path="patients/new" element={<PatientsBiodataPage />} />
             <Route path="edit/:id" element={<PatientsEditPage />} />
+            <Route path="doctor-reports/:patientId" element={<DoctorsReportTable />} />
             <Route path="staff/:id" element={<RecordingProfile />} />
           </Route>
 

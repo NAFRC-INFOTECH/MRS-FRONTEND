@@ -1,6 +1,6 @@
 // import React from 'react'
 
-import PatientsRegTable from "@/components/patientsTable/RecordingSection/PatientsRegTable";
+import PatientsRegTable from "@/Pages/recordingdepartment/components/PatientsRegTable";
 
 export default function PatientsRegistry() {
   return (

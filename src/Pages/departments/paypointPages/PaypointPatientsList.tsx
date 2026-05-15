@@ -1,10 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, MoreVertical } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRightLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { usePaypointReferredPatientsQuery } from "@/api-integration/queries/patients";
-import { useUpdatePatientMutation } from "@/api-integration/mutations/patients";
-import { useSearch } from "@/contexts/SearchContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,102 +19,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { PatientStatus } from "@/components/patientsTable/patientsDatas/types";
 import {
-  buildPaypointRows,
-  type BillingCategory,
-  type DeskFilter,
-  type PaypointRow,
-} from "./paypointPatients";
+  useAllInvoicesQuery,
+  PAYMENT_STATUS,
+  type Invoice,
+} from "@/api-integration/queries/invoices";
+import {
+  useUpdateInvoicePaymentStatusMutation,
+} from "@/api-integration/mutations/invoices";
+import { formatCurrency } from "@/Pages/adminPages/createPriceListsPage/components/priceListTypes";
 
 export default function PaypointPatientsList() {
   const navigate = useNavigate();
-  const q = usePaypointReferredPatientsQuery();
-  const update = useUpdatePatientMutation();
-  const { query } = useSearch();
+  const { data: allInvoices = [], isLoading: allInvoicesLoading } = useAllInvoicesQuery();
+  const updateInvoiceStatus = useUpdateInvoicePaymentStatusMutation();
 
-  const [patients, setPatients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deskFilter, setDeskFilter] = useState<DeskFilter>("awaiting-clearance");
-  const [categoryFilter, setCategoryFilter] = useState<BillingCategory>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  useEffect(() => {
-    if (q.data) setPatients(q.data as any[]);
-  }, [q.data]);
+  const latestInvoices = useMemo(() => {
+    const sorted = [...allInvoices].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const byPatient = new Map<string, Invoice>();
+    for (const inv of sorted) {
+      const key = String(inv.patientId || "");
+      if (!key) continue;
+      if (!byPatient.has(key)) byPatient.set(key, inv);
+    }
+    return Array.from(byPatient.values());
+  }, [allInvoices]);
 
-  const rows = useMemo<PaypointRow[]>(() => buildPaypointRows(patients), [patients]);
-
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) => {
-      const matchesDesk = deskFilter === "all" ? true : row.deskState === deskFilter;
-      const matchesCategory = categoryFilter === "all" ? true : row.category === categoryFilter;
-      const matchesLocalSearch = searchTerm
-        ? `${row.cardNumber} ${row.fullName} ${row.phone}`.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInvoices = useMemo(() => {
+    return latestInvoices.filter((invoice) => {
+      const matchesSearch = searchTerm
+        ? `${invoice.patientName} ${invoice.patientCardNumber}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
         : true;
-      const matchesGlobalSearch = query
-        ? row.fullName.toLowerCase().includes(query.toLowerCase())
-        : true;
-
-      return matchesDesk && matchesCategory && matchesLocalSearch && matchesGlobalSearch;
+      const matchesStatus = statusFilter === "all" ? true : invoice.paymentStatus === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [rows, deskFilter, categoryFilter, searchTerm, query]);
+  }, [latestInvoices, searchTerm, statusFilter]);
 
-  const completeDeskReview = (id: string) => {
-    update.mutate(
-      { id, data: { patientStatus: "active", patientQueue: "" } },
+  const getPaymentStatusBadge = (status: string) => {
+    if (status === PAYMENT_STATUS.PAID) {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Paid</Badge>;
+    }
+    if (status === PAYMENT_STATUS.CANCELED) {
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Canceled</Badge>;
+    }
+    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Awaiting Payment</Badge>;
+  };
+
+  const markInvoicePaid = (invoiceId: string) => {
+    updateInvoiceStatus.mutate(
+      { invoiceId, paymentStatus: PAYMENT_STATUS.PAID },
       {
-        onSuccess: () => toast.success("Patient cleared from paypoint desk"),
-        onError: (err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err ?? "");
-          toast.error(msg || "Unable to complete paypoint processing");
-        },
+        onSuccess: () => toast.success("Invoice marked as paid"),
+        onError: () => toast.error("Failed to mark invoice as paid"),
       }
     );
   };
 
-  const getDeskStateBadge = (deskState: PaypointRow["deskState"]) => {
-    if (deskState === "awaiting-clearance") {
-      return (
-        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">
-          Awaiting Clearance
-        </Badge>
-      );
-    }
-
-    return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-        Completed
-      </Badge>
-    );
-  };
-
-  const getStatusBadge = (status: PatientStatus) => {
-    switch (status) {
-      case "paypoint":
-        return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">PAYPOINT</Badge>;
-      case "nhia":
-        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">NHIA</Badge>;
-      case "gopd":
-        return <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100">GOPD</Badge>;
-      case "discharged":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">DISCHARGED</Badge>;
-      case "inactive":
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">INACTIVE</Badge>;
-      case "active":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">ACTIVE</Badge>;
-      default:
-        return <Badge variant="outline">{status.toUpperCase()}</Badge>;
-    }
-  };
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-6 space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">Paypoint Patients List</h1>
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">Paypoint Invoices List</h1>
           <p className="text-sm text-muted-foreground">
-            Manage the operational queue for paypoint patients, apply desk filters, and complete per-patient
-            paypoint clearance.
+            Manage invoices and mark them as paid.
           </p>
         </div>
         <Button variant="outline" onClick={() => navigate("/paypoint")}>
@@ -132,144 +98,178 @@ export default function PaypointPatientsList() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Paypoint Queue Controls</CardTitle>
-          <CardDescription>
-            Filter the queue by desk state, billing category, or patient identifier to focus on active paypoint
-            workflow.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-            <Select value={deskFilter} onValueChange={(value) => setDeskFilter(value as DeskFilter)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Desk state" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Desk States</SelectItem>
-                <SelectItem value="awaiting-clearance">Awaiting Clearance</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
+      <section className="space-y-6 lg:flex lg:gap-6 lg:justify-between">
+        <div className="space-y-6 w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoice Queue Controls</CardTitle>
+              <CardDescription>
+                Filter invoices by payment status or search by patient name / card number.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Payment Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value={PAYMENT_STATUS.AWAITING}>Awaiting Payment</SelectItem>
+                    <SelectItem value={PAYMENT_STATUS.PAID}>Paid</SelectItem>
+                    <SelectItem value={PAYMENT_STATUS.CANCELED}>Canceled</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as BillingCategory)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Billing category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Billing Categories</SelectItem>
-                <SelectItem value="civilian">Civilian</SelectItem>
-                <SelectItem value="personnel">Personnel / Veteran</SelectItem>
-              </SelectContent>
-            </Select>
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by patient name or card number"
+                  className="lg:col-span-2"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by card number, patient name or phone"
-              className="lg:col-span-2"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Paypoint Operations Table</CardTitle>
-          <CardDescription>
-            This page is reserved for the live queue table and patient-level desk actions.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-0">
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-t border-gray-200">
-              <thead className="bg-[#56bbe3] text-white">
-                <tr>
-                  <th className="px-4 py-3 text-left">S/N</th>
-                  <th className="px-4 py-3 text-left">Card No</th>
-                  <th className="px-4 py-3 text-left">Patient Name</th>
-                  <th className="px-4 py-3 text-left">Phone</th>
-                  <th className="px-4 py-3 text-left">Rank</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Billing Category</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Billing Lane</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Queue</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Desk State</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3 text-left whitespace-nowrap">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {q.isLoading && (
-                  <tr>
-                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      Loading paypoint patients...
-                    </td>
-                  </tr>
-                )}
-
-                {q.isError && !q.isLoading && (
-                  <tr>
-                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-red-600">
-                      Failed to load paypoint patients.
-                    </td>
-                  </tr>
-                )}
-
-                {!q.isLoading &&
-                  !q.isError &&
-                  filteredRows.map((row, idx) => (
-                    <tr key={row.id} className="border-b border-gray-200 even:bg-[#f9f9f9]">
-                      <td className="px-4 py-3 whitespace-nowrap">{idx + 1}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{row.cardNumber || "-"}</td>
-                      <td className="px-4 py-3 font-medium whitespace-nowrap">{row.fullName}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{row.phone || "-"}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{row.rank || "-"}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <Badge variant="outline">{row.categoryLabel}</Badge>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{row.billingLane}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{row.queueLabel}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{getDeskStateBadge(row.deskState)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{getStatusBadge(row.status)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="rounded p-2 hover:bg-gray-100">
-                            <MoreVertical className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/recordings/edit/${row.id}`)}>
-                              View Biodata
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={row.deskState === "completed"}
-                              onClick={() => completeDeskReview(row.id)}
-                            >
-                              Mark Desk Cleared
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoices Table</CardTitle>
+              <CardDescription>
+                Click an invoice to view details in the sidebar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0">
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-t border-gray-200">
+                  <thead className="bg-[#56bbe3] text-white">
+                    <tr>
+                      <th className="px-4 py-3 text-left">S/N</th>
+                      <th className="px-4 py-3 text-left whitespace-nowrap">Card No</th>
+                      <th className="px-4 py-3 text-left whitespace-nowrap">Patient Name</th>
+                      <th className="px-4 py-3 text-left whitespace-nowrap">Total Cost</th>
+                      <th className="px-4 py-3 text-left whitespace-nowrap">Payment Status</th>
                     </tr>
-                  ))}
+                  </thead>
+                  <tbody>
+                    {allInvoicesLoading && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                          Loading invoices...
+                        </td>
+                      </tr>
+                    )}
 
-                {!q.isLoading && !q.isError && filteredRows.length === 0 && (
-                  <tr>
-                    <td colSpan={11} className="px-4 py-10 text-center">
-                      <div className="space-y-1">
-                        <p className="font-medium">No paypoint patients found.</p>
-                        <p className="text-sm text-muted-foreground">
-                          Patients transferred to the paypoint desk will appear here for billing review.
-                        </p>
+                    {!allInvoicesLoading &&
+                      filteredInvoices.map((invoice, idx) => (
+                        <tr
+                          key={invoice._id}
+                          className={`border-b border-gray-200 even:bg-[#f9f9f9] cursor-pointer ${selectedInvoice?._id === invoice._id ? "bg-blue-50" : ""}`}
+                          onClick={() => setSelectedInvoice(invoice)}
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap">{idx + 1}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{invoice.patientCardNumber}</td>
+                          <td className="px-4 py-3 font-medium whitespace-nowrap">{invoice.patientName}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{formatCurrency(invoice.totalCost)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{getPaymentStatusBadge(invoice.paymentStatus)}</td>
+                        </tr>
+                      ))}
+
+                    {!allInvoicesLoading && filteredInvoices.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-10 text-center">
+                          <div className="space-y-1">
+                            <p className="font-medium">No invoices found.</p>
+                            <p className="text-sm text-muted-foreground">
+                              Invoices will appear here once they are created.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="w-full lg:w-[400px]">
+          {selectedInvoice ? (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Card key={selectedInvoice._id} className="border border-gray-200">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <div>
+                        <CardTitle className="text-sm font-medium">
+                          Invoice #{selectedInvoice._id.slice(-8)}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {new Date(selectedInvoice.createdAt).toLocaleString()}
+                        </CardDescription>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                      {getPaymentStatusBadge(selectedInvoice.paymentStatus)}
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full border border-gray-200 text-xs">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="px-2 py-1 text-left">Name</th>
+                              <th className="px-2 py-1 text-left">Qty</th>
+                              <th className="px-2 py-1 text-left">Unit</th>
+                              <th className="px-2 py-1 text-left">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(selectedInvoice.items && selectedInvoice.items.length > 0 ? selectedInvoice.items : selectedInvoice.drugs).map(
+                              (drug, idx) => (
+                              <tr key={idx} className="border-b border-gray-200">
+                                <td className="px-2 py-1">{drug.name}</td>
+                                <td className="px-2 py-1">{drug.quantity}</td>
+                                <td className="px-2 py-1">{formatCurrency(drug.unitPrice)}</td>
+                                <td className="px-2 py-1">{formatCurrency(drug.totalPrice)}</td>
+                              </tr>
+                              )
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium">
+                          Total: {formatCurrency(selectedInvoice.totalCost)}
+                        </div>
+                        {selectedInvoice.paymentStatus !== PAYMENT_STATUS.PAID && (
+                          <Button
+                            size="sm"
+                            onClick={() => markInvoicePaid(selectedInvoice._id)}
+                            disabled={updateInvoiceStatus.isPending}
+                            className="bg-[#56bbe3] text-white"
+                          >
+                            Mark Paid
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-center text-muted-foreground text-sm">
+                  Select an invoice from the table to view its details
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

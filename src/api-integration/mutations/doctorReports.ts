@@ -8,6 +8,7 @@ export const addDoctorReportApi = async (payload: {
   diagnosis?: string;
   imageUrl?: string;
   replyToId?: string;
+  senderName?: string;
 }) => {
   const res = await api.post("/doctors/reports", payload);
   return res.data;

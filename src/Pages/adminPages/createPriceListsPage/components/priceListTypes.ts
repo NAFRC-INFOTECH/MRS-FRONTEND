@@ -4,6 +4,7 @@ export const predefinedCategories = [
   "drug",
   "consultation",
   "bed",
+  "registration",
   "procedure",
   "laboratory",
   "other",
@@ -61,6 +62,7 @@ export const categoryLabels: Record<string, string> = {
   drug: "Drugs",
   consultation: "Consultation",
   bed: "Bed Fees",
+  registration: "Registration Fee",
   procedure: "Procedures",
   laboratory: "Laboratory",
   other: "Other",
@@ -84,7 +86,15 @@ export const defaultForm: PriceForm = {
 
 export const quickAddTemplates: PriceTemplate[] = [
   {
-    name: "Specialist Consultation Fee",
+    name: "Registration",
+    category: "registration",
+    description: "Initial patient registration and file creation fee.",
+    unit: "per patient",
+    price: 5000,
+    isActive: true,
+  },
+  {
+    name: "Specialist Consultation",
     category: "consultation",
     description: "Consultation charge for specialist review.",
     unit: "per visit",
@@ -92,7 +102,7 @@ export const quickAddTemplates: PriceTemplate[] = [
     isActive: true,
   },
   {
-    name: "Private Room Bed Fee",
+    name: "Private Room Bed",
     category: "bed",
     description: "Admission fee for private room occupancy.",
     unit: "per day",
