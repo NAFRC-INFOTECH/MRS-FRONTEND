@@ -1,21 +1,33 @@
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 import { useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "@/api-integration/api/config";
 
 export default function GlobalRealtimeSync() {
   const qc = useQueryClient();
   useEffect(() => {
-    const url = `${location.protocol}//${location.hostname}:8000/ws`;
+    if ((import.meta as any).env?.VITE_DISABLE_REALTIME === "true") return;
+
+    const envWsUrl = ((import.meta as any).env?.VITE_WS_URL as string | undefined) || "";
+    const url = (() => {
+      if (envWsUrl) return envWsUrl;
+      try {
+        return `${new URL(API_BASE_URL).origin}/ws`;
+      } catch {
+        return `${location.origin}/ws`;
+      }
+    })();
     const socket = io(url, {
       withCredentials: true,
       transports: ["websocket"],
       reconnection: true,
       reconnectionDelay: 1500,
       reconnectionAttempts: Infinity,
+      timeout: 5000,
     });
     
     const onConnectError = (err: Error) => {
-      console.error("Socket.io connect error:", err.message);
+      if ((import.meta as any).env?.DEV) console.warn("Socket.io connect error:", err.message);
     };
     const invalidateUsers = () => {
       qc.invalidateQueries({ queryKey: ["users"] });
