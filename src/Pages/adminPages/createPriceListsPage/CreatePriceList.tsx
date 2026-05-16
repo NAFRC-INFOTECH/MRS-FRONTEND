@@ -28,6 +28,7 @@ import {
   defaultForm,
   quickAddTemplates,
   calculatePriceSummary,
+  predefinedCategories,
   type PriceCategory,
   type PriceForm,
   type PriceItem,
@@ -73,10 +74,12 @@ export default function CreatePriceList() {
 
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
-    allItems.forEach((item) => cats.add(item.category));
-    const predefined = ["drug", "consultation", "bed", "procedure", "laboratory", "other"];
-    predefined.forEach((p) => cats.add(p));
-    return Array.from(cats).sort();
+    allItems.forEach((item) => {
+      const cat = String(item.category || "").trim();
+      if (cat) cats.add(cat);
+    });
+    predefinedCategories.forEach((p) => cats.add(p));
+    return Array.from(cats).sort((a, b) => a.localeCompare(b));
   }, [allItems]);
 
   const createMutation = useCreatePriceItemMutation();

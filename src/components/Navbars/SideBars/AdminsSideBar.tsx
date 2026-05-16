@@ -15,6 +15,7 @@ import {
   ClipboardList,
   ReceiptText,
   Stethoscope,
+  ScanLine,
 } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -67,14 +68,16 @@ export default function AdminsSideBar() {
             { text: "Dashboard", path: "/admin-dashboard", icon: LayoutPanelLeft },
             { text: "All Departments", path: "/admin-dashboard/all-departments", icon: Network },
             { text: "Doctors", path: "/admin-dashboard/doctors", icon: FolderOpen },
-            { text: "Nurses", path: "/admin-dashboard/nurses", icon: Calendar },
+            { text: "Staffs", path: "/admin-dashboard/staffs", icon: Calendar },
             { text: "All Patients", path: "/admin-dashboard/patients", icon: ContactRound },
             { text: "Recordings", path: "/admin-dashboard/recordings", icon: LibraryBig },
+            { text: "Radiology", path: "/admin-dashboard/radiology", icon: ScanLine },
             { text: "Service Users", path: "/admin-dashboard/service-users", icon: ShieldUser },
             { text: "Price List", path: "/admin-dashboard/price-list", icon: ReceiptText },
-            { text: "Nurses Duty", path: "/admin-dashboard/nurses-duty", icon: ClipboardList },
+            { text: "Staffs Duty", path: "/admin-dashboard/staffs-duty", icon: ClipboardList },
             { text: "Doctors Duty", path: "/admin-dashboard/doctors-duty", icon: Stethoscope },
             { text: "Recording Duty", path: "/admin-dashboard/recording-duty", icon: ClipboardList },
+            { text: "Radiology Duty", path: "/admin-dashboard/radiology-duty", icon: ClipboardList },
           ].map((item) => {
             const active = isRouteActive(item.path)
 

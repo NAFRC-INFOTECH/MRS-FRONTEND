@@ -33,6 +33,9 @@ export type Invoice = {
   patientId: string;
   createdByRole?: string;
   createdByUserId?: string;
+  paidByRole?: string;
+  paidByUserId?: string;
+  paidAt?: string;
   patientName: string;
   patientCardNumber: string;
   drugs: InvoiceDrugItem[];
@@ -57,7 +60,14 @@ export const getAllInvoicesApi = async (): Promise<Invoice[]> => {
   return res.data as Invoice[];
 };
 
-export const getInvoicesApi = async (params?: { createdByRole?: string; createdByUserId?: string }): Promise<Invoice[]> => {
+export const getInvoicesApi = async (params?: {
+  createdByRole?: string;
+  createdByUserId?: string;
+  paymentStatus?: PaymentStatus;
+  paidByRole?: string;
+  paidFrom?: string;
+  paidTo?: string;
+}): Promise<Invoice[]> => {
   const res = await api.get("/invoices", { params });
   return res.data as Invoice[];
 };
@@ -87,9 +97,25 @@ export const useAllInvoicesQuery = () => {
   });
 };
 
-export const useInvoicesQuery = (params?: { createdByRole?: string; createdByUserId?: string }) => {
+export const useInvoicesQuery = (params?: {
+  createdByRole?: string;
+  createdByUserId?: string;
+  paymentStatus?: PaymentStatus;
+  paidByRole?: string;
+  paidFrom?: string;
+  paidTo?: string;
+}) => {
   return useQuery({
-    queryKey: ["invoices", "list", params?.createdByRole ?? "", params?.createdByUserId ?? ""],
+    queryKey: [
+      "invoices",
+      "list",
+      params?.createdByRole ?? "",
+      params?.createdByUserId ?? "",
+      params?.paymentStatus ?? "",
+      params?.paidByRole ?? "",
+      params?.paidFrom ?? "",
+      params?.paidTo ?? "",
+    ],
     queryFn: () => getInvoicesApi(params),
   });
 };

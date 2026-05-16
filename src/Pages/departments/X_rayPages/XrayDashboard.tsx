@@ -2,6 +2,6 @@
 
 export default function XrayDashboard() {
   return (
-    <div>Xray Dashboard</div>
+    <div>Radiology Dashboard</div>
   )
 }

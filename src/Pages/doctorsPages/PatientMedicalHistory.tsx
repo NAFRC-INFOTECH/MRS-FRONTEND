@@ -12,6 +12,7 @@ import type { MonthlyData } from "./types/patientstypes";
 import PatientProfileDetails from "./components/patientProfile/PatientProfileDetails";
 import DoctorReport from "./components/doctorReport/DoctorReport";
 import LabResultsTable from "./components/LabResultsTable";
+import XrayResultsTable from "./components/XrayResultsTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function PatientMedicalHistory() {
@@ -70,10 +71,8 @@ export default function PatientMedicalHistory() {
            
           <div className="w-full lg:min-w-[20rem] lg:max-w-[25rem] lg:h-[31.2rem] rounded-lg overflow-hidden">
             <Tabs defaultValue="report" className="w-full h-full flex flex-col">
-
               {/* Tabs Header */}
-              <TabsList className="grid grid-cols-3 w-full bg-gray-100 rounded-t-none rounded-b-lg pt-1 pb-2">
-            
+              <TabsList className="grid grid-cols-2 w-full bg-gray-100 rounded-t-none rounded-b-lg pt-1 pb-2">
                 <TabsTrigger
                   value="report"
                   className="rounded-t-none rounded-b-lg text-sm font-medium transition-all
@@ -82,16 +81,6 @@ export default function PatientMedicalHistory() {
                   data-[state=active]:shadow-sm"
                 >
                   Clinical Notes
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="lab"
-                  className="rounded-t-none rounded-b-lg text-sm font-medium transition-all
-                  data-[state=active]:bg-white
-                  data-[state=active]:text-[#56bbe3]
-                  data-[state=active]:shadow-sm"
-                >
-                  Lab Results
                 </TabsTrigger>
 
                 <TabsTrigger
@@ -109,12 +98,6 @@ export default function PatientMedicalHistory() {
               {/* Tab Content */}
               <TabsContent value="report" className="flex-1 border-2 border-black/10 rounded-2xl overflow-auto">
                 <DoctorReport patientId={String(patientId)} />
-              </TabsContent>
-
-              <TabsContent value="lab" className="flex-1 border-2 border-black/10 rounded-2xl overflow-auto">
-                <div className="p-3">
-                  <LabResultsTable patientId={String(patientId)} />
-                </div>
               </TabsContent>
 
               <TabsContent value="details" className="flex-1 overflow-auto">
@@ -171,6 +154,22 @@ export default function PatientMedicalHistory() {
                 )}
               </tbody>
             </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lab / Radiology card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lab / Radiology Results</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="p-3 border border-gray-300 rounded-md">
+            <LabResultsTable patientId={String(patientId)} />
+          </div>
+
+          <div className="p-3 border border-gray-300 rounded-md">
+            <XrayResultsTable patientId={String(patientId)} />
           </div>
         </CardContent>
       </Card>

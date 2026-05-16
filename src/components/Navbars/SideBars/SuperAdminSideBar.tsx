@@ -13,6 +13,7 @@ import {
   Network,
   Pill,
   ShieldUser,
+  ScanLine,
 } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -68,9 +69,10 @@ export default function SuperAdminSideBar() {
             { text: "Admins", path: "/mrs-admin/admins", icon: Pill },
             { text: "All Departments", path: "/mrs-admin/all-departments", icon: Network },
             { text: "Doctors", path: "/mrs-admin/doctors", icon: FolderOpen },
-            { text: "Nurses", path: "/mrs-admin/nurses", icon: Calendar },
+            { text: "Staffs", path: "/mrs-admin/staffs", icon: Calendar },
             { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
             { text: "Recording Dept", path: "/mrs-admin/recordings", icon: LibraryBig },
+            { text: "Radiology Dept", path: "/mrs-admin/radiology", icon: ScanLine },
             { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser }
           ].map((item) => {
             const active = isRouteActive(item.path)

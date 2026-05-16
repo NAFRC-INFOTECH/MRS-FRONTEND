@@ -90,7 +90,7 @@ export default function UsersTable() {
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="super_admin">Super Admin</SelectItem>
               <SelectItem value="doctor">Doctor</SelectItem>
-              <SelectItem value="nurse">Nurse</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>

@@ -11,7 +11,7 @@ export type NurseUser = {
 };
 
 export const getNursesApi = async (params?: { department?: string }): Promise<NurseUser[]> => {
-  const res = await api.get("/nurses", { params });
+  const res = await api.get("/staff", { params });
   return res.data as NurseUser[];
 };
 

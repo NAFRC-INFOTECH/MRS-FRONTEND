@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, type PriceSummary, type SummaryPeriod } from "./priceListTypes";
 import { useMemo, useState } from "react";
+import { PAYMENT_STATUS, useInvoicesQuery } from "@/api-integration/queries/invoices";
 
 type PriceListSummaryCardsProps = {
   summaries?: Record<SummaryPeriod, PriceSummary>;
@@ -35,6 +36,7 @@ const emptySummary: PriceSummary = {
   activeItems: 0,
   drugs: 0,
   services: 0,
+  servicesValue: 0,
   totalValue: 0,
   totalDrugs: 0,
   totalDrugsInStock: 0,
@@ -56,7 +58,38 @@ export default function PriceListSummaryCards({
     yearly: summaries?.yearly ?? { ...emptySummary, period: "yearly" },
   };
 
-  console.log(resolvedSummaries);
+  const paypointPaidRange = useMemo(() => {
+    const now = new Date();
+    if (activePeriod === "yearly") {
+      const y = Number(yearlyDate) || now.getFullYear();
+      const start = new Date(y, 0, 1, 0, 0, 0, 0);
+      const end = new Date(y + 1, 0, 1, 0, 0, 0, 0);
+      return { paidFrom: start.toISOString(), paidTo: end.toISOString() };
+    }
+    const [yRaw, mRaw] = (monthlyDate || "").split("-");
+    const y = Number(yRaw) || now.getFullYear();
+    const m = Number(mRaw) || now.getMonth() + 1;
+    const start = new Date(y, m - 1, 1, 0, 0, 0, 0);
+    const end = new Date(y, m, 1, 0, 0, 0, 0);
+    return { paidFrom: start.toISOString(), paidTo: end.toISOString() };
+  }, [activePeriod, monthlyDate, yearlyDate]);
+
+  const paypointPaidInvoices = useInvoicesQuery({
+    paymentStatus: PAYMENT_STATUS.PAID,
+    paidByRole: "paypoint",
+    paidFrom: paypointPaidRange.paidFrom,
+    paidTo: paypointPaidRange.paidTo,
+  });
+
+  const paypointServiceRevenue = useMemo(() => {
+    const invoices = paypointPaidInvoices.data || [];
+    return invoices.reduce((sum, inv) => {
+      const items = inv.items || [];
+      const itemsTotal = items.reduce((s, it) => s + (Number(it.totalPrice) || 0), 0);
+      return sum + itemsTotal;
+    }, 0);
+  }, [paypointPaidInvoices.data]);
+
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
     return Array.from({ length: 15 }, (_, idx) => String(currentYear - idx));
@@ -108,16 +141,16 @@ export default function PriceListSummaryCards({
       </div>
 
       <TabsContent value="monthly">
-        <SummaryGrid summary={resolvedSummaries.monthly} />
+        <SummaryGrid summary={resolvedSummaries.monthly} paypointServiceRevenue={paypointServiceRevenue} />
       </TabsContent>
       <TabsContent value="yearly">
-        <SummaryGrid summary={resolvedSummaries.yearly} />
+        <SummaryGrid summary={resolvedSummaries.yearly} paypointServiceRevenue={paypointServiceRevenue} />
       </TabsContent>
     </Tabs>
   );
 }
 
-function SummaryGrid({ summary }: { summary: PriceSummary }) {
+function SummaryGrid({ summary, paypointServiceRevenue }: { summary: PriceSummary; paypointServiceRevenue: number }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       <Card className="bg-blue-50 dark:bg-blue-900/20 shadow-none max-h-[10rem] rounded-md">
@@ -155,10 +188,11 @@ function SummaryGrid({ summary }: { summary: PriceSummary }) {
           <Pill className="h-5 w-5 text-purple-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold flex items-center gap-2">
+          <div className="text-2xl font-semibold flex items-center gap-1">
             <span>{summary.totalDrugsSold}</span>
             <span className="text-muted-foreground">/</span>
-            <span>{summary.totalDrugsInStock}</span>
+            {/* IF Drugs is running low in stock */}
+            {summary.totalDrugsInStock < 20 ? <span className="text-red-500 text-md">{summary.totalDrugsInStock}</span> : <span>{summary.totalDrugsInStock}</span>}
           </div>
         </CardContent>
       </Card>
@@ -180,12 +214,12 @@ function SummaryGrid({ summary }: { summary: PriceSummary }) {
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle>Service Items</CardTitle>
-            <CardDescription>Fees for non-drug services</CardDescription>
+            <CardDescription>Paid via paypoint</CardDescription>
           </div>
           <Stethoscope className="h-5 w-5 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-semibold">{summary.services}</div>
+          <div className="text-lg font-semibold">{formatCurrency(paypointServiceRevenue)}</div>
         </CardContent>
       </Card>
 

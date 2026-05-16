@@ -9,7 +9,7 @@ import RecordingSideBar from './RecordingSidebar';
 import LabSidebar from './LabSidebar';
 import GenNurseSidebar from './generalPermitSidebars/GenNurseSidebar';
 import AdminsSideBar from './AdminsSideBar';
-import XraySidebar from './XraySidebar';
+import RadiologySidebar from './RadiologySidebar';
 import NHIASidebar from './NHIASidebar';
 import PaypointSidebar from './PaypointSidebar';
 import PharmacySidebar from './PharmacySidebar';
@@ -30,10 +30,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
       ? "Admin"
       : roles.includes("doctor")
       ? "Doctor"
-      : roles.includes("nurse")
+      : roles.includes("staff")
       ? (user?.department || "").toUpperCase()
       : roles.includes("recording")
       ? "Recording"
+      : roles.includes("radiology")
+      ? "Radiology"
       : " ";
 
   const drawer = (() => {
@@ -47,13 +49,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
       case "doctor":
         return <DoctorsSidebar />;
 
-      case "nurse":
+      case "staff":
         {
           const dept = (user?.department || "").toLowerCase();
           if (dept === "gopd" || dept === "general") return <GopdSidebar />;
           if (dept === "lab" || dept === "general") return <LabSidebar />;
           if (dept === "general") return <GenNurseSidebar />;
-          if (dept === "xray" || dept === "general") return <XraySidebar />;
           if (dept === "nhia" || dept === "general") return <NHIASidebar />;
           if (dept === "paypoint" || dept === "general") return <PaypointSidebar />;
           if (dept === "pharmacy" || dept === "general") return <PharmacySidebar />;
@@ -62,6 +63,9 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
       
       case "recording":
         return <RecordingSideBar />;
+
+      case "radiology":
+        return <RadiologySidebar />;
 
       default:
         return null;

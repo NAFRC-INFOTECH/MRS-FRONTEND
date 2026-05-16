@@ -15,10 +15,12 @@ export default function UserProfile({className, textSize}: {className?: string, 
       ? "Admin"
       : roles.includes("doctor")
       ? "Doctor"
-      : roles.includes("nurse")
-      ? "Nurse"
+      : roles.includes("staff")
+      ? "Staff"
       : roles.includes("recording")
       ? "Recording"
+      : roles.includes("radiology")
+      ? "Radiology"
       : " ";
   const avatar = data?.imageUrl || user?.imageUrl || "https://plus.unsplash.com/premium_vector-1682269287900-d96e9a6c188b?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
   return (

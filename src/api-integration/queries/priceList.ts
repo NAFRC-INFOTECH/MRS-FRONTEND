@@ -68,6 +68,7 @@ const emptySummary = (period: SummaryPeriod): PriceSummary => ({
   activeItems: 0,
   drugs: 0,
   services: 0,
+  servicesValue: 0,
   totalValue: 0,
   totalDrugs: 0,
   totalDrugsInStock: 0,

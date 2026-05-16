@@ -15,6 +15,7 @@ import GopdDashboard from './Pages/departments/gopdPages/GopdDashboard'
 import PatientsRegistry from './Pages/recordingdepartment/PatientsRegistry'
 import UserSettings from './Pages/settings/UserSettings'
 import Recordings from './Pages/superAdminPages/Recordings'
+import Radiology from './Pages/superAdminPages/Radiology'
 import RecordingDashboard from './Pages/recordingdepartment/RecordingDashboard'
 import RecordingProfile from './Pages/superAdminPages/RecordingProfile'
 import PatientsInQueue from './Pages/departments/gopdPages/PatientsInQueue'
@@ -39,6 +40,7 @@ import AdminDashboard from './Pages/adminPages/AdminDashboard'
 import CreatePriceList from './Pages/adminPages/createPriceListsPage/CreatePriceList'
 import LandingPage from './Pages/LandingPage/LandingPage'
 import RecordingDailyShift from './Pages/adminPages/RecordingDailyShift'
+import RadiologyDailyShift from './Pages/adminPages/RadiologyDailyShift'
 import NHIADashboard from './Pages/departments/nhiaPages/NHIADashboard'
 import NHIAPatientsList from './Pages/departments/nhiaPages/NHIAPatientsList'
 import PaypointDashboard from './Pages/departments/paypointPages/PaypointDashboard'
@@ -70,6 +72,7 @@ export {
   PatientsRegistry,
   UserSettings,
   Recordings,
+  Radiology,
   RecordingDashboard,
   RecordingProfile,
   PatientsInQueue,
@@ -93,6 +96,7 @@ export {
   AdminDashboard,
   CreatePriceList,
   RecordingDailyShift,
+  RadiologyDailyShift,
   NHIADashboard,
   NHIAPatientsList,
   PaypointDashboard,

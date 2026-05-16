@@ -1,63 +1,28 @@
-import {
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import {
-  ContactRound,
-  LayoutPanelLeft,
-} from "lucide-react";
+import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { ContactRound, LayoutPanelLeft } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-export default function XraySidebar() {
+export default function RadiologySidebar() {
   const location = useLocation();
 
-  // ✅ Define routes
   const routes = [
-    {
-      text: "Dashboard",
-      path: "/xray",
-      icon: LayoutPanelLeft,
-    },
-    {
-      text: "Patient List",
-      path: "/xray/patient-list",
-      icon: ContactRound,
-    },
+    { text: "Dashboard", path: "/radiology", icon: LayoutPanelLeft },
+    { text: "Patient List", path: "/radiology/patient-list", icon: ContactRound },
   ];
 
-  // Get most specific (longest) matching path
   const getActivePath = (paths: string[]) => {
     return paths
-      .filter(
-        (path) =>
-          location.pathname === path ||
-          location.pathname.startsWith(path + "/")
-      )
+      .filter((path) => location.pathname === path || location.pathname.startsWith(path + "/"))
       .sort((a, b) => b.length - a.length)[0];
   };
 
   const activePath = getActivePath(routes.map((r) => r.path));
 
-  //  Icon wrapper
-  const IconWrapper = ({
-    Icon,
-    active,
-  }: {
-    Icon: React.ElementType;
-    active: boolean;
-  }) => {
-    return (
-      <Icon
-        size={20}
-        color={active ? "#ffffff" : "#6B7280"}
-      />
-    );
+  const IconWrapper = ({ Icon, active }: { Icon: React.ElementType; active: boolean }) => {
+    return <Icon size={20} color={active ? "#ffffff" : "#6B7280"} />;
   };
 
-  //  Midnight auto refresh
   const getMillisecondsUntilMidnight = () => {
     const now = new Date();
     const midnight = new Date();
@@ -69,20 +34,15 @@ export default function XraySidebar() {
     const timer = setTimeout(() => {
       window.location.reload();
     }, getMillisecondsUntilMidnight());
-
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <section>
       <List>
-        <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
-          X-RAY
-        </span>
-
+        <span className="block text-start text-xs text-gray-500 pl-4 mb-2">RADIOLOGY</span>
         {routes.map((item) => {
           const active = item.path === activePath;
-
           return (
             <ListItemButton
               key={item.text}
@@ -103,7 +63,6 @@ export default function XraySidebar() {
               <ListItemIcon sx={{ minWidth: 40 }}>
                 <IconWrapper Icon={item.icon} active={active} />
               </ListItemIcon>
-
               <ListItemText primary={item.text} />
             </ListItemButton>
           );
@@ -112,3 +71,4 @@ export default function XraySidebar() {
     </section>
   );
 }
+

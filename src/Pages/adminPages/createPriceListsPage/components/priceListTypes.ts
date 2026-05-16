@@ -47,6 +47,7 @@ export type PriceSummary = {
   activeItems: number;
   drugs: number;
   services: number;
+  servicesValue: number;
   totalValue: number;
   totalDrugs: number;
   totalDrugsInStock: number;
@@ -157,6 +158,11 @@ export const calculatePriceSummary = (
     return sum + price * multiplier;
   }, 0);
 
+  const servicesValue = activeItemsArray.reduce((sum: number, item: PriceItem) => {
+    if (item.category === "drug") return sum;
+    return sum + (Number(item.price) || 0);
+  }, 0);
+
   const totalDrugsInStock = drugItems.reduce((sum: number, item: PriceItem) => {
     return sum + (Number(item.stockQuantity) || 0);
   }, 0);
@@ -180,6 +186,7 @@ export const calculatePriceSummary = (
     drugs: drugItems.length,
     totalDrugs: drugItems.length,
     services,
+    servicesValue,
     totalValue,
     totalDrugsInStock,
     totalDrugsSold,

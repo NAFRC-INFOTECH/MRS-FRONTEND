@@ -1,25 +1,24 @@
-// import React from 'react'
-
-import { useState, useMemo } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useDoctorUsersQuery } from "@/api-integration/queries/doctors";
+import { useUsersQuery } from "@/api-integration/queries/users";
 import { useDepartmentsQuery } from "@/api-integration/queries/departments";
 import { useDutiesQuery } from "@/api-integration/queries/duties";
-import { useCreateDutyMutation, useUpdateDutyMutation, useDeleteDutyMutation } from "@/api-integration/mutations/duties";
+import { useCreateDutyMutation, useDeleteDutyMutation, useUpdateDutyMutation } from "@/api-integration/mutations/duties";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DUTY_SHIFT_OPTIONS, getShiftTimes } from "@/lib/duty-shifts";
 
-export default function DoctorsDailyShift() {
+export default function RadiologyDailyShift() {
   const [openCombobox, setOpenCombobox] = useState(false);
-  const { data: doctors = [] } = useDoctorUsersQuery(true);
+  const { data: radiologyUsers = [] } = useUsersQuery("radiology");
   const { data: departments = [] } = useDepartmentsQuery();
+
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>(() => {
     const d = new Date();
@@ -29,15 +28,18 @@ export default function DoctorsDailyShift() {
     return `${y}-${m}-${day}`;
   });
   const [shiftFilter, setShiftFilter] = useState<string>("all");
+
   const { data: duties = [] } = useDutiesQuery({
-    role: "doctor",
+    role: "radiology",
     departmentId: deptFilter && deptFilter !== "all" ? deptFilter : undefined,
     date: dateFilter || undefined,
     shift: shiftFilter && shiftFilter !== "all" ? (shiftFilter as any) : undefined,
   });
+
   const createDuty = useCreateDutyMutation();
   const updateDuty = useUpdateDutyMutation();
   const deleteDuty = useDeleteDutyMutation();
+
   const [editOpen, setEditOpen] = useState(false);
   const [editDuty, setEditDuty] = useState<any>(null);
   const [editDepartmentId, setEditDepartmentId] = useState<string>("");
@@ -46,7 +48,7 @@ export default function DoctorsDailyShift() {
   const [editTimeOut, setEditTimeOut] = useState<string>("");
   const [editStatus, setEditStatus] = useState<string>("ON_DUTY");
 
-  const [role, setRole] = useState<"doctor">("doctor");
+  const [role, setRole] = useState<"radiology">("radiology");
   const [staffId, setStaffId] = useState<string>("");
   const [departmentId, setDepartmentId] = useState<string>("");
   const [date, setDate] = useState<string>("");
@@ -55,53 +57,21 @@ export default function DoctorsDailyShift() {
   const [timeOut, setTimeOut] = useState<string>("");
   const [status, setStatus] = useState<string>("ON_DUTY");
 
-  const mappedDoctors = useMemo(
-    () => doctors.map((d: any) => ({ id: d._id, name: d.name })),
-    [doctors]
+  const mappedRadiologyUsers = useMemo(
+    () => radiologyUsers.map((d: any) => ({ id: d._id, name: d.name })),
+    [radiologyUsers]
   );
-  const withinThreeDays = (d: string) => {
-    if (!d) return false;
-    const sel = new Date(d);
-    const today = new Date();
-    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const max = new Date(start);
-    max.setDate(max.getDate() + 3);
-    const selStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
-    return selStart >= start && selStart <= max;
-  };
+
   const applyShiftTimes = (d: string, s: string) => {
     const { timeIn, timeOut } = getShiftTimes(d, s);
     setTimeIn(timeIn);
     setTimeOut(timeOut);
   };
+
   const applyEditShiftTimes = (d: string, s: string) => {
     const { timeIn, timeOut } = getShiftTimes(d, s);
     setEditTimeIn(timeIn);
     setEditTimeOut(timeOut);
-  };
-  const exportCsv = () => {
-    const headers = ["Doctor", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
-    const rows = duties.map((d) => {
-      const docName = mappedDoctors.find((x) => x.id === (d as any).doctorUserId)?.name || "-";
-      const deptName = departments.find((x) => x._id === d.departmentId)?.name || "-";
-      const dateText = new Date(d.date).toLocaleDateString();
-      const shiftText = d.shift;
-      const timeInText = new Date(d.timeIn).toLocaleString();
-      const timeOutText = new Date(d.timeOut).toLocaleString();
-      const statusText = d.status;
-      return [docName, deptName, dateText, shiftText, timeInText, timeOutText, statusText];
-    });
-    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = "\ufeff" + [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `doctors_duties_${dateFilter || "today"}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -114,10 +84,14 @@ export default function DoctorsDailyShift() {
           <div className="flex flex-col gap-1">
             <Label>Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as any)}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select Role" /></SelectTrigger>
-              <SelectContent><SelectGroup>
-                <SelectItem value="doctor">Doctor</SelectItem>
-              </SelectGroup></SelectContent>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="radiology">Radiology</SelectItem>
+                </SelectGroup>
+              </SelectContent>
             </Select>
           </div>
 
@@ -126,7 +100,7 @@ export default function DoctorsDailyShift() {
             <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
               <PopoverTrigger asChild>
                 <Button variant="outline" type="button" className="justify-between">
-                  {mappedDoctors.find((n) => n.id === staffId)?.name || "Select Staff"}
+                  {mappedRadiologyUsers.find((n) => n.id === staffId)?.name || "Select Staff"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[300px]">
@@ -135,8 +109,8 @@ export default function DoctorsDailyShift() {
                   <CommandList>
                     <CommandEmpty>No staff found.</CommandEmpty>
                     <CommandGroup>
-                      {role === "doctor" &&
-                        mappedDoctors.map((n) => (
+                      {role === "radiology" &&
+                        mappedRadiologyUsers.map((n) => (
                           <CommandItem
                             key={n.id}
                             value={n.name}
@@ -158,82 +132,117 @@ export default function DoctorsDailyShift() {
           <div className="flex flex-col gap-1">
             <Label>Department</Label>
             <Select value={departmentId} onValueChange={setDepartmentId}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
-              <SelectContent><SelectGroup>
-                {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
-              </SelectGroup></SelectContent>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {departments.map((d) => (
+                    <SelectItem key={d._id} value={d._id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <Label htmlFor="doctor-duty-date">Duty Date</Label>
-            <Input id="doctor-duty-date" type="date" value={date} onChange={(e) => { const v = e.target.value; setDate(v); applyShiftTimes(v, shift); }} />
+            <Label htmlFor="radiology-duty-date">Duty Date</Label>
+            <Input
+              id="radiology-duty-date"
+              type="date"
+              value={date}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDate(v);
+                applyShiftTimes(v, shift);
+              }}
+            />
           </div>
+
           <div className="flex flex-col gap-1">
             <Label>Shift</Label>
-            <Select value={shift} onValueChange={(v) => { setShift(v); applyShiftTimes(date, v); }}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
-              <SelectContent><SelectGroup>
-                {DUTY_SHIFT_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                ))}
-              </SelectGroup></SelectContent>
+            <Select
+              value={shift}
+              onValueChange={(v) => {
+                setShift(v);
+                if (date) applyShiftTimes(date, v);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Shift" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {DUTY_SHIFT_OPTIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
             </Select>
           </div>
+
           <div className="flex flex-col gap-1">
-            <Label htmlFor="doctor-time-in">Time In</Label>
-            <Input id="doctor-time-in" type="datetime-local" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} />
+            <Label>Time In</Label>
+            <Input type="datetime-local" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} />
           </div>
+
           <div className="flex flex-col gap-1">
-            <Label htmlFor="doctor-time-out">Time Out</Label>
-            <Input id="doctor-time-out" type="datetime-local" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} />
+            <Label>Time Out</Label>
+            <Input type="datetime-local" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} />
           </div>
+
           <div className="flex flex-col gap-1">
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select Status" /></SelectTrigger>
-              <SelectContent><SelectGroup>
-                <SelectItem value="ON_DUTY">On Duty</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-                <SelectItem value="ABSENT">Absent</SelectItem>
-                <SelectItem value="SWAPPED">Swapped</SelectItem>
-              </SelectGroup></SelectContent>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="ON_DUTY">ON_DUTY</SelectItem>
+                  <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                  <SelectItem value="ABSENT">ABSENT</SelectItem>
+                  <SelectItem value="SWAPPED">SWAPPED</SelectItem>
+                </SelectGroup>
+              </SelectContent>
             </Select>
           </div>
-          <Button
-            className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/80"
-            type="button"
-            onClick={() => {
-              if (!role || !staffId || !departmentId || !date || !shift || !timeIn || !timeOut || !status) {
-                toast.error("All fields are required");
-                return;
-              }
-              if (!withinThreeDays(date)) {
-                toast.error("Duty date must be within the next 3 days");
-                return;
-              }
-              createDuty.mutate(
-                {
-                  role,
-                  staffId,
-                  departmentId,
-                  date,
-                  shift: shift as any,
-                  timeIn,
-                  timeOut,
-                  status: status as any,
-                  assignedBy: "admin",
-                },
-                {
-                  onSuccess: () => toast.success("Duty created"),
-                  onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+
+          <div className="flex items-end">
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (!staffId || !departmentId || !date || !shift || !timeIn || !timeOut) {
+                  toast.error("Please fill all required fields");
+                  return;
                 }
-              );
-            }}
-            disabled={createDuty.isPending}
-          >
-            {createDuty.isPending ? "Assigning..." : "Assign Duty"}
-          </Button>
+                createDuty.mutate(
+                  {
+                    role,
+                    staffId,
+                    departmentId,
+                    date,
+                    shift: shift as any,
+                    timeIn,
+                    timeOut,
+                    status: status as any,
+                    assignedBy: "admin",
+                  },
+                  {
+                    onSuccess: () => toast.success("Duty created"),
+                    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                  }
+                );
+              }}
+              disabled={createDuty.isPending}
+            >
+              {createDuty.isPending ? "Assigning..." : "Assign Duty"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -242,37 +251,49 @@ export default function DoctorsDailyShift() {
           <CardTitle>Duty Records</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
-              <Label>Filter Department</Label>
+              <Label>Department</Label>
               <Select value={deptFilter} onValueChange={setDeptFilter}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
-                <SelectContent><SelectGroup>
-                  <SelectItem value="all">All</SelectItem>
-                  {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
-                </SelectGroup></SelectContent>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Departments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="doctor-filter-date">Filter Date</Label>
-              <Input id="doctor-filter-date" type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+              <Label>Duty Date</Label>
+              <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
             </div>
             <div className="flex flex-col gap-1">
-              <Label>Filter Shift</Label>
+              <Label>Shift</Label>
               <Select value={shiftFilter} onValueChange={setShiftFilter}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
-                <SelectContent><SelectGroup>
-                  <SelectItem value="all">All</SelectItem>
-                  {DUTY_SHIFT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectGroup></SelectContent>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Shifts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
+                    {DUTY_SHIFT_OPTIONS.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
               </Select>
-            </div>
-            <div className="flex items-end">
-              <Button variant="outline" type="button" onClick={exportCsv} className="bg-[#56bbe3] text-white rounded-[8px]">Export CSV</Button>
             </div>
           </div>
+
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
               <thead className="bg-[#56bbe3] text-white">
@@ -288,11 +309,12 @@ export default function DoctorsDailyShift() {
                   <th className="px-4 py-2 text-left uppercase text-sm">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {duties.map((d) => (
-                  <tr key={d._id} className="even:bg-[#f9f9f9] border-b border-gray-200">
-                    {/* <td className="px-4 py-2 whitespace-nowrap">{d.nurseUserId ? "Nurse" : "Doctor"}</td> */}
-                    <td className="px-4 py-2 whitespace-nowrap">{mappedDoctors.find((x) => x.id === (d as any).doctorUserId)?.name || "-"}</td>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {duties.map((d: any) => (
+                  <tr key={d._id}>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      {mappedRadiologyUsers.find((x) => x.id === d.radiologyUserId)?.name || "-"}
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap">{departments.find((x) => x._id === d.departmentId)?.name || "-"}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(d.date).toLocaleDateString()}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{d.shift}</td>
@@ -302,29 +324,30 @@ export default function DoctorsDailyShift() {
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
                           size="sm"
+                          variant="outline"
                           onClick={() => {
                             setEditDuty(d);
-                            setEditOpen(true);
                             setEditDepartmentId(d.departmentId);
                             setEditShift(d.shift);
-                            setEditTimeIn(new Date(d.timeIn).toISOString().slice(0,16));
-                            setEditTimeOut(new Date(d.timeOut).toISOString().slice(0,16));
                             setEditStatus(d.status);
+                            setEditTimeIn(new Date(d.timeIn).toISOString().slice(0, 16));
+                            setEditTimeOut(new Date(d.timeOut).toISOString().slice(0, 16));
+                            setEditOpen(true);
                           }}
                         >
                           Edit
                         </Button>
                         <Button
-                          variant="destructive"
                           size="sm"
+                          variant="destructive"
                           onClick={() => {
                             deleteDuty.mutate(d._id, {
                               onSuccess: () => toast.success("Duty deleted"),
                               onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
                             });
                           }}
+                          disabled={deleteDuty.isPending}
                         >
                           Delete
                         </Button>
@@ -334,7 +357,9 @@ export default function DoctorsDailyShift() {
                 ))}
                 {duties.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-4">No duties found.</td>
+                    <td colSpan={8} className="text-center py-4">
+                      No duties found.
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -342,60 +367,89 @@ export default function DoctorsDailyShift() {
           </div>
         </CardContent>
       </Card>
+
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Duty</DialogTitle>
             <DialogDescription>Update shift, time in/out, and status.</DialogDescription>
           </DialogHeader>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <Label>Department</Label>
               <Select value={editDepartmentId} onValueChange={setEditDepartmentId}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select Department" /></SelectTrigger>
-                <SelectContent><SelectGroup>
-                  {departments.map((d) => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
-                </SelectGroup></SelectContent>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {departments.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
               </Select>
             </div>
+
             <div className="flex flex-col gap-1">
               <Label>Shift</Label>
-              <Select value={editShift} onValueChange={(v) => { setEditShift(v); if (editDuty?.date) applyEditShiftTimes(new Date(editDuty.date).toISOString().slice(0, 10), v); }}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select Shift" /></SelectTrigger>
-                <SelectContent><SelectGroup>
-                  {DUTY_SHIFT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectGroup></SelectContent>
+              <Select
+                value={editShift}
+                onValueChange={(v) => {
+                  setEditShift(v);
+                  if (editDuty?.date) applyEditShiftTimes(new Date(editDuty.date).toISOString().slice(0, 10), v);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {DUTY_SHIFT_OPTIONS.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
               </Select>
             </div>
+
             <div className="flex flex-col gap-1">
-              <Label htmlFor="edit-time-in">Time In</Label>
-              <Input id="edit-time-in" type="datetime-local" value={editTimeIn} onChange={(e) => setEditTimeIn(e.target.value)} />
+              <Label>Time In</Label>
+              <Input type="datetime-local" value={editTimeIn} onChange={(e) => setEditTimeIn(e.target.value)} />
             </div>
+
             <div className="flex flex-col gap-1">
-              <Label htmlFor="edit-time-out">Time Out</Label>
-              <Input id="edit-time-out" type="datetime-local" value={editTimeOut} onChange={(e) => setEditTimeOut(e.target.value)} />
+              <Label>Time Out</Label>
+              <Input type="datetime-local" value={editTimeOut} onChange={(e) => setEditTimeOut(e.target.value)} />
             </div>
-            <div className="flex flex-col gap-1">
+
+            <div className="flex flex-col gap-1 md:col-span-2">
               <Label>Status</Label>
               <Select value={editStatus} onValueChange={setEditStatus}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select Status" /></SelectTrigger>
-                <SelectContent><SelectGroup>
-                  <SelectItem value="ON_DUTY">On Duty</SelectItem>
-                  <SelectItem value="COMPLETED">Off Duty</SelectItem>
-                  <SelectItem value="ABSENT">Absent</SelectItem>
-                  <SelectItem value="SWAPPED">Swapped</SelectItem>
-                </SelectGroup></SelectContent>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="ON_DUTY">ON_DUTY</SelectItem>
+                    <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                    <SelectItem value="ABSENT">ABSENT</SelectItem>
+                    <SelectItem value="SWAPPED">SWAPPED</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
               </Select>
             </div>
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
             <Button
-              type="button"
               onClick={() => {
-                if (!editDuty) return;
+                if (!editDuty?._id) return;
                 updateDuty.mutate(
                   {
                     id: editDuty._id,
@@ -416,6 +470,7 @@ export default function DoctorsDailyShift() {
                   }
                 );
               }}
+              disabled={updateDuty.isPending}
             >
               Save
             </Button>
