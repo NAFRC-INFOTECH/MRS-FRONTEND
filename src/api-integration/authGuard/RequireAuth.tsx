@@ -27,7 +27,7 @@ export default function RequireAuth({ roles, departments }: RequireAuthProps) {
     }
   }
 
-  if (departments?.length && user.roles?.includes("nurse" as Role)) {
+  if (departments?.length && (user.roles?.includes("staff" as Role) || (user.roles as any)?.includes?.("nurse"))) {
     const userDept = (user?.department || "").toLowerCase();
     const deptList = departments.map((d) => d.toLowerCase());
     const okDept = !!userDept && (userDept === "general" || deptList.includes(userDept));

@@ -275,21 +275,21 @@ export default function RecordingDailyShift() {
             <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
               <thead className="bg-[#56bbe3] text-white">
                 <tr>
-                  <th className="px-4 py-2 text-left">Role</th>
-                  <th className="px-4 py-2 text-left">Recording Staff</th>
-                  <th className="px-4 py-2 text-left">Department</th>
-                  <th className="px-4 py-2 text-left">Date</th>
-                  <th className="px-4 py-2 text-left">Shift</th>
-                  <th className="px-4 py-2 text-left">Time In</th>
-                  <th className="px-4 py-2 text-left">Time Out</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
+                  {/* <th className="px-4 py-2 text-left uppercase text-sm">Role</th> */}
+                  <th className="px-4 py-2 text-left uppercase text-sm">Staff</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Department</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Date</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Shift</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time In</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time Out</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Status</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {duties.map((d) => (
                   <tr key={d._id} className="even:bg-[#f9f9f9] border-b border-gray-200">
-                    <td className="px-4 py-2 whitespace-nowrap">Recording</td>
+                    {/* <td className="px-4 py-2 whitespace-nowrap">Recording</td> */}
                     <td className="px-4 py-2 whitespace-nowrap">{mappedRecordingUsers.find((x) => x.id === (d as any).recordingUserId)?.name || "-"}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{departments.find((x) => x._id === d.departmentId)?.name || "-"}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(d.date).toLocaleDateString()}</td>

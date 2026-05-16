@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCreateLabReferralMutation } from "@/api-integration/mutations/labReferrals";
+import { useCreateXrayReferralMutation } from "@/api-integration/mutations/xrayReferrals";
 import MultiSelectLabTests from "../multiSelect/MultiSelectLabTests";
 import { xrayTests } from "./datas/xrayTests";
 
@@ -28,6 +29,7 @@ export default function TransferRequestFormModal({
     enabled: !!patientId && open,
   });
   const createReferral = useCreateLabReferralMutation();
+  const createXrayReferral = useCreateXrayReferralMutation();
 
   const computeAgeFromDob = (dob?: string) => {
     if (!dob) return "";
@@ -63,7 +65,7 @@ export default function TransferRequestFormModal({
       const p = patient as Patient;
       let toDest = "";
       if (destination === "lab") toDest = "Lab";
-      else if (destination === "xray") toDest = "X-ray";
+      else if (destination === "xray") toDest = "Radiology";
       else if (destination === "nhia") toDest = "NHIA";
       else if (destination === "paypoint") toDest = "Paypoint";
       setForm((prev) => ({
@@ -83,7 +85,7 @@ export default function TransferRequestFormModal({
 
   const onSubmit = async () => {
     if (!destination) return;
-    if (destination === "lab" || destination === "xray") {
+    if (destination === "lab") {
       await createReferral.mutateAsync({
         patientId,
         date: form.date,
@@ -96,6 +98,26 @@ export default function TransferRequestFormModal({
         age: form.age,
         to: form.to,
         specimen: form.specimen,
+        examinationRequired: form.examinationRequired,
+        diagnosis: form.diagnosis,
+        statement: form.statement,
+        previousReportNos: form.previousReportNos,
+        previousReportDate: form.previousReportDate,
+      }).catch(() => void 0);
+    }
+    if (destination === "xray") {
+      await createXrayReferral.mutateAsync({
+        patientId,
+        date: form.date,
+        serviceNoOrUUID: form.serviceNoOrUUID,
+        rank: form.rank,
+        forenames: form.forenames,
+        surname: form.surname,
+        wardNo: form.wardNo,
+        hospitalUnit: form.hospitalUnit,
+        age: form.age,
+        to: form.to,
+        imagingArea: form.specimen,
         examinationRequired: form.examinationRequired,
         diagnosis: form.diagnosis,
         statement: form.statement,

@@ -43,7 +43,7 @@ export default function NursesDailyShift() {
   });
   const [shiftFilter, setShiftFilter] = useState<string>("all");
   const { data: duties = [] } = useDutiesQuery({
-    role: "nurse",
+    role: "staff",
     departmentId: deptFilter && deptFilter !== "all" ? deptFilter : undefined,
     date: dateFilter || undefined,
     shift: shiftFilter && shiftFilter !== "all" ? (shiftFilter as any) : undefined,
@@ -59,7 +59,7 @@ export default function NursesDailyShift() {
   const [editTimeOut, setEditTimeOut] = useState<string>("");
   const [editStatus, setEditStatus] = useState<string>("ON_DUTY");
 
-  const [role, setRole] = useState<"nurse">("nurse");
+  const [role, setRole] = useState<"staff">("staff");
   const [staffId, setStaffId] = useState<string>("");
   const [departmentId, setDepartmentId] = useState<string>("");
   const [date, setDate] = useState<string>("");
@@ -105,7 +105,7 @@ export default function NursesDailyShift() {
     setEditTimeOut(timeOut);
   };
   const exportCsv = () => {
-    const headers = ["Nurse", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
+    const headers = ["Staff", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
     const rows = duties.map((d) => {
       const nurseName = mappedNurses.find((x) => x.id === d.nurseUserId)?.name || "-";
       const deptName = departments.find((x) => x._id === d.departmentId)?.name || "-";
@@ -122,7 +122,7 @@ export default function NursesDailyShift() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `nurses_duties_${dateFilter || "today"}.csv`;
+    a.download = `staff_duties_${dateFilter || "today"}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -141,7 +141,7 @@ export default function NursesDailyShift() {
             <Select value={role} onValueChange={(v) => setRole(v as any)}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select Role" /></SelectTrigger>
               <SelectContent><SelectGroup>
-                <SelectItem value="nurse">Nurse</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
               </SelectGroup></SelectContent>
             </Select>
           </div>
@@ -160,7 +160,7 @@ export default function NursesDailyShift() {
                   <CommandList>
                     <CommandEmpty>No staff found.</CommandEmpty>
                     <CommandGroup>
-                      {role === "nurse" &&
+                      {role === "staff" &&
                         mappedNurses.map((n) => (
                           <CommandItem
                             key={n.id}
@@ -257,7 +257,7 @@ export default function NursesDailyShift() {
                       if (deptName) {
                         const updated = { ...user, department: deptName };
                         dispatch(setUser(updated as any));
-                        const target = routeForRoleDepartment("nurse", deptName);
+                        const target = routeForRoleDepartment("staff", deptName);
                         if (target) navigate(target);
                       }
                     }
@@ -313,21 +313,21 @@ export default function NursesDailyShift() {
             <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
               <thead className="bg-[#56bbe3] text-white">
                 <tr>
-                  <th className="px-4 py-2 text-left">Role</th>
-                  <th className="px-4 py-2 text-left">Nurse</th>
-                  <th className="px-4 py-2 text-left">Department</th>
-                  <th className="px-4 py-2 text-left">Date</th>
-                  <th className="px-4 py-2 text-left">Shift</th>
-                  <th className="px-4 py-2 text-left">Time In</th>
-                  <th className="px-4 py-2 text-left">Time Out</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
+                  {/* <th className="px-4 py-2 text-left uppercase text-sm">Role</th> */}
+                  <th className="px-4 py-2 text-left uppercase text-sm">Staff</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Department</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Date</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Shift</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time In</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time Out</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Status</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {duties.map((d) => (
                   <tr key={d._id} className="even:bg-[#f9f9f9] border-b border-gray-200">
-                    <td className="px-4 py-2 whitespace-nowrap">{d.nurseUserId ? "Nurse" : "Doctor"}</td>
+                    {/* <td className="px-4 py-2 whitespace-nowrap">{d.nurseUserId ? "Nurse" : "Doctor"}</td> */}
                     <td className="px-4 py-2 whitespace-nowrap">{mappedNurses.find((x) => x.id === d.nurseUserId)?.name || "-"}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{departments.find((x) => x._id === d.departmentId)?.name || "-"}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(d.date).toLocaleDateString()}</td>
@@ -452,7 +452,7 @@ export default function NursesDailyShift() {
                         if (deptName) {
                           const updated = { ...user, department: deptName };
                           dispatch(setUser(updated as any));
-                          const target = routeForRoleDepartment("nurse", deptName);
+                          const target = routeForRoleDepartment("staff", deptName);
                           if (target) navigate(target);
                         }
                       }

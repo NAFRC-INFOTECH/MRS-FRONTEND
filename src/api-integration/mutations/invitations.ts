@@ -32,7 +32,7 @@ export const useCreateDoctorDirectMutation = () => {
 };
 
 export const createNurseDirectApi = async (payload: { name: string; email: string; department?: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
-  const res = await api.post("/invitations/nurse/direct", payload);
+  const res = await api.post("/invitations/staff/direct", payload);
   return res.data as { id: string; email: string; name: string; password: string };
 };
 
@@ -53,8 +53,19 @@ export const useCreateRecordingDirectMutation = () => {
   });
 };
 
+export const createRadiologyDirectApi = async (payload: { name: string; email: string; department?: string }): Promise<{ id: string; email: string; name: string; password: string }> => {
+  const res = await api.post("/invitations/radiology/direct", payload);
+  return res.data as { id: string; email: string; name: string; password: string };
+};
+
+export const useCreateRadiologyDirectMutation = () => {
+  return useMutation({
+    mutationFn: createRadiologyDirectApi,
+  });
+};
+
 export const inviteNurseApi = async (payload: { email: string }): Promise<InvitationResponse> => {
-  const res = await api.post("/invitations/nurse", payload);
+  const res = await api.post("/invitations/staff", payload);
   return res.data as InvitationResponse;
 };
 

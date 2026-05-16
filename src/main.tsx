@@ -40,6 +40,7 @@ import {
   PatientsRegistry,
   UserSettings,
   Recordings,
+  Radiology,
   RecordingDashboard,
   RecordingProfile,
   PatientsInQueue,
@@ -63,6 +64,7 @@ import {
   AdminDashboard,
   CreatePriceList,
   RecordingDailyShift,
+  RadiologyDailyShift,
   NHIADashboard,
   NHIAPatientsList,
   PaypointDashboard,
@@ -92,12 +94,13 @@ const router = createBrowserRouter(
             <Route path='mrs-admin'>
               <Route index element={<SuperAdminDashboard />} />
               <Route path='admins' element={<Admins />} />
-              <Route path='nurses' element={<Nurses />} />
+              <Route path='staffs' element={<Nurses />} />
               <Route path='doctors' element={<Doctors />} />
               <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='patients' element={<Patients />} />
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='recordings' element={<Recordings />} />
+              <Route path='radiology' element={<Radiology />} />
               <Route path='all-departments' element={<AllDepartments />} />
             </Route>
           </Route>
@@ -110,13 +113,15 @@ const router = createBrowserRouter(
               <Route path='price-list' element={<CreatePriceList />} />
               <Route path='doctors' element={<Doctors />} />
               <Route path='doctors/:id' element={<DoctorProfile />} />
-              <Route path='nurses' element={<Nurses />} />
+              <Route path='staffs' element={<Nurses />} />
               <Route path='patients' element={<Patients />} />
               <Route path='recordings' element={<Recordings />} />
+              <Route path='radiology' element={<Radiology />} />
               <Route path='service-users' element={<ServiceUsers />} />
-              <Route path='nurses-duty' element={<NursesDailyShift />} />
+              <Route path='staffs-duty' element={<NursesDailyShift />} />
               <Route path='doctors-duty' element={<DoctorsDailyShift />} />
               <Route path='recording-duty' element={<RecordingDailyShift />} />
+              <Route path='radiology-duty' element={<RadiologyDailyShift />} />
             </Route>
           </Route>
 
@@ -134,14 +139,14 @@ const router = createBrowserRouter(
           </Route>
 
           {/* General Permit Routes */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["general"]} />}>
             <Route path='general'>
               <Route index element={<NurseGeneral />} />
             </Route>
           </Route>
 
           {/* Nurses Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["GOPD", "general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["GOPD", "general"]} />}>
             <Route path='gopd'>
               <Route index element={<GopdDashboard />} />
               <Route path="patients-in-queue" element={<PatientsInQueue />} />
@@ -150,7 +155,7 @@ const router = createBrowserRouter(
           </Route>
 
           {/* Lab Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["lab", "general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["lab", "general"]} />}>
             <Route path='lab'>
               <Route index element={<LabDashboard />} />
               <Route path="patient-list" element={<LabPatientsList />} />
@@ -158,9 +163,9 @@ const router = createBrowserRouter(
             </Route>
           </Route>
 
-          {/* X-Ray Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["xray", "general"]} />}>
-            <Route path='xray'>
+          {/* Radiology Dashboard */}
+          <Route element={<RequireAuth roles={["radiology"]} />}>
+            <Route path='radiology'>
               <Route index element={<XrayDashboard />} />
               <Route path="patient-list" element={<XrayPatientsList />} />
               <Route path="patient-list/:patientId" element={<XrayPatientTestsPage />} />
@@ -168,7 +173,7 @@ const router = createBrowserRouter(
           </Route>
 
           {/* NHIA Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["nhia", "general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["nhia", "general"]} />}>
             <Route path='nhia'>
               <Route index element={<NHIADashboard />} />
               <Route path="patients" element={<NHIAPatientsList />} />
@@ -176,7 +181,7 @@ const router = createBrowserRouter(
           </Route>
 
           {/* Paypoint Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["paypoint", "general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["paypoint", "general"]} />}>
             <Route path='paypoint'>
               <Route index element={<PaypointDashboard />} />
               <Route path="patients" element={<PaypointPatientsList />} />
@@ -184,7 +189,7 @@ const router = createBrowserRouter(
           </Route>
 
           {/* Pharmacy Dashboard */}
-          <Route element={<RequireAuth roles={["nurse"]} departments={["pharmacy", "general"]} />}>
+          <Route element={<RequireAuth roles={["staff"]} departments={["pharmacy", "general"]} />}>
             <Route path='pharmacy'>
               <Route index element={<PharmacyDashboard />} />
               <Route path="patientsList" element={<ReferredPatientsList />} />

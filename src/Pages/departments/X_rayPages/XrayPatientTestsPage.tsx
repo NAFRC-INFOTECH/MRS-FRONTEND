@@ -3,11 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUpdateLabReferralResultsMutation } from "@/api-integration/mutations/labReferrals";
+import { useUpdateXrayReferralResultsMutation } from "@/api-integration/mutations/xrayReferrals";
 import {
-  useLabReferralsQuery,
-  type LabReferral,
-} from "@/api-integration/queries/lab";
+  useXrayReferralsQuery,
+  type XrayReferral,
+} from "@/api-integration/queries/xray";
 
 type ResultMap = Record<string, string>;
 type ErrorMap = Record<string, string>;
@@ -15,18 +15,14 @@ type ErrorMap = Record<string, string>;
 export default function XrayPatientTestsPage() {
   const navigate = useNavigate();
   const { patientId } = useParams();
-  const { data: referrals = [], isLoading } = useLabReferralsQuery();
-  const updateResults = useUpdateLabReferralResultsMutation();
+  const { data: referrals = [], isLoading } = useXrayReferralsQuery();
+  const updateResults = useUpdateXrayReferralResultsMutation();
 
   const [results, setResults] = useState<ResultMap>({});
   const [errors, setErrors] = useState<ErrorMap>({});
 
   const patientReferral = useMemo(() => {
-    const matches = (referrals as LabReferral[]).filter(
-      (ref) =>
-        String(ref.patientId) === String(patientId) &&
-        (ref.to || "").toLowerCase() === "x-ray"
-    );
+    const matches = (referrals as XrayReferral[]).filter((ref) => String(ref.patientId) === String(patientId));
     return matches[0];
   }, [referrals, patientId]);
 
@@ -81,8 +77,8 @@ export default function XrayPatientTestsPage() {
     updateResults.mutate(
       { id: patientReferral.id, testResults: results },
       {
-        onSuccess: () => toast.success("Patient X-ray results saved"),
-        onError: () => toast.error("Failed to save patient X-ray results"),
+        onSuccess: () => toast.success("Patient radiology results saved"),
+        onError: () => toast.error("Failed to save patient radiology results"),
       }
     );
   };
@@ -91,13 +87,13 @@ export default function XrayPatientTestsPage() {
     <div className="space-y-6 py-4">
       <div className="flex items-center justify-between gap-20">
         <div>
-          <h2 className="text-xl font-semibold">Patient Required X-Ray Tests</h2>
+          <h2 className="text-xl font-semibold">Patient Required Radiology Tests</h2>
           <p className="text-sm text-gray-500">
-            Required X-ray tests and result input for the selected patient.
+            Required radiology tests and result input for the selected patient.
           </p>
         </div>
 
-        <Button variant="outline" onClick={() => navigate("/xray/patient-list")}>
+        <Button variant="outline" onClick={() => navigate("/radiology/patient-list")}>
           Back
         </Button>
       </div>
@@ -136,7 +132,7 @@ export default function XrayPatientTestsPage() {
             <div className="flex w-full items-center gap-20">
               <div>
                 <div className="text-xs text-gray-500">Imaging Area</div>
-                <div className="font-medium">{patientReferral.specimen || "-"}</div>
+                <div className="font-medium">{patientReferral.imagingArea || "-"}</div>
               </div>
 
               <div>

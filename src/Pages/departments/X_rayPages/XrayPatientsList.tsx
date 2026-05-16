@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { MoreHorizontal } from "lucide-react";
-import { useLabReferralsQuery, type LabReferral } from "@/api-integration/queries/lab";
-import { useUpdateLabReferralStatusMutation } from "@/api-integration/mutations/labReferrals";
+import { useXrayReferralsQuery, type XrayReferral } from "@/api-integration/queries/xray";
+import { useUpdateXrayReferralStatusMutation } from "@/api-integration/mutations/xrayReferrals";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,21 +22,19 @@ import {
 
 export default function XrayPatientsList() {
   const [status, setStatus] = useState<string>("PENDING");
-  const { data: referrals = [], isLoading } = useLabReferralsQuery(status);
-  const updateStatus = useUpdateLabReferralStatusMutation();
+  const { data: referrals = [], isLoading } = useXrayReferralsQuery({ status });
+  const updateStatus = useUpdateXrayReferralStatusMutation();
   const navigate = useNavigate();
 
   const rows = useMemo(() => {
-    return (referrals as LabReferral[])
-      .filter((r) => (r.to || "").toLowerCase() === "x-ray")
-      .map((r) => ({
+    return (referrals as XrayReferral[]).map((r) => ({
         id: r.id,
         patientId: r.patientId,
         date: r.date ? new Date(r.date).toLocaleDateString() : "-",
         name: [r.surname, r.forenames].filter(Boolean).join(", "),
         serviceNoOrUUID: r.serviceNoOrUUID || r.patientId,
         age: r.age || "-",
-        imagingArea: r.specimen || "-",
+        imagingArea: r.imagingArea || "-",
         examinationRequired: r.examinationRequired || "-",
         status: r.status,
       }));
@@ -45,7 +43,7 @@ export default function XrayPatientsList() {
   return (
     <div className="py-4">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">X-Ray Patients</h2>
+        <h2 className="text-xl font-semibold">Radiology Patients</h2>
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Status</span>
@@ -139,7 +137,7 @@ export default function XrayPatientsList() {
 
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate(`/xray/patient-list/${r.patientId}`);
+                            navigate(`/radiology/patient-list/${r.patientId}`);
                           }}
                         >
                           Required Test

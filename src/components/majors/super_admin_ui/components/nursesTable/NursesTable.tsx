@@ -25,7 +25,7 @@ import { useNursesQuery } from "@/api-integration/queries/nurses";
 import { useResetUserPasswordMutation } from "@/api-integration/mutations/users";
 import { useSearch } from "@/contexts/SearchContext";
 
-// Type for nurse status
+// Type for staff status
 type NurseStatus = "active" | "assigned" | "suspended" | "sacked";
 
 // No local dummy data; fetched from API instead
@@ -111,20 +111,20 @@ export default function NursesTable() {
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">View all Nurses</h2>
+        <h2 className="text-xl font-semibold">View all Staff</h2>
         <button
           onClick={() => setShowInvite(true)}
           className="flex items-center px-4 py-2 bg-[#56bbe3] text-white rounded hover:bg-[#56bbe3] rounded-[8px]"
         >
-          <PlusIcon className="w-5 h-5 mr-2" /> Add <span className="hidden md:inline-block ml-2">Nurse</span>
+          <PlusIcon className="w-5 h-5 mr-2" /> Add <span className="hidden md:inline-block ml-2">Staff</span>
         </button>
       </div>
 
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Nurse Account</DialogTitle>
-            <DialogDescription>Enter the nurse&rsquo;s full name and email. A temporary password will be generated.</DialogDescription>
+            <DialogTitle>Create Staff Account</DialogTitle>
+            <DialogDescription>Enter the staff&rsquo;s full name and email. A temporary password will be generated.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Input
@@ -135,7 +135,7 @@ export default function NursesTable() {
             />
             <Input
               type="email"
-              placeholder="nurse@example.com"
+              placeholder="staff@example.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
             />
@@ -164,7 +164,7 @@ export default function NursesTable() {
                   { email: inviteEmail, name: inviteName, department: inviteDept || undefined },
                   {
                     onSuccess: (res) => {
-                      toast.success(`Nurse created. Temp password: ${res.password}`);
+                      toast.success(`Staff created. Temp password: ${res.password}`);
                       setInviteEmail("");
                       setInviteName("");
                       setInviteDept("");
@@ -172,14 +172,14 @@ export default function NursesTable() {
                     },
                     onError: (err: unknown) => {
                       const msg = err instanceof Error ? err.message : String(err ?? "");
-                      toast.error(msg || "Failed to create nurse account");
+                      toast.error(msg || "Failed to create staff account");
                     },
                   }
                 );
               }}
               disabled={createNurse.isPending || !inviteEmail || !inviteName || !inviteDept}
             >
-              {createNurse.isPending ? "Creating..." : "Create Nurse"}
+              {createNurse.isPending ? "Creating..." : "Create Staff"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -233,7 +233,7 @@ export default function NursesTable() {
         </Select>
       </div>
 
-      {/* Nurses Table */}
+      {/* Staff Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-200 rounded-t-[8px] overflow-hidden">
           <thead className="bg-[#56bbe3] text-white">
@@ -249,12 +249,12 @@ export default function NursesTable() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="text-center py-6">Loading nurses...</td>
+                <td colSpan={6} className="text-center py-6">Loading staff...</td>
               </tr>
             )}
             {isError && !isLoading && (
               <tr>
-                <td colSpan={6} className="text-center py-6 text-red-600">Failed to load nurses</td>
+                <td colSpan={6} className="text-center py-6 text-red-600">Failed to load staff</td>
               </tr>
             )}
             {!isLoading && !isError && filteredNurses.map((n) => (
@@ -301,7 +301,7 @@ export default function NursesTable() {
             {filteredNurses.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center py-4">
-                  No nurses found.
+                  No staff found.
                 </td>
               </tr>
             )}
@@ -313,7 +313,7 @@ export default function NursesTable() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Temporary Password</DialogTitle>
-            <DialogDescription>Share this temporary password securely with the nurse.</DialogDescription>
+            <DialogDescription>Share this temporary password securely with the staff.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="flex items-center gap-2">

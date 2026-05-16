@@ -8,7 +8,7 @@ export interface SidebarProps {
     // role: UserRole;
 }
 
-export type Role = "super_admin" | "admin" | "doctor" | "nurse" | "recording";
+export type Role = "super_admin" | "admin" | "doctor" | "staff" | "recording" | "radiology";
 export type Department = {
   _id: string;
   name: string;

@@ -12,7 +12,8 @@ export function routeForRoleDepartment(role?: string, department?: string): stri
   if (r === "admin") return "/admin-dashboard";
   if (r === "doctor") return "/doctors-dashboard";
   if (r === "recording") return "/recordings";
-  if (r === "nurse") {
+  if (r === "radiology") return "/radiology";
+  if (r === "staff" || r === "nurse") {
     const map: Record<string, string> = {
       gopd: "/gopd",
       lab: "/lab",

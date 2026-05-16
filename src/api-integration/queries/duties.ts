@@ -9,6 +9,7 @@ export type DutyRecord = {
   doctorUserId?: string;
   nurseUserId?: string;
   recordingUserId?: string;
+  radiologyUserId?: string;
   departmentId: string;
   date: string;
   shift: DutyShift;
@@ -18,12 +19,12 @@ export type DutyRecord = {
   assignedBy: string;
 };
 
-export const getDutiesApi = async (params?: { role?: "doctor" | "nurse" | "recording"; departmentId?: string; date?: string; shift?: DutyShift }): Promise<DutyRecord[]> => {
+export const getDutiesApi = async (params?: { role?: "doctor" | "staff" | "recording" | "radiology"; departmentId?: string; date?: string; shift?: DutyShift }): Promise<DutyRecord[]> => {
   const res = await api.get("/duties", { params });
   return res.data as DutyRecord[];
 };
 
-export const useDutiesQuery = (params?: { role?: "doctor" | "nurse" | "recording"; departmentId?: string; date?: string; shift?: DutyShift }) => {
+export const useDutiesQuery = (params?: { role?: "doctor" | "staff" | "recording" | "radiology"; departmentId?: string; date?: string; shift?: DutyShift }) => {
   return useQuery({
     queryKey: ["duties", params?.role ?? "all", params?.departmentId ?? "all", params?.date ?? "all", params?.shift ?? "all"],
     queryFn: () => getDutiesApi(params),
