@@ -11,4 +11,5 @@ export interface Doctor {
   specialty: string;     // Area of specialty (e.g., Cardiology)
   hospital: string;      // Hospital name
   status: DoctorStatus;  // Current status
+  email: string;         // Doctor's email
 }

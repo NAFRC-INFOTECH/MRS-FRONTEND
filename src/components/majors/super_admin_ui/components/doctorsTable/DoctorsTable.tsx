@@ -107,10 +107,6 @@ export default function DoctorsTable() {
     });
     return;
   }
-  // if (action === "assign") {
-  //   toast.info("Assign action is not implemented yet");
-  //   return;
-  // }
 };
 
   const getStatusColor = (status: doctorProfile["personalInfo"]["status"]) => {
@@ -285,8 +281,8 @@ export default function DoctorsTable() {
           <thead className="bg-[#56bbe3] text-white">
             <tr className="">
               <th className="px-4 py-2 text-left">Image</th>
-              <th className="px-4 py-2 text-left">UUID</th>
               <th className="px-4 py-2 text-left">Name</th>
+              <th className="px-4 py-2 text-left">Email</th>
               <th className="px-4 py-2 text-left">Specialty</th>
               <th className="px-4 py-2 text-left">Hospital</th>
               <th className="px-4 py-2 text-left">Status</th>
@@ -318,8 +314,8 @@ export default function DoctorsTable() {
                     <img src={doc.personalInfo.imageUrl || "https://placehold.co/80x80"} alt={doc.personalInfo.fullName} className="w-full h-full object-cover rounded-full" />
                   </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">{doc.personalInfo.id}</td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{doc.personalInfo.fullName}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{doc.personalInfo.email}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{doc.qualifications.specialization}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{doc.personalInfo.hospital}</td>
                 <td className={`p-2`}>

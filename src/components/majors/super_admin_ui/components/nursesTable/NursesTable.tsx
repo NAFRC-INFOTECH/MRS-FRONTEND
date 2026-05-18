@@ -28,6 +28,17 @@ import { useSearch } from "@/contexts/SearchContext";
 // Type for staff status
 type NurseStatus = "active" | "assigned" | "suspended" | "sacked";
 
+type StaffRow = {
+  personalInfo: {
+    id: string;
+    email: string;
+    fullName: string;
+    imageUrl: string;
+    status: NurseStatus;
+  };
+  department: string;
+};
+
 // No local dummy data; fetched from API instead
 
 export default function NursesTable() {
@@ -57,7 +68,7 @@ export default function NursesTable() {
 
   const handleAction = (id: string, action: string) => {
     if (action === "profile") {
-      navigate(`/hospital-admin/nurses/${id}`);
+      navigate(`/hospital-admin/staffs/${id}`);
       return;
     }
 
@@ -91,16 +102,17 @@ export default function NursesTable() {
     }
   };
 
-  const mapped = (nurseUsers || []).map((u) => ({
+  const mapped: StaffRow[] = (nurseUsers || []).map((u) => ({
     personalInfo: {
       id: u._id,
+      email: u.email,
       fullName: u.name,
       imageUrl: u.imageUrl || "",
       status: "active" as NurseStatus, // accepted invite -> user exists
     },
     department: u.department || "",
   }));
-  const filteredNurses = mapped.filter(
+  const filteredNurses: StaffRow[] = mapped.filter(
     (n) =>
       (filters.status ? n.personalInfo.status === filters.status : true) &&
       (filters.department ? n.department === filters.department : true) &&
@@ -239,8 +251,8 @@ export default function NursesTable() {
           <thead className="bg-[#56bbe3] text-white">
             <tr>
               <th className="px-4 py-2 text-left">Image</th>
-              <th className="px-4 py-2 text-left">UUID</th>
               <th className="px-4 py-2 text-left">Name</th>
+              <th className="px-4 py-2 text-left">Email</th>
               <th className="px-4 py-2 text-left">Department</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Action</th>
@@ -268,8 +280,8 @@ export default function NursesTable() {
                     />
                   </div>
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap">{n.personalInfo.id}</td>
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{n.personalInfo.fullName}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{n.personalInfo.email}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{n.department || "-"}</td>
                 <td className="p-2">
                   <span
