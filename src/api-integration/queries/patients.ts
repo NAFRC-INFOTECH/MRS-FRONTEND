@@ -143,3 +143,15 @@ export const usePharmacyReferredPatientsQuery = (q?: string) => {
     queryFn: () => getPharmacyReferredPatientsApi(q),
   });
 };
+
+export type NHIAAccess = {
+  patientId: string;
+  status: "cleared" | "not_cleared" | "awaiting" | "unknown";
+  hasAccess: boolean;
+  updatedAt?: string | null;
+};
+
+export const getNHIAAccessApi = async (patientId: string): Promise<NHIAAccess> => {
+  const res = await api.get(`/patients/${encodeURIComponent(patientId)}/nhia/access`);
+  return res.data as NHIAAccess;
+};

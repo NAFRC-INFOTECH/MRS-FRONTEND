@@ -23,6 +23,7 @@ const PriceListTable = lazy(() =>
 const PriceListTemplates = lazy(() =>
   import("./components/PriceListTemplates").then((m) => ({ default: m.PriceListTemplates }))
 );
+const TopSellingDrugsCard = lazy(() => import("./components/TopSellingDrugsCard"));
 
 import {
   defaultForm,
@@ -262,20 +263,34 @@ export default function CreatePriceList() {
 
         <Card className="xl:col-span-2">
           <CardContent className="space-y-4">
-            <Suspense
-              fallback={
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              }
-            >
-              <PriceListTemplates
-                templates={quickAddTemplates}
-                onTemplateSelect={loadStarterTemplate}
-              />
-            </Suspense>
+            <section className="flex flex-col lg:flex-row justify-between gap-4">
+              <Suspense
+                fallback={
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:min-w-[40rem]">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                }
+              >
+                <PriceListTemplates
+                  templates={quickAddTemplates}
+                  onTemplateSelect={loadStarterTemplate}
+                />
+              </Suspense>
+
+              <Suspense
+                fallback={
+                  <div className="w-full">
+                    {Array.from({ length: 1 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                }
+              >
+                <TopSellingDrugsCard />
+              </Suspense>
+            </section>
             <Suspense fallback={<Skeleton className="h-10 w-full" />}>
               <PriceListFilters
                 searchTerm={searchTerm}

@@ -15,6 +15,8 @@ export default function UserProfile({className, textSize}: {className?: string, 
       ? "Admin"
       : roles.includes("doctor")
       ? "Doctor"
+      : roles.includes("clinical")
+      ? "Clinical"
       : roles.includes("staff")
       ? "Staff"
       : roles.includes("recording")

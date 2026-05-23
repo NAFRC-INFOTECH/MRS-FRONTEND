@@ -18,7 +18,7 @@ export function PriceListTemplates({
   onTemplateSelect,
 }: PriceListTemplatesProps) {
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Quick Price Templates</CardTitle>
         <CardDescription>
@@ -26,7 +26,7 @@ export function PriceListTemplates({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {templates.map((template) => (
             <TemplateCard key={template.name} template={template} onSelect={onTemplateSelect} />
           ))}

@@ -11,6 +11,11 @@ export function routeForRoleDepartment(role?: string, department?: string): stri
   if (r === "super_admin") return "/mrs-admin";
   if (r === "admin") return "/admin-dashboard";
   if (r === "doctor") return "/doctors-dashboard";
+  if (r === "clinical") {
+    if (d.includes("ear")) return "/clinical/ear";
+    if (d.includes("eye")) return "/clinical/eye";
+    return "/clinical";
+  }
   if (r === "recording") return "/recordings";
   if (r === "radiology") return "/radiology";
   if (r === "staff" || r === "nurse") {

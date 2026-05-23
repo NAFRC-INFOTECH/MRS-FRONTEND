@@ -2,19 +2,23 @@
 import { useMemo, useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Activity, ArrowRightCircle } from "lucide-react";
+import { ChevronDown, Activity, ArrowRightCircle, Ear, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGopdQueueQuery } from "@/api-integration/queries/gopd";
 import { useAddDoctorDayListMutation } from "@/api-integration/mutations/doctorDayList";
+import { useAddClinicalDayListMutation } from "@/api-integration/mutations/clinicalDayList";
 import { api } from "@/api-integration/api/apiClient";
 import { getVitalsApi } from "@/api-integration/queries/vitals";
 import { toast } from "sonner";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function PatientsInQueue() {
+  const {query} = useSearch()
   const { data: queue = [] } = useGopdQueueQuery();
   const navigate = useNavigate();
   const addDaylist = useAddDoctorDayListMutation();
-  const [searchName, setSearchName] = useState("");
+  const addClinicalDaylist = useAddClinicalDayListMutation();
+  // const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
 
   const rows = useMemo(() => {
@@ -28,14 +32,16 @@ export default function PatientsInQueue() {
       return { id, fullName, phone, cardNumber, rank };
     });
     return list.filter((r) => {
-      const nmOk = searchName ? r.fullName.toLowerCase().includes(searchName.toLowerCase()) : true;
+      const q1 = (query || "").trim().toLowerCase();
+      const name = (r.fullName || "").toLowerCase();
+      const nmOk = (q1 ? name.includes(q1) : true);
       const idOk = searchIdService
         ? r.id.toLowerCase().includes(searchIdService.toLowerCase()) ||
           r.cardNumber.toLowerCase().includes(searchIdService.toLowerCase())
         : true;
       return nmOk && idOk;
     });
-  }, [queue, searchName, searchIdService]);
+  }, [queue, query, searchIdService]);
 
   return (
     <div className="p-4">
@@ -44,13 +50,6 @@ export default function PatientsInQueue() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 max-w-[60rem]">
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border p-2 rounded"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-        />
         <input
           type="text"
           placeholder="Search by UUID / Service Number"
@@ -117,6 +116,66 @@ export default function PatientsInQueue() {
                       >
                         <ArrowRightCircle className="w-4 h-4" />
                         <span>Transfer to Doctor</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          const vitals = await getVitalsApi(r.id);
+                          const today = new Date();
+                          const y = today.getFullYear();
+                          const m = today.getMonth() + 1;
+                          const d = today.getDate();
+                          const hasToday = (vitals as any[]).some(
+                            (v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d
+                          );
+                          if (!hasToday) {
+                            toast.error("Record today's vitals before transfer");
+                            return;
+                          }
+                          await addClinicalDaylist.mutateAsync({
+                            patientId: r.id,
+                            targetDepartment: "EarDoctor",
+                            sourceDepartment: "GOPD",
+                          });
+                          try {
+                            await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
+                          } catch {}
+                          toast.success("Transferred to EarDoctor");
+                          navigate(`/gopd/patients-in-queue`);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Ear className="w-4 h-4" />
+                        <span>Transfer to EarDoctor</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          const vitals = await getVitalsApi(r.id);
+                          const today = new Date();
+                          const y = today.getFullYear();
+                          const m = today.getMonth() + 1;
+                          const d = today.getDate();
+                          const hasToday = (vitals as any[]).some(
+                            (v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d
+                          );
+                          if (!hasToday) {
+                            toast.error("Record today's vitals before transfer");
+                            return;
+                          }
+                          await addClinicalDaylist.mutateAsync({
+                            patientId: r.id,
+                            targetDepartment: "EyeDoctor",
+                            sourceDepartment: "GOPD",
+                          });
+                          try {
+                            await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
+                          } catch {}
+                          toast.success("Transferred to EyeDoctor");
+                          navigate(`/gopd/patients-in-queue`);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>Transfer to EyeDoctor</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

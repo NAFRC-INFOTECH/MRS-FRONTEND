@@ -16,6 +16,7 @@ import {
   ReceiptText,
   Stethoscope,
   ScanLine,
+  BookOpenCheck,
 } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -72,12 +73,14 @@ export default function AdminsSideBar() {
             { text: "All Patients", path: "/admin-dashboard/patients", icon: ContactRound },
             { text: "Recordings", path: "/admin-dashboard/recordings", icon: LibraryBig },
             { text: "Radiology", path: "/admin-dashboard/radiology", icon: ScanLine },
+            { text: "Clinical", path: "/admin-dashboard/clinical", icon: Stethoscope },
             { text: "Service Users", path: "/admin-dashboard/service-users", icon: ShieldUser },
             { text: "Price List", path: "/admin-dashboard/price-list", icon: ReceiptText },
             { text: "Staffs Duty", path: "/admin-dashboard/staffs-duty", icon: ClipboardList },
             { text: "Doctors Duty", path: "/admin-dashboard/doctors-duty", icon: Stethoscope },
             { text: "Recording Duty", path: "/admin-dashboard/recording-duty", icon: ClipboardList },
             { text: "Radiology Duty", path: "/admin-dashboard/radiology-duty", icon: ClipboardList },
+            { text: "Audit Log", path: "/admin-dashboard/audit-log", icon: BookOpenCheck },
           ].map((item) => {
             const active = isRouteActive(item.path)
 

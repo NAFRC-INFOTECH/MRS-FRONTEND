@@ -41,6 +41,7 @@ import {
   UserSettings,
   Recordings,
   Radiology,
+  Clinical,
   RecordingDashboard,
   RecordingProfile,
   PatientsInQueue,
@@ -65,6 +66,7 @@ import {
   CreatePriceList,
   RecordingDailyShift,
   RadiologyDailyShift,
+  AuditLog,
   NHIADashboard,
   NHIAPatientsList,
   PaypointDashboard,
@@ -73,8 +75,13 @@ import {
   ReferredPatientsList,
   ViewPrescription,
   DoctorsReportTable,
+  EarDoctorDashboard,
+  EarPatientsTable,
+  EyeDoctorDashboard,
+  EyePatientsTable,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
+import ClinicalRedirect from './Pages/clinical/ClinicalRedirect';
 
 
 
@@ -101,6 +108,8 @@ const router = createBrowserRouter(
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='recordings' element={<Recordings />} />
               <Route path='radiology' element={<Radiology />} />
+              <Route path='clinical' element={<Clinical />} />
+              <Route path='audit-log' element={<AuditLog />} />
               <Route path='all-departments' element={<AllDepartments />} />
             </Route>
           </Route>
@@ -117,11 +126,13 @@ const router = createBrowserRouter(
               <Route path='patients' element={<Patients />} />
               <Route path='recordings' element={<Recordings />} />
               <Route path='radiology' element={<Radiology />} />
+              <Route path='clinical' element={<Clinical />} />
               <Route path='service-users' element={<ServiceUsers />} />
               <Route path='staffs-duty' element={<NursesDailyShift />} />
               <Route path='doctors-duty' element={<DoctorsDailyShift />} />
               <Route path='recording-duty' element={<RecordingDailyShift />} />
               <Route path='radiology-duty' element={<RadiologyDailyShift />} />
+              <Route path='audit-log' element={<AuditLog />} />
             </Route>
           </Route>
 
@@ -134,6 +145,27 @@ const router = createBrowserRouter(
                 <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
                 <Route path='todays-patients-list' element={<TodaysPatientsList />} />
                 <Route path='today-transferred-list' element={<TodayTransferredList />} />
+              </Route>
+            </Route>
+          </Route>
+
+          {/* Clinical Routes */}
+          <Route element={<RequireAuth roles={["clinical"]} />}>
+            <Route path='clinical'>
+              <Route index element={<ClinicalRedirect />} />
+              <Route element={<RequireAuth roles={["clinical"]} departments={["eardoctor"]} />}>
+                <Route path='ear'>
+                  <Route index element={<EarDoctorDashboard />} />
+                  <Route path='patients' element={<EarPatientsTable />} />
+                  <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
+                </Route>
+              </Route>
+              <Route element={<RequireAuth roles={["clinical"]} departments={["eyedoctor"]} />}>
+                <Route path='eye'>
+                  <Route index element={<EyeDoctorDashboard />} />
+                  <Route path='patients' element={<EyePatientsTable />} />
+                  <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
+                </Route>
               </Route>
             </Route>
           </Route>

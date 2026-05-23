@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/apiClient";
-import type { Patient, DrugItem } from "../queries/patients";
+import type { Patient, DrugItem, NHIAAccess } from "../queries/patients";
 import { addPatientToPharmacyApi, updatePharmacyDeskStateApi } from "../queries/patients";
+import { getNHIAAccessApi } from "../queries/patients";
 
 export const createPatientApi = async (payload: Partial<Patient>): Promise<Patient> => {
   const res = await api.post("/patients", payload);
@@ -71,5 +72,11 @@ export const useUpdatePharmacyDeskStateMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", "pharmacy"] });
     },
+  });
+};
+
+export const useCheckNHIAAccessMutation = () => {
+  return useMutation({
+    mutationFn: (patientId: string) => getNHIAAccessApi(patientId) as Promise<NHIAAccess>,
   });
 };
