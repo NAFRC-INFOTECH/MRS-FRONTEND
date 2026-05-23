@@ -27,10 +27,13 @@ export default function RequireAuth({ roles, departments }: RequireAuthProps) {
     }
   }
 
-  if (departments?.length && (user.roles?.includes("staff" as Role) || (user.roles as any)?.includes?.("nurse"))) {
+  if (
+    departments?.length &&
+    (user.roles?.includes("staff" as Role) || user.roles?.includes("clinical" as Role) || (user.roles as any)?.includes?.("nurse"))
+  ) {
     const userDept = (user?.department || "").toLowerCase();
     const deptList = departments.map((d) => d.toLowerCase());
-    const okDept = !!userDept && (userDept === "general" || deptList.includes(userDept));
+    const okDept = !!userDept && (deptList.includes(userDept) || userDept === "general");
     if (!okDept) return <Navigate to="/login" replace />;
   }
 

@@ -127,3 +127,26 @@ export const savePriceSummaryApi = async (summaryData: any): Promise<any> => {
   const res = await api.post("/price-list/summary", summaryData);
   return res.data;
 };
+
+export type TopSellingDrug = {
+  _id: string;
+  name: string;
+  soldQuantity: number;
+  stockQuantity: number;
+  price: number;
+  isActive: boolean;
+  unit: string;
+};
+
+export const getTopSellingDrugsApi = async (opts?: { limit?: number; activeOnly?: boolean }): Promise<TopSellingDrug[]> => {
+  const res = await api.get("/price-list/top-selling/drugs", { params: opts });
+  return res.data as TopSellingDrug[];
+};
+
+export const useTopSellingDrugsQuery = (opts?: { limit?: number; activeOnly?: boolean }) => {
+  return useQuery({
+    queryKey: ["price-list", "top-selling-drugs", opts],
+    queryFn: () => getTopSellingDrugsApi(opts),
+    staleTime: 1000 * 30,
+  });
+};

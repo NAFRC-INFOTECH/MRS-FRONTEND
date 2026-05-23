@@ -16,6 +16,7 @@ import PatientsRegistry from './Pages/recordingdepartment/PatientsRegistry'
 import UserSettings from './Pages/settings/UserSettings'
 import Recordings from './Pages/superAdminPages/Recordings'
 import Radiology from './Pages/superAdminPages/Radiology'
+import Clinical from './Pages/superAdminPages/Clinical'
 import RecordingDashboard from './Pages/recordingdepartment/RecordingDashboard'
 import RecordingProfile from './Pages/superAdminPages/RecordingProfile'
 import PatientsInQueue from './Pages/departments/gopdPages/PatientsInQueue'
@@ -41,6 +42,7 @@ import CreatePriceList from './Pages/adminPages/createPriceListsPage/CreatePrice
 import LandingPage from './Pages/LandingPage/LandingPage'
 import RecordingDailyShift from './Pages/adminPages/RecordingDailyShift'
 import RadiologyDailyShift from './Pages/adminPages/RadiologyDailyShift'
+import AuditLog from './Pages/adminPages/AuditLog'
 import NHIADashboard from './Pages/departments/nhiaPages/NHIADashboard'
 import NHIAPatientsList from './Pages/departments/nhiaPages/NHIAPatientsList'
 import PaypointDashboard from './Pages/departments/paypointPages/PaypointDashboard'
@@ -49,6 +51,10 @@ import PharmacyDashboard from './Pages/departments/pharmacyPages/PharmacyDashboa
 import ReferredPatientsList from './Pages/departments/pharmacyPages/ReferredPatientsList'
 import ViewPrescription from './Pages/departments/pharmacyPages/ViewPrescription'
 import DoctorsReportTable from './Pages/recordingdepartment/DoctorsReportTable'
+import EarDoctorDashboard from './Pages/clinical/EarDoctorPage/EarDoctorDashboard'
+import EarPatientsTable from './Pages/clinical/EarDoctorPage/EarPatientsTable'
+import EyeDoctorDashboard from './Pages/clinical/EyeDoctorPage/EyeDoctorDashboard'
+import EyePatientsTable from './Pages/clinical/EyeDoctorPage/EyePatientsTable'
 
 
 
@@ -73,6 +79,7 @@ export {
   UserSettings,
   Recordings,
   Radiology,
+  Clinical,
   RecordingDashboard,
   RecordingProfile,
   PatientsInQueue,
@@ -97,6 +104,7 @@ export {
   CreatePriceList,
   RecordingDailyShift,
   RadiologyDailyShift,
+  AuditLog,
   NHIADashboard,
   NHIAPatientsList,
   PaypointDashboard,
@@ -105,4 +113,8 @@ export {
   ReferredPatientsList,
   ViewPrescription,
   DoctorsReportTable,
+  EarDoctorDashboard,
+  EarPatientsTable,
+  EyeDoctorDashboard,
+  EyePatientsTable,
 }

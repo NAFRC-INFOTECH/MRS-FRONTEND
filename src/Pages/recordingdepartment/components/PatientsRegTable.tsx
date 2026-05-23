@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import type { PatientCondition, PatientStatus } from "../../../components/patientsTable/patientsDatas/types";
 import { usePatientsQuery } from "@/api-integration/queries/patients";
-import { useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
+import { useCheckNHIAAccessMutation, useDeletePatientMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
 import { useCreateInvoiceMutation } from "@/api-integration/mutations/invoices";
 import { usePriceItemsQuery } from "@/api-integration/queries/priceList";
 import { useAllInvoicesQuery, PAYMENT_STATUS, type Invoice } from "@/api-integration/queries/invoices";
@@ -48,6 +48,7 @@ export default function PatientsRegTable() {
   >([]);
   const del = useDeletePatientMutation();
   const update = useUpdatePatientMutation();
+  const checkNHIA = useCheckNHIAAccessMutation();
   const { query } = useSearch();
   const transferOptions = {
     gopd: {
@@ -97,6 +98,20 @@ export default function PatientsRegTable() {
 
     if (action === "doctorReports") {
       navigate(`/recordings/doctor-reports/${id}`);
+      return;
+    }
+
+    if (action === "checkNhia") {
+      checkNHIA.mutate(id, {
+        onSuccess: (res) => {
+          const t = res.status === "cleared" ? "CLEARED" : res.status === "not_cleared" ? "NOT CLEARED" : res.status === "awaiting" ? "AWAITING" : "UNKNOWN";
+          toast.success(`NHIA: ${t}`);
+        },
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err ?? "");
+          toast.error(msg || "Unable to validate NHIA access");
+        }
+      });
       return;
     }
 
@@ -421,6 +436,9 @@ export default function PatientsRegTable() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleAction(r.id, "doctorReports")}>
                         Doctor Reports
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleAction(r.id, "checkNhia")}>
+                        Validate NHIA Access
                       </DropdownMenuItem>
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger>

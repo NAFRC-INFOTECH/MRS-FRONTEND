@@ -13,6 +13,8 @@ import RadiologySidebar from './RadiologySidebar';
 import NHIASidebar from './NHIASidebar';
 import PaypointSidebar from './PaypointSidebar';
 import PharmacySidebar from './PharmacySidebar';
+import EarDoctorSidebar from './EarDoctorSidebar';
+import EyeDoctorSidebar from './EyeDoctorSidebar';
 
 
 
@@ -23,20 +25,26 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
   const { user } = useAppSelector((state) => state.auth);
 
   const roles = user?.roles || [];
-  const roleLabel =
-    roles.includes("super_admin")
-      ? "Super Admin"
-      : roles.includes("admin")
-      ? "Admin"
-      : roles.includes("doctor")
-      ? "Doctor"
-      : roles.includes("staff")
-      ? (user?.department || "").toUpperCase()
-      : roles.includes("recording")
-      ? "Recording"
-      : roles.includes("radiology")
-      ? "Radiology"
-      : " ";
+  const clinicalDepartment = (user?.department || "Clinical").toUpperCase();
+  const roleLabel = roles.includes("super_admin")
+  ? "Super Admin"
+  : roles.includes("admin")
+  ? "Admin"
+  : roles.includes("doctor")
+  ? "Doctor"
+  : roles.includes("clinical")
+  ? clinicalDepartment.includes("EAR")
+    ? "Ear Doctor"
+    : clinicalDepartment.includes("EYE")
+    ? "Eye Doctor"
+    : "Clinical"
+  : roles.includes("staff")
+  ? user?.department || "Staff"
+  : roles.includes("recording")
+  ? "Recording"
+  : roles.includes("radiology")
+  ? "Radiology"
+  : "";
 
   const drawer = (() => {
     switch (user?.roles?.[0]) {
@@ -58,6 +66,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
           if (dept === "nhia" || dept === "general") return <NHIASidebar />;
           if (dept === "paypoint" || dept === "general") return <PaypointSidebar />;
           if (dept === "pharmacy" || dept === "general") return <PharmacySidebar />;
+          return null;
+        }
+
+      case "clinical":
+        {
+          const dept = (user?.department || "").toLowerCase();
+          if (dept.includes("ear")) return <EarDoctorSidebar />;
+          if (dept.includes("eye")) return <EyeDoctorSidebar />;
           return null;
         }
       

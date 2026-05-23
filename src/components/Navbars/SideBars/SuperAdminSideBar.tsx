@@ -14,6 +14,8 @@ import {
   Pill,
   ShieldUser,
   ScanLine,
+  BookOpenCheck,
+  Stethoscope,
 } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
@@ -73,7 +75,8 @@ export default function SuperAdminSideBar() {
             { text: "All Patients", path: "/mrs-admin/patients", icon: ContactRound },
             { text: "Recording Dept", path: "/mrs-admin/recordings", icon: LibraryBig },
             { text: "Radiology Dept", path: "/mrs-admin/radiology", icon: ScanLine },
-            { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser }
+            { text: "Clinical Dept", path: "/mrs-admin/clinical", icon: Stethoscope },
+            { text: "Service Users", path: "/mrs-admin/service-users", icon: ShieldUser },
           ].map((item) => {
             const active = isRouteActive(item.path)
 
@@ -116,21 +119,21 @@ export default function SuperAdminSideBar() {
 
           <ListItemButton
             component={Link}
-            to="mrs-admin/drugs-list"
+            to="mrs-admin/audit-log"
             sx={{
               borderTopRightRadius: "8px",
               borderBottomRightRadius: "8px",
-              background: isRouteActive("mrs-admin/drugs-list")
+              background: isRouteActive("mrs-admin/audit-log")
                 ? "#56bbe3"
                 : "transparent",
-              color: isRouteActive("mrs-admin/drugs-list")
+              color: isRouteActive("mrs-admin/audit-log")
                 ? "#ffffff"
                 : "#9e9e9edc",
               ":hover": {
-                background: isRouteActive("mrs-admin/drugs-list")
+                background: isRouteActive("mrs-admin/audit-log")
                   ? "#56bbe3"
                   : "#c9c9c91e",
-                color: isRouteActive("mrs-admin/drugs-list")
+                color: isRouteActive("mrs-admin/audit-log")
                   ? "#ffffff"
                   : "#6B7280",
               }
@@ -138,14 +141,14 @@ export default function SuperAdminSideBar() {
           >
             {/* drugs list icon */}
             <ListItemIcon sx={{ minWidth: 40 }}>
-              <Pill
+              <BookOpenCheck
                 size={20}
                 color={
-                  isRouteActive("mrs-admin/drugs-list") ? "#56bbe3" : "#9e9e9edc"
+                  isRouteActive("mrs-admin/audit-log") ? "#56bbe3" : "#9e9e9edc"
                 }
               />
             </ListItemIcon>
-            <ListItemText primary="Drugs List" />
+            <ListItemText primary="Audit Log" />
           </ListItemButton>
         </div>
 
