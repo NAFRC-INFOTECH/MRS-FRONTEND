@@ -3,7 +3,7 @@ import { ArrowRightLeft, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useNHIAReferredPatientsQuery } from "@/api-integration/queries/patients";
-import { useUpdatePatientMutation } from "@/api-integration/mutations/patients";
+import { useCheckNHIAAccessMutation, useUpdatePatientMutation } from "@/api-integration/mutations/patients";
 import { useSearch } from "@/contexts/SearchContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export default function NHIAPatientsList() {
   const navigate = useNavigate();
   const q = useNHIAReferredPatientsQuery();
   const update = useUpdatePatientMutation();
+  const checkNHIA = useCheckNHIAAccessMutation();
   const { query } = useSearch();
 
   const [patients, setPatients] = useState<any[]>([]);
@@ -71,7 +72,10 @@ export default function NHIAPatientsList() {
     update.mutate(
       { id, data: { patientStatus: "active", patientQueue: "", nhiaStatus: "cleared", nhiaUpdatedAt: new Date().toISOString() } },
       {
-        onSuccess: () => toast.success("Patient cleared from NHIA desk"),
+        onSuccess: () => {
+          toast.success("Patient cleared from NHIA desk");
+          checkNHIA.mutate(id);
+        },
         onError: (err: unknown) => {
           const msg = err instanceof Error ? err.message : String(err ?? "");
           toast.error(msg || "Unable to complete NHIA processing");
@@ -84,7 +88,10 @@ export default function NHIAPatientsList() {
     update.mutate(
       { id, data: { patientStatus: "active", patientQueue: "", nhiaStatus: "not_cleared", nhiaUpdatedAt: new Date().toISOString() } },
       {
-        onSuccess: () => toast.success("Patient marked as not cleared by NHIA"),
+        onSuccess: () => {
+          toast.success("Patient marked as not cleared by NHIA");
+          checkNHIA.mutate(id);
+        },
         onError: (err: unknown) => {
           const msg = err instanceof Error ? err.message : String(err ?? "");
           toast.error(msg || "Unable to update NHIA status");
@@ -223,6 +230,9 @@ export default function NHIAPatientsList() {
                             <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/nhia/invoices/${row.id}`)}>
+                              View Invoices
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               disabled={row.deskState === "completed"}
                               onClick={() => completeDeskReview(row.id)}

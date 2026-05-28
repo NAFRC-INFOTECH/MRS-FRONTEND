@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRightLeft, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { usePharmacyReferredPatientsQuery } from "@/api-integration/queries/patients";
-import { useUpdatePharmacyDeskStateMutation } from "@/api-integration/mutations/patients";
 import { useSearch } from "@/contexts/SearchContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,6 @@ import {
 export default function ReferredPatientsList() {
   const navigate = useNavigate();
   const q = usePharmacyReferredPatientsQuery();
-  const updatePharmacyDeskState = useUpdatePharmacyDeskStateMutation();
   const { query } = useSearch();
 
   const [patients, setPatients] = useState<any[]>([]);
@@ -69,19 +66,6 @@ export default function ReferredPatientsList() {
       return matchesDesk && matchesCategory && matchesLocalSearch && matchesGlobalSearch;
     });
   }, [rows, deskFilter, categoryFilter, searchTerm, query]);
-
-  const completePharmacyDispense = (id: string) => {
-    updatePharmacyDeskState.mutate(
-      { patientId: id, deskState: "completed" },
-      {
-        onSuccess: () => toast.success("Patient dispensed from pharmacy"),
-        onError: (err: unknown) => {
-          const msg = err instanceof Error ? err.message : String(err ?? "");
-          toast.error(msg || "Unable to complete pharmacy dispensing");
-        },
-      }
-    );
-  };
 
   const getDeskStateBadge = (deskState: PharmacyRow["deskState"]) => {
     if (deskState === "awaiting-dispense") {
@@ -175,6 +159,8 @@ export default function ReferredPatientsList() {
                   <th className="px-4 py-3 text-left whitespace-nowrap">Phone</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">Rank</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">Coverage Category</th>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Clearance</th>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Ward</th>
                   {/* <th className="px-4 py-3 text-left whitespace-nowrap">Queue</th> */}
                   <th className="px-4 py-3 text-left whitespace-nowrap">Desk State</th>
                   <th className="px-4 py-3 text-left whitespace-nowrap">Action</th>
@@ -183,7 +169,7 @@ export default function ReferredPatientsList() {
               <tbody>
                 {q.isLoading && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-muted-foreground">
                       Loading pharmacy patients...
                     </td>
                   </tr>
@@ -191,7 +177,7 @@ export default function ReferredPatientsList() {
 
                 {q.isError && !q.isLoading && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-sm text-red-600">
+                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-red-600">
                       Failed to load pharmacy patients.
                     </td>
                   </tr>
@@ -209,6 +195,26 @@ export default function ReferredPatientsList() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Badge variant="outline">{row.categoryLabel}</Badge>
                       </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge
+                          className={
+                            row.cleared ? "bg-green-100 text-green-800 hover:bg-green-100" : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                          }
+                        >
+                          {row.clearanceLabel}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {row.hasBed ? (
+                          row.admitted ? (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{row.admittedWardUnit}</Badge>
+                          ) : (
+                            <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Pending</Badge>
+                          )
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </td>
                       {/* <td className="px-4 py-3 whitespace-nowrap text-sm">{row.queueLabel}</td> */}
                       <td className="px-4 py-3 whitespace-nowrap">{getDeskStateBadge(row.deskState)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -220,12 +226,26 @@ export default function ReferredPatientsList() {
                             <DropdownMenuItem onClick={() => navigate(`/pharmacy/prescription/${row.id}`)}>
                               View Prescription
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={row.deskState === "completed"}
-                              onClick={() => completePharmacyDispense(row.id)}
-                            >
-                              Mark Dispensed
-                            </DropdownMenuItem>
+                            {row.admitted && row.admittedWardUnit && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  const unit = row.admittedWardUnit.toLowerCase();
+                                  const path =
+                                    unit.includes("children")
+                                      ? "/wards/children"
+                                      : unit.includes("femalevip")
+                                        ? "/wards/female-vip"
+                                        : unit.includes("malevip")
+                                          ? "/wards/male-vip"
+                                          : unit.includes("female")
+                                            ? "/wards/female"
+                                            : "/wards/male";
+                                  navigate(path);
+                                }}
+                              >
+                                Open Ward
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -234,7 +254,7 @@ export default function ReferredPatientsList() {
 
                 {!q.isLoading && !q.isError && filteredRows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center">
+                    <td colSpan={11} className="px-4 py-10 text-center">
                       <div className="space-y-1">
                         <p className="font-medium">No pharmacy patients found.</p>
                         <p className="text-sm text-muted-foreground">

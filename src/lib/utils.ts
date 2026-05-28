@@ -22,6 +22,13 @@ export function routeForRoleDepartment(role?: string, department?: string): stri
     const map: Record<string, string> = {
       gopd: "/gopd",
       lab: "/lab",
+      antenatal: "/antenatal",
+      ward: "/wards",
+      childrenward: "/wards/children",
+      femaleward: "/wards/female",
+      maleward: "/wards/male",
+      malevip: "/wards/male-vip",
+      femalevip: "/wards/female-vip",
     };
     if (!d) return "/";
     return map[d] || `/${d}`;

@@ -28,8 +28,6 @@ import LabPatientTestsPage from "./Pages/departments/labPages/LabPatientTestsPag
 import XrayDashboard from "./Pages/departments/X_rayPages/XrayDashboard";
 import XrayPatientsList from "./Pages/departments/X_rayPages/XrayPatientsList";
 import XrayPatientTestsPage from "./Pages/departments/X_rayPages/XrayPatientTestsPage";
-import NursesDailyShift from "./Pages/adminPages/NursesDailyShift";
-import DoctorsDailyShift from "./Pages/adminPages/DoctorsDailyShift";
 import AddVitalsSigns from "./Pages/departments/gopdPages/AddVitalsSigns";
 import NurseGeneral from "./Pages/generalPermitPages/NurseGeneral";
 import PatientMedicalHistory from "./Pages/doctorsPages/PatientMedicalHistory";
@@ -40,11 +38,10 @@ import Admins from './Pages/superAdminPages/Admins'
 import AdminDashboard from './Pages/adminPages/AdminDashboard'
 import CreatePriceList from './Pages/adminPages/createPriceListsPage/CreatePriceList'
 import LandingPage from './Pages/LandingPage/LandingPage'
-import RecordingDailyShift from './Pages/adminPages/RecordingDailyShift'
-import RadiologyDailyShift from './Pages/adminPages/RadiologyDailyShift'
-import AuditLog from './Pages/adminPages/AuditLog'
+import AuditLog from './Pages/superAdminPages/AuditLog'
 import NHIADashboard from './Pages/departments/nhiaPages/NHIADashboard'
 import NHIAPatientsList from './Pages/departments/nhiaPages/NHIAPatientsList'
+import NHIAInvoicesList from './Pages/departments/nhiaPages/NHIAInvoicesList'
 import PaypointDashboard from './Pages/departments/paypointPages/PaypointDashboard'
 import PaypointPatientsList from './Pages/departments/paypointPages/PaypointPatientsList'
 import PharmacyDashboard from './Pages/departments/pharmacyPages/PharmacyDashboard'
@@ -55,6 +52,14 @@ import EarDoctorDashboard from './Pages/clinical/EarDoctorPage/EarDoctorDashboar
 import EarPatientsTable from './Pages/clinical/EarDoctorPage/EarPatientsTable'
 import EyeDoctorDashboard from './Pages/clinical/EyeDoctorPage/EyeDoctorDashboard'
 import EyePatientsTable from './Pages/clinical/EyeDoctorPage/EyePatientsTable'
+import DailyShifts from './Pages/adminPages/DailyShifts'
+import ChildrenWard from './Pages/departments/wards/ChildrenWard'
+import FemaleWard from './Pages/departments/wards/FemaleWard'
+import MaleWard from './Pages/departments/wards/MaleWard'
+import MaleVIP from './Pages/departments/wards/MaleVIP'
+import FemaleVIP from './Pages/departments/wards/FemaleVIP'
+import WardsRedirect from './Pages/departments/wards/WardsRedirect'
+import AntenatalPatients from './Pages/departments/Antenatal/AntenatalPatients'
 
 
 
@@ -91,8 +96,6 @@ export {
   XrayDashboard,
   XrayPatientsList,
   XrayPatientTestsPage,
-  NursesDailyShift,
-  DoctorsDailyShift,
   AddVitalsSigns,
   NurseGeneral,
   PatientMedicalHistory,
@@ -102,11 +105,10 @@ export {
   Admins,
   AdminDashboard,
   CreatePriceList,
-  RecordingDailyShift,
-  RadiologyDailyShift,
   AuditLog,
   NHIADashboard,
   NHIAPatientsList,
+  NHIAInvoicesList,
   PaypointDashboard,
   PaypointPatientsList,
   PharmacyDashboard,
@@ -117,4 +119,12 @@ export {
   EarPatientsTable,
   EyeDoctorDashboard,
   EyePatientsTable,
+  DailyShifts,
+  ChildrenWard,
+  FemaleWard,
+  MaleWard,
+  MaleVIP,
+  FemaleVIP,
+  WardsRedirect,
+  AntenatalPatients,
 }

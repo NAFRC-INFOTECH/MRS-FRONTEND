@@ -58,6 +58,7 @@ export default function NHIASidebar() {
           {[
             { text: "Dashboard", path: "/nhia", icon: LayoutPanelLeft },
             { text: "Patients List", path: "/nhia/patients", icon: ContactRound },
+            { text: "Invoices List", path: "/nhia/invoices", icon: ContactRound },
           ].map((item) => {
             const active = isRouteActive(item.path)
 

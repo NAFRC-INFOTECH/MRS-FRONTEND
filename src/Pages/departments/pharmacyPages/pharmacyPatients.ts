@@ -14,6 +14,14 @@ export type PharmacyRow = {
   queueLabel: string;
   deskState: Exclude<DeskFilter, "all">;
   status: PatientStatus;
+  cleared: boolean;
+  clearanceLabel: string;
+  billingRoute: string;
+  invoiceId: string;
+  patientAmountDue: number;
+  hasBed: boolean;
+  admitted: boolean;
+  admittedWardUnit: string;
 };
 
 export function buildPharmacyRows(patients: any[]): PharmacyRow[] {
@@ -38,6 +46,17 @@ export function buildPharmacyRows(patients: any[]): PharmacyRow[] {
       const category: Exclude<CoverageCategory, "all"> = veteran ? "personnel" : "civilian";
       const deskState = deskStateFromData === "completed" ? "completed" : "awaiting-dispense";
 
+      const ph = (p.pharmacy || {}) as any;
+      const billingRoute = String(ph.billingRoute || "");
+      const cleared = !!ph.cleared;
+      const clearanceLabel = (() => {
+        if (!ph.hasInvoice) return "No Invoice";
+        if (billingRoute === "paypoint") return String(ph.paymentStatus || "") === "paid" ? "Paid" : "Awaiting Paypoint";
+        if (String(ph.nhiaStampStatus || "") !== "stamped") return "Awaiting NHIA Stamp";
+        if ((Number(ph.patientAmountDue ?? 0) || 0) > 0 && String(ph.copayStatus || "") !== "paid") return "Awaiting NHIA Copay";
+        return "Cleared";
+      })();
+
       return {
         id,
         cardNumber: p.membershipNumber || p.serviceNumber || "",
@@ -49,6 +68,14 @@ export function buildPharmacyRows(patients: any[]): PharmacyRow[] {
         queueLabel: queue === "pharmacy" ? "Pharmacy Queue" : "Transferred to Pharmacy",
         deskState,
         status,
+        cleared,
+        clearanceLabel,
+        billingRoute,
+        invoiceId: String(ph.invoiceId || ""),
+        patientAmountDue: Number(ph.patientAmountDue ?? 0) || 0,
+        hasBed: !!ph.hasBed,
+        admitted: !!ph.admitted,
+        admittedWardUnit: String(ph.admittedWardUnit || ""),
       };
     })
     .filter((row): row is PharmacyRow => Boolean(row));

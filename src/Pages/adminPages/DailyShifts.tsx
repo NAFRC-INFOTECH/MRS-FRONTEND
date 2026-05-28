@@ -1,0 +1,748 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+import { useUser } from "@/api-integration/redux/selectors";
+import { useAppDispatch } from "@/api-integration/redux/store";
+import { setUser } from "@/api-integration/redux/authSlice";
+
+import { useDepartmentsQuery } from "@/api-integration/queries/departments";
+import { useDoctorUsersQuery } from "@/api-integration/queries/doctors";
+import { useNursesQuery } from "@/api-integration/queries/nurses";
+import { useUsersQuery } from "@/api-integration/queries/users";
+import { useDutiesQuery } from "@/api-integration/queries/duties";
+import { useCreateDutyMutation, useDeleteDutyMutation, useUpdateDutyMutation } from "@/api-integration/mutations/duties";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+import { routeForRoleDepartment } from "@/lib/utils";
+import { DUTY_SHIFT_OPTIONS, getShiftTimes } from "@/lib/duty-shifts";
+import { ArrowBigDownIcon } from "lucide-react";
+
+type DutyRole = "staff" | "doctor" | "recording" | "radiology";
+
+export default function DailyShifts() {
+  const user = useUser();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const roles = user?.roles || [];
+  const isAdmin = roles.includes("super_admin" as any) || roles.includes("admin" as any);
+  const canFetchStaff = user ? isAdmin || roles.includes("recording" as any) : true;
+
+  const [openCombobox, setOpenCombobox] = useState(false);
+  const [departmentOpen, setDepartmentOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDuty, setEditDuty] = useState<any>(null);
+  const [editDepartmentId, setEditDepartmentId] = useState<string>("");
+  const [editShift, setEditShift] = useState<string>("");
+  const [editTimeIn, setEditTimeIn] = useState<string>("");
+  const [editTimeOut, setEditTimeOut] = useState<string>("");
+  const [editStatus, setEditStatus] = useState<string>("ON_DUTY");
+
+  const { data: departments = [] } = useDepartmentsQuery();
+  const { data: staffUsers = [] } = useNursesQuery(canFetchStaff);
+  const { data: doctorUsers = [] } = useDoctorUsersQuery(true);
+  const { data: recordingUsers = [] } = useUsersQuery("recording");
+  const { data: radiologyUsers = [] } = useUsersQuery("radiology");
+
+  const WARD_UNITS = useMemo(() => ["ChildrenWard", "FemaleWard", "MaleWard", "MaleVIP", "FemaleVIP"] as const, []);
+
+  const [role, setRole] = useState<DutyRole>("staff");
+  const [staffId, setStaffId] = useState<string>("");
+  const [departmentId, setDepartmentId] = useState<string>("");
+  const [wardUnit, setWardUnit] = useState<(typeof WARD_UNITS)[number]>("ChildrenWard");
+  const [date, setDate] = useState<string>("");
+  const [shift, setShift] = useState<string>("");
+  const [timeIn, setTimeIn] = useState<string>("");
+  const [timeOut, setTimeOut] = useState<string>("");
+  const [status, setStatus] = useState<string>("ON_DUTY");
+
+  const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [wardUnitFilter, setWardUnitFilter] = useState<"all" | (typeof WARD_UNITS)[number]>("all");
+  const [dateFilter, setDateFilter] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
+  const [shiftFilter, setShiftFilter] = useState<string>("all");
+
+  const wardRootId = useMemo(() => {
+    const normalize = (s: string) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
+    const d = (departments as any[]).find((x) => normalize(String(x?.name || "")) === "ward");
+    return d ? String(d._id) : "";
+  }, [departments]);
+
+  const wardUnitIdByName = useMemo(() => {
+    const normalize = (s: string) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
+    const map = new Map<string, string>();
+    for (const nm of WARD_UNITS) {
+      const d = (departments as any[]).find((x) => normalize(String(x?.name || "")) === normalize(nm));
+      if (d?._id) map.set(nm, String(d._id));
+    }
+    return map;
+  }, [departments, WARD_UNITS]);
+
+  const selectedDepartmentName = useMemo(() => {
+    const d = (departments as any[]).find((x) => String(x?._id) === String(departmentId));
+    return String(d?.name || "");
+  }, [departments, departmentId]);
+
+  const isWardSelected = selectedDepartmentName.trim().toLowerCase() === "ward";
+  const effectiveDepartmentId = isWardSelected ? (wardUnitIdByName.get(wardUnit) || "") : departmentId;
+
+  const filterDepartmentName = useMemo(() => {
+    const d = (departments as any[]).find((x) => String(x?._id) === String(deptFilter));
+    return String(d?.name || "");
+  }, [departments, deptFilter]);
+
+  const isWardFilter = filterDepartmentName.trim().toLowerCase() === "ward";
+
+  const { data: duties = [] } = useDutiesQuery({
+    role,
+    departmentId:
+      deptFilter && deptFilter !== "all"
+        ? isWardFilter
+          ? wardUnitFilter !== "all"
+            ? wardUnitIdByName.get(wardUnitFilter) || undefined
+            : undefined
+          : deptFilter
+        : undefined,
+    date: dateFilter || undefined,
+    shift: shiftFilter && shiftFilter !== "all" ? (shiftFilter as any) : undefined,
+  });
+
+  const visibleDuties = useMemo(() => {
+    if (!isWardFilter || wardUnitFilter !== "all") return duties as any[];
+    const wardUnitIds = new Set(Array.from(wardUnitIdByName.values()));
+    return (duties as any[]).filter((d) => wardUnitIds.has(String(d.departmentId || "")));
+  }, [duties, isWardFilter, wardUnitFilter, wardUnitIdByName]);
+
+  const createDuty = useCreateDutyMutation();
+  const updateDuty = useUpdateDutyMutation();
+  const deleteDuty = useDeleteDutyMutation();
+
+  const todayStr = useMemo(() => {
+    const t = new Date();
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  const maxStr = useMemo(() => {
+    const t = new Date();
+    t.setDate(t.getDate() + 3);
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  const withinThreeDays = (d: string) => {
+    if (!d) return false;
+    const sel = new Date(d);
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const max = new Date(start);
+    max.setDate(max.getDate() + 3);
+    const selStart = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate());
+    return selStart >= start && selStart <= max;
+  };
+
+  const applyShiftTimes = (d: string, s: string) => {
+    const { timeIn, timeOut } = getShiftTimes(d, s);
+    setTimeIn(timeIn);
+    setTimeOut(timeOut);
+  };
+
+  const applyEditShiftTimes = (d: string, s: string) => {
+    const { timeIn, timeOut } = getShiftTimes(d, s);
+    setEditTimeIn(timeIn);
+    setEditTimeOut(timeOut);
+  };
+
+  const roleLabel = useMemo(() => {
+    if (role === "doctor") return "Doctor";
+    if (role === "recording") return "Recording";
+    if (role === "radiology") return "Radiology";
+    return "Staff";
+  }, [role]);
+
+  const userOptions = useMemo(() => {
+    if (role === "doctor") {
+      return (doctorUsers as any[]).map((u) => ({ id: String(u._id || ""), name: String(u.name || "") }));
+    }
+    if (role === "recording") {
+      return (recordingUsers as any[]).map((u) => ({ id: String(u._id || ""), name: String(u.name || "") }));
+    }
+    if (role === "radiology") {
+      return (radiologyUsers as any[]).map((u) => ({ id: String(u._id || ""), name: String(u.name || "") }));
+    }
+    return (staffUsers as any[]).map((u) => ({ id: String(u._id || ""), name: String(u.name || "") }));
+  }, [role, doctorUsers, recordingUsers, radiologyUsers, staffUsers]);
+
+  const userNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const u of userOptions) m.set(u.id, u.name);
+    return m;
+  }, [userOptions]);
+
+  const dutyUserId = (d: any) => {
+    if (role === "doctor") return String(d.doctorUserId || "");
+    if (role === "recording") return String(d.recordingUserId || "");
+    if (role === "radiology") return String(d.radiologyUserId || "");
+    return String(d.nurseUserId || "");
+  };
+
+  const exportCsv = () => {
+    const headers = ["Role", "User", "Department", "Date", "Shift", "Time In", "Time Out", "Status"];
+    const rows = visibleDuties.map((d) => {
+      const uId = dutyUserId(d);
+      const name = userNameById.get(uId) || "-";
+      const deptName = (departments as any[]).find((x) => x._id === d.departmentId)?.name || "-";
+      const dateText = new Date(d.date).toLocaleDateString();
+      const shiftText = d.shift;
+      const timeInText = new Date(d.timeIn).toLocaleString();
+      const timeOutText = new Date(d.timeOut).toLocaleString();
+      const statusText = d.status;
+      return [roleLabel, name, deptName, dateText, shiftText, timeInText, timeOutText, statusText];
+    });
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "\ufeff" + [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${role}_duties_${dateFilter || "today"}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="py-4 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create Duty Assignment</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-1">
+            <Label>Role</Label>
+            <Select
+              value={role}
+              onValueChange={(v) => {
+                setRole(v as DutyRole);
+                setStaffId("");
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="doctor">Doctor</SelectItem>
+                  <SelectItem value="recording">Recording</SelectItem>
+                  <SelectItem value="radiology">Radiology</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>{roleLabel}</Label>
+            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" type="button" className="justify-between">
+                  {userNameById.get(staffId) || <div className="flex items-center justify-between w-full"><span className="text-gray-500">Select {roleLabel}</span> <ArrowBigDownIcon className="text-[#56bbe3]"/></div>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[320px]">
+                <Command>
+                  <CommandInput placeholder={`Search ${roleLabel.toLowerCase()} by name...`} />
+                  <CommandList>
+                    <CommandEmpty>No {roleLabel.toLowerCase()} found.</CommandEmpty>
+                    <CommandGroup>
+                      {userOptions.map((n) => (
+                        <CommandItem
+                          key={n.id}
+                          value={n.name}
+                          onSelect={() => {
+                            setStaffId(n.id);
+                            setOpenCombobox(false);
+                          }}
+                        >
+                          {n.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Department</Label>
+            <Popover open={departmentOpen} onOpenChange={setDepartmentOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" type="button" className="justify-between">
+                  {selectedDepartmentName || <div className="flex items-center justify-between w-full"><span className="text-gray-500">Select Department</span> <ArrowBigDownIcon className="text-[#56bbe3]"/></div>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[320px]">
+                <Command>
+                  <CommandInput placeholder="Search department..." />
+                  <CommandList>
+                    <CommandEmpty>No department found.</CommandEmpty>
+                    <CommandGroup>
+                      {(departments as any[]).map((d) => (
+                        <CommandItem
+                          key={d._id}
+                          value={String(d.name || "")}
+                          onSelect={() => {
+                            const v = String(d._id);
+                            setDepartmentId(v);
+                            const nm = String(d.name || "").toLowerCase();
+                            if (nm !== "ward") setWardUnit("ChildrenWard");
+                            setDepartmentOpen(false);
+                          }}
+                        >
+                          {d.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {isWardSelected && (
+            <div className="flex flex-col gap-1">
+              <Label>Ward Unit</Label>
+              <Select value={wardUnit} onValueChange={(v) => setWardUnit(v as any)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Ward Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {WARD_UNITS.map((nm) => (
+                      <SelectItem key={nm} value={nm}>
+                        {nm}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="duty-date">Duty Date</Label>
+            <Input
+              id="duty-date"
+              type="date"
+              min={todayStr}
+              max={maxStr}
+              value={date}
+              onChange={(e) => {
+                const v = e.target.value;
+                setDate(v);
+                applyShiftTimes(v, shift);
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Shift</Label>
+            <Select
+              value={shift}
+              onValueChange={(v) => {
+                setShift(v);
+                applyShiftTimes(date, v);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Shift" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {DUTY_SHIFT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="time-in">Time In</Label>
+            <Input id="time-in" type="datetime-local" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="time-out">Time Out</Label>
+            <Input id="time-out" type="datetime-local" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="ON_DUTY">On Duty</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="ABSENT">Absent</SelectItem>
+                  <SelectItem value="SWAPPED">Swapped</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/80"
+            type="button"
+            disabled={createDuty.isPending}
+            onClick={() => {
+              if (!role || !staffId || !departmentId || !date || !shift || !timeIn || !timeOut || !status) {
+                toast.error("All fields are required");
+                return;
+              }
+              if (isWardSelected && !effectiveDepartmentId) {
+                toast.error("Select a ward unit");
+                return;
+              }
+              if (!withinThreeDays(date)) {
+                toast.error("Duty date must be within the next 3 days");
+                return;
+              }
+              createDuty.mutate(
+                {
+                  role,
+                  staffId,
+                  departmentId: effectiveDepartmentId || departmentId,
+                  date,
+                  shift: shift as any,
+                  timeIn,
+                  timeOut,
+                  status: status as any,
+                  assignedBy: "admin",
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Duty created");
+                    if (user?.id && user.id === staffId) {
+                      const deptName = (departments as any[]).find((d) => d._id === (effectiveDepartmentId || departmentId))?.name;
+                      if (deptName) {
+                        const updated = { ...user, department: deptName };
+                        dispatch(setUser(updated as any));
+                        const target = routeForRoleDepartment(role, deptName);
+                        if (target) navigate(target);
+                      }
+                    }
+                  },
+                  onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                }
+              );
+            }}
+          >
+            {createDuty.isPending ? "Assigning..." : "Assign Duty"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Duty Records</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-1">
+              <Label>Filter Department</Label>
+              <Select
+                value={deptFilter}
+                onValueChange={(v) => {
+                  setDeptFilter(v);
+                  if (String(v) !== String(wardRootId)) setWardUnitFilter("all");
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
+                    {(departments as any[]).map((d) => (
+                      <SelectItem key={d._id} value={d._id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isWardFilter && (
+              <div className="flex flex-col gap-1">
+                <Label>Ward Unit</Label>
+                <Select value={wardUnitFilter} onValueChange={(v) => setWardUnitFilter(v as any)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All Ward Units" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">All</SelectItem>
+                      {WARD_UNITS.map((nm) => (
+                        <SelectItem key={nm} value={nm}>
+                          {nm}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="filter-date">Filter Date</Label>
+              <Input id="filter-date" type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label>Filter Shift</Label>
+              <Select value={shiftFilter} onValueChange={setShiftFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
+                    {DUTY_SHIFT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-end">
+              <Button variant="outline" type="button" onClick={exportCsv} className="bg-[#56bbe3] text-white rounded-[8px]">
+                Export CSV
+              </Button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-[8px] overflow-hidden">
+              <thead className="bg-[#56bbe3] text-white">
+                <tr>
+                  <th className="px-4 py-2 text-left uppercase text-sm">{roleLabel}</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Department</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Date</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Shift</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time In</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Time Out</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Status</th>
+                  <th className="px-4 py-2 text-left uppercase text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(visibleDuties as any[]).map((d) => {
+                  const uId = dutyUserId(d);
+                  return (
+                    <tr key={d._id} className="even:bg-[#f9f9f9] border-b border-gray-200">
+                      <td className="px-4 py-2 whitespace-nowrap">{userNameById.get(uId) || "-"}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {(departments as any[]).find((x) => x._id === d.departmentId)?.name || "-"}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">{new Date(d.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{d.shift}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeIn).toLocaleString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{new Date(d.timeOut).toLocaleString()}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{d.status}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditDuty(d);
+                              setEditOpen(true);
+                              setEditDepartmentId(d.departmentId);
+                              setEditShift(d.shift);
+                              setEditTimeIn(new Date(d.timeIn).toISOString().slice(0, 16));
+                              setEditTimeOut(new Date(d.timeOut).toISOString().slice(0, 16));
+                              setEditStatus(d.status);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              deleteDuty.mutate(d._id, {
+                                onSuccess: () => toast.success("Duty deleted"),
+                                onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                              });
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {(visibleDuties as any[]).length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4">
+                      No duties found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Duty</DialogTitle>
+            <DialogDescription>Update shift, time in/out, and status.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <Label>Department</Label>
+              <Select value={editDepartmentId} onValueChange={setEditDepartmentId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {(departments as any[]).map((d) => (
+                      <SelectItem key={d._id} value={d._id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label>Shift</Label>
+              <Select
+                value={editShift}
+                onValueChange={(v) => {
+                  setEditShift(v);
+                  if (editDuty?.date) applyEditShiftTimes(new Date(editDuty.date).toISOString().slice(0, 10), v);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Shift" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {DUTY_SHIFT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="edit-time-in">Time In</Label>
+              <Input id="edit-time-in" type="datetime-local" value={editTimeIn} onChange={(e) => setEditTimeIn(e.target.value)} />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="edit-time-out">Time Out</Label>
+              <Input id="edit-time-out" type="datetime-local" value={editTimeOut} onChange={(e) => setEditTimeOut(e.target.value)} />
+            </div>
+
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="ON_DUTY">On Duty</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="ABSENT">Absent</SelectItem>
+                    <SelectItem value="SWAPPED">Swapped</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]/80"
+              disabled={updateDuty.isPending}
+              onClick={() => {
+                if (!editDuty?._id) return;
+                if (!editDepartmentId || !editShift || !editTimeIn || !editTimeOut || !editStatus) {
+                  toast.error("All fields are required");
+                  return;
+                }
+                updateDuty.mutate(
+                  {
+                    id: editDuty._id,
+                    payload: {
+                      departmentId: editDepartmentId,
+                      shift: editShift as any,
+                      timeIn: editTimeIn,
+                      timeOut: editTimeOut,
+                      status: editStatus as any,
+                    },
+                  },
+                  {
+                    onSuccess: () => {
+                      toast.success("Duty updated");
+                      setEditOpen(false);
+                    },
+                    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed"),
+                  }
+                );
+              }}
+            >
+              {updateDuty.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

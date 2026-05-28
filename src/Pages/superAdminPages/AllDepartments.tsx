@@ -37,7 +37,7 @@ export default function AllDepartments() {
           <CardTitle>All Departments</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-sm text-gray-600">Department Name</label>
               <Input placeholder="e.g., GOPD" value={name} onChange={(e) => setName(e.target.value)} />
@@ -85,7 +85,7 @@ export default function AllDepartments() {
               <div className="text-center py-4">No departments found.</div>
             )}
             {!isLoading && filteredRows.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredRows.map((d) => (
                   <Card key={d._id} className="border border-gray-200 rounded-md">
                     <CardHeader>

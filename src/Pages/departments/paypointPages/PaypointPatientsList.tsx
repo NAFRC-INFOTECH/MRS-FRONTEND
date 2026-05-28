@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  useAllInvoicesQuery,
+  useInvoicesQuery,
   PAYMENT_STATUS,
   type Invoice,
 } from "@/api-integration/queries/invoices";
@@ -31,7 +31,7 @@ import { formatCurrency } from "@/Pages/adminPages/createPriceListsPage/componen
 
 export default function PaypointPatientsList() {
   const navigate = useNavigate();
-  const { data: allInvoices = [], isLoading: allInvoicesLoading } = useAllInvoicesQuery();
+  const { data: allInvoices = [], isLoading: allInvoicesLoading } = useInvoicesQuery({ billingRoute: "paypoint" as any });
   const updateInvoiceStatus = useUpdateInvoicePaymentStatusMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -169,7 +169,7 @@ export default function PaypointPatientsList() {
                           <td className="px-4 py-3 whitespace-nowrap">{idx + 1}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{invoice.patientCardNumber}</td>
                           <td className="px-4 py-3 font-medium whitespace-nowrap">{invoice.patientName}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{formatCurrency(invoice.totalCost)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{formatCurrency((invoice as any).patientAmountDue ?? invoice.totalCost)}</td>
                           <td className="px-4 py-3 whitespace-nowrap">{getPaymentStatusBadge(invoice.paymentStatus)}</td>
                         </tr>
                       ))}
@@ -241,7 +241,7 @@ export default function PaypointPatientsList() {
 
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium">
-                          Total: {formatCurrency(selectedInvoice.totalCost)}
+                          Total: {formatCurrency((selectedInvoice as any).patientAmountDue ?? selectedInvoice.totalCost)}
                         </div>
                         {selectedInvoice.paymentStatus !== PAYMENT_STATUS.PAID && (
                           <Button

@@ -3,6 +3,8 @@ import { api } from "../api/apiClient";
 
 export type DrugItem = {
   priceItemId?: string;
+  category?: string;
+  unit?: string;
   name: string;
   dosage: string;
   quantity: number;
@@ -45,6 +47,22 @@ export type PharmacyPatient = Patient & {
   deskState: string;
   prescription?: string;
   drugs?: DrugItem[];
+  pharmacy?: {
+    cleared?: boolean;
+    hasInvoice?: boolean;
+    invoiceId?: string;
+    billingRoute?: string;
+    paymentStatus?: string;
+    nhiaStampStatus?: string;
+    copayStatus?: string;
+    patientAmountDue?: number;
+    nhiaAmountDue?: number;
+    totalCost?: number;
+    hasBed?: boolean;
+    admitted?: boolean;
+    admittedWardUnit?: string;
+    admissionId?: string;
+  };
 };
 
 export const getPatientsApi = async (q?: string): Promise<Patient[]> => {

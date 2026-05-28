@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, History, ArrowRightCircle, FlaskConical, Scan, Pill, CreditCard, ShieldCheck, Trash2, Plus, Minus, ShoppingCart, Search, Send } from "lucide-react";
+import { ChevronDown, History, ArrowRightCircle, FlaskConical, Scan, Pill, CreditCard, ShieldCheck, Trash2, Plus, Minus, ShoppingCart, Search, Send, BedDouble } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDoctorDayListQuery } from "@/api-integration/queries/doctorDayList";
 import { usePriceItemsQuery } from "@/api-integration/queries/priceList";
@@ -21,8 +21,12 @@ import { Badge } from "@/components/ui/badge";
 export default function TodaysPatientsList() {
   const { query } = useSearch();
   const { data: daylist = [] } = useDoctorDayListQuery("GOPD", "all");
-  const { data: priceItems = [] } = usePriceItemsQuery({
+  const { data: drugPriceItems = [] } = usePriceItemsQuery({
     category: "drug",
+    activeOnly: true,
+  });
+  const { data: bedPriceItems = [] } = usePriceItemsQuery({
+    category: "bed",
     activeOnly: true,
   });
   const navigate = useNavigate();
@@ -33,8 +37,12 @@ export default function TodaysPatientsList() {
   const [pharmacyFormOpen, setPharmacyFormOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [destination, setDestination] = useState<"lab" | "xray" | "nhia" | "paypoint" | "pharmacy" | null>(null);
-  const [cart, setCart] = useState<{ drugId: string; prescription: string; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ itemId: string; prescription: string; quantity: number }[]>([]);
   const [drugSearch, setDrugSearch] = useState("");
+
+  const allItems = useMemo(() => {
+    return [...drugPriceItems, ...bedPriceItems];
+  }, [drugPriceItems, bedPriceItems]);
 
   const rows = useMemo(() => {
     const list = (daylist as any[]).map((q) => {
@@ -55,47 +63,66 @@ export default function TodaysPatientsList() {
     });
   }, [daylist, query, searchIdService]);
 
-  const filteredDrugs = useMemo(() => {
-    return priceItems.filter(item => 
-      item.name.toLowerCase().includes(drugSearch.toLowerCase()) &&
-      !cart.find(c => c.drugId === item._id)
-    );
-  }, [priceItems, drugSearch, cart]);
-
-  const cartDrugs = useMemo(() => {
-    return cart.map(item => {
-      const drug = priceItems.find(d => d._id === item.drugId);
-      return { ...item, drug };
+  const filteredItems = useMemo(() => {
+    const q = drugSearch.trim().toLowerCase();
+    if (!q) return [];
+    return allItems.filter((item) => {
+      if (!item.name.toLowerCase().includes(q)) return false;
+      if (cart.find((c) => c.itemId === item._id)) return false;
+      if (String(item.category || "").toLowerCase() === "bed") {
+        const remaining = Number(item.stockQuantity || 0) - Number(item.soldQuantity || 0);
+        return remaining > 0;
+      }
+      return true;
     });
-  }, [cart, priceItems]);
+  }, [allItems, drugSearch, cart]);
 
-  const cartDrugsLatestFirst = useMemo(() => {
-    return [...cartDrugs].reverse();
-  }, [cartDrugs]);
+  const cartItems = useMemo(() => {
+    return cart.map((item) => {
+      const priceItem = allItems.find((d) => d._id === item.itemId);
+      return { ...item, priceItem };
+    });
+  }, [cart, allItems]);
+
+  const cartItemsLatestFirst = useMemo(() => {
+    return [...cartItems].reverse();
+  }, [cartItems]);
 
   const allPrescriptionsFilled = useMemo(() => {
-    return cart.every(item => item.prescription.trim().length > 0);
-  }, [cart]);
+    return cartItems.every((item) => {
+      const cat = String(item.priceItem?.category || "").toLowerCase();
+      if (cat === "bed") return true;
+      return item.prescription.trim().length > 0;
+    });
+  }, [cartItems]);
 
-  const addToCart = (drug: PriceItem) => {
-    setCart([...cart, { drugId: drug._id, prescription: "", quantity: 1 }]);
+  const addToCart = (priceItem: PriceItem) => {
+    const cat = String(priceItem.category || "").toLowerCase();
+    if (cat === "bed") {
+      const remaining = Number(priceItem.stockQuantity || 0) - Number(priceItem.soldQuantity || 0);
+      if (remaining <= 0) {
+        toast.error("No beds remaining in this ward");
+        return;
+      }
+    }
+    setCart([...cart, { itemId: priceItem._id, prescription: cat === "bed" ? "Bed assigned" : "", quantity: 1 }]);
     setDrugSearch("");
   };
 
-  const removeFromCart = (drugId: string) => {
-    setCart(cart.filter(item => item.drugId !== drugId));
+  const removeFromCart = (itemId: string) => {
+    setCart(cart.filter((item) => item.itemId !== itemId));
   };
 
-  const updateDrugPrescription = (drugId: string, prescription: string) => {
+  const updateItemPrescription = (itemId: string, prescription: string) => {
     setCart(cart.map(item => 
-      item.drugId === drugId ? { ...item, prescription } : item
+      item.itemId === itemId ? { ...item, prescription } : item
     ));
   };
 
-  const updateDrugQuantity = (drugId: string, quantity: number) => {
+  const updateItemQuantity = (itemId: string, quantity: number) => {
     if (quantity < 1) return;
     setCart(cart.map(item => 
-      item.drugId === drugId ? { ...item, quantity } : item
+      item.itemId === itemId ? { ...item, quantity } : item
     ));
   };
 
@@ -301,12 +328,12 @@ export default function TodaysPatientsList() {
                       htmlFor="drug-search"
                       className="text-xs sm:text-sm font-semibold"
                     >
-                      Search Drugs
+                      Search Drugs or Ward
                     </Label>
 
                     <Input
                       id="drug-search"
-                      placeholder="Search by drug name..."
+                      placeholder="Search by drug name or Ward name..."
                       value={drugSearch}
                       onChange={(e) =>
                         setDrugSearch(e.target.value)
@@ -324,19 +351,19 @@ export default function TodaysPatientsList() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm sm:text-base font-semibold">
-                          Available Drugs
+                          Available Items
                         </h3>
 
                         <span className="text-xs text-muted-foreground">
-                          {filteredDrugs.length} found
+                          {filteredItems.length} found
                         </span>
                       </div>
 
                       <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-                        {filteredDrugs.length > 0 ? (
-                          filteredDrugs.map((drug) => (
+                        {filteredItems.length > 0 ? (
+                          filteredItems.map((item) => (
                             <div
-                              key={drug._id}
+                              key={item._id}
                               className="
                                 flex items-center justify-between gap-3
                                 rounded-2xl border
@@ -357,16 +384,20 @@ export default function TodaysPatientsList() {
                                     flex items-center justify-center
                                   "
                                 >
-                                  <Pill className="w-5 h-5 text-primary" />
+                                  {String(item.category || "").toLowerCase() === "bed" ? (
+                                    <BedDouble className="w-5 h-5 text-primary" />
+                                  ) : (
+                                    <Pill className="w-5 h-5 text-primary" />
+                                  )}
                                 </div>
 
                                 <div>
                                   <div className="font-medium text-sm">
-                                    {drug.name}
+                                    {item.name}
                                   </div>
 
                                   <div className="text-xs text-muted-foreground">
-                                    {drug.unit}
+                                    {item.unit}
                                   </div>
                                 </div>
                               </div>
@@ -374,7 +405,7 @@ export default function TodaysPatientsList() {
                               <Button
                                 size="icon"
                                 className="rounded-full"
-                                onClick={() => addToCart(drug)}
+                                onClick={() => addToCart(item as any)}
                               >
                                 <Plus className="w-4 h-4" />
                               </Button>
@@ -392,7 +423,7 @@ export default function TodaysPatientsList() {
                             <Search className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
 
                             <p className="text-xs sm:text-sm font-medium">
-                              No drugs found
+                              No items found
                             </p>
 
                             <p className="text-xs text-muted-foreground">
@@ -411,23 +442,23 @@ export default function TodaysPatientsList() {
                   <div className="border-b px-6 py-1">
                     <div className="">
                       <h3 className="text-base sm:text-lg font-semibold">
-                        Selected Medications
+                        Selected Items
                       </h3>
 
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Configure quantity and prescription details
-                        for each medication.
+                        for each item.
                       </p>
                     </div>
                   </div>
 
                   {/* CART */}
                   <div className="flex-1 overflow-y-auto px-6 py-5">
-                    {cartDrugs.length > 0 ? (
+                    {cartItems.length > 0 ? (
                       <div className="space-y-5">
-                        {cartDrugsLatestFirst.map((item) => (
+                        {cartItemsLatestFirst.map((item) => (
                           <div
-                            key={item.drugId}
+                            key={item.itemId}
                             className="
                               rounded-2xl border
                               bg-card/50
@@ -450,17 +481,20 @@ export default function TodaysPatientsList() {
                                     flex items-center justify-center
                                   "
                                 >
-                                  <Pill className="w-5 h-5 text-primary" />
+                                  {String(item.priceItem?.category || "").toLowerCase() === "bed" ? (
+                                    <BedDouble className="w-5 h-5 text-primary" />
+                                  ) : (
+                                    <Pill className="w-5 h-5 text-primary" />
+                                  )}
                                 </div>
 
                                 <div>
                                   <div className="font-semibold">
-                                    {item.drug?.name ||
-                                      "Unknown Drug"}
+                                    {item.priceItem?.name || "Unknown Item"}
                                   </div>
 
                                   <div className="text-xs sm:text-sm text-muted-foreground">
-                                    {item.drug?.unit || ""}
+                                    {item.priceItem?.unit || ""}
                                   </div>
                                 </div>
                               </div>
@@ -470,7 +504,7 @@ export default function TodaysPatientsList() {
                                 size="icon"
                                 className="rounded-xl"
                                 onClick={() =>
-                                  removeFromCart(item.drugId)
+                                  removeFromCart(item.itemId)
                                 }
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -489,8 +523,8 @@ export default function TodaysPatientsList() {
                                   variant="outline"
                                   className="rounded-xl"
                                   onClick={() =>
-                                    updateDrugQuantity(
-                                      item.drugId,
+                                    updateItemQuantity(
+                                      item.itemId,
                                       Math.max(
                                         1,
                                         item.quantity - 1
@@ -506,8 +540,8 @@ export default function TodaysPatientsList() {
                                   min="1"
                                   value={item.quantity}
                                   onChange={(e) =>
-                                    updateDrugQuantity(
-                                      item.drugId,
+                                    updateItemQuantity(
+                                      item.itemId,
                                       parseInt(e.target.value) ||
                                         1
                                     )
@@ -524,8 +558,8 @@ export default function TodaysPatientsList() {
                                   variant="outline"
                                   className="rounded-xl"
                                   onClick={() =>
-                                    updateDrugQuantity(
-                                      item.drugId,
+                                    updateItemQuantity(
+                                      item.itemId,
                                       item.quantity + 1
                                     )
                                   }
@@ -536,29 +570,40 @@ export default function TodaysPatientsList() {
                             </div>
 
                             {/* PRESCRIPTION */}
-                            <div className="space-y-2">
-                              <Label className="text-xs sm:text-sm font-semibold">
-                                Prescription Instructions
-                              </Label>
+                            {String(item.priceItem?.category || "").toLowerCase() === "bed" ? (
+                              <div className="space-y-2">
+                                <Label className="text-xs sm:text-sm font-semibold">
+                                  Bed Assignment
+                                </Label>
+                                <div className="text-xs sm:text-sm text-muted-foreground">
+                                  This bed fee will be included with the request.
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <Label className="text-xs sm:text-sm font-semibold">
+                                  Prescription Instructions
+                                </Label>
 
-                              <Textarea
-                                placeholder="Write prescription instructions..."
-                                value={item.prescription}
-                                onChange={(e) =>
-                                  updateDrugPrescription(
-                                    item.drugId,
-                                    e.target.value
-                                  )
-                                }
-                                rows={4}
-                                className="
-                                  min-h-[120px]
-                                  rounded-2xl
-                                  resize-none
-                                  focus-visible:ring-2
-                                "
-                              />
-                            </div>
+                                <Textarea
+                                  placeholder="Write prescription instructions..."
+                                  value={item.prescription}
+                                  onChange={(e) =>
+                                    updateItemPrescription(
+                                      item.itemId,
+                                      e.target.value
+                                    )
+                                  }
+                                  rows={4}
+                                  className="
+                                    min-h-[120px]
+                                    rounded-2xl
+                                    resize-none
+                                    focus-visible:ring-2
+                                  "
+                                />
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -575,19 +620,19 @@ export default function TodaysPatientsList() {
                         <ShoppingCart className="w-12 h-12 text-muted-foreground mb-4" />
 
                         <h3 className="text-base sm:text-lg font-semibold">
-                          No medications added
+                          No items added
                         </h3>
 
                         <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
                           Search and add medications from the left
-                          panel to begin creating a prescription.
+                          panel to begin creating a request.
                         </p>
                       </div>
                     )}
                   </div>
 
                   {/* SUMMARY */}
-                  {cartDrugs.length > 0 && (
+                  {cartItems.length > 0 && (
                     <div className="border-t px-6 py-2 bg-muted/30">
                       <div
                         className="
@@ -597,8 +642,8 @@ export default function TodaysPatientsList() {
                       >
                         <div>
                           <div className="font-semibold">
-                            {cartDrugs.length} medication
-                            {cartDrugs.length > 1 ? "s" : ""} selected
+                            {cartItems.length} item
+                            {cartItems.length > 1 ? "s" : ""} selected
                           </div>
 
                           <div className="text-xs sm:text-sm text-muted-foreground">
@@ -642,7 +687,7 @@ export default function TodaysPatientsList() {
 
               <Button
                 disabled={
-                  cartDrugs.length === 0 ||
+                  cartItems.length === 0 ||
                   !allPrescriptionsFilled ||
                   addToPharmacy.isPending
                 }
@@ -651,23 +696,28 @@ export default function TodaysPatientsList() {
                   if (!selectedPatientId) return;
 
                   try {
-                    const drugs = cartDrugsLatestFirst.map((item) => ({
-                      priceItemId: item.drug?._id,
-                      name:
-                        item.drug?.name || "Unknown Drug",
-                      dosage: "As prescribed",
-                      quantity: item.quantity,
-                      instructions: item.prescription,
-                      dispensed: false,
-                    }));
+                    const drugs = cartItemsLatestFirst.map((item) => {
+                      const p = item.priceItem;
+                      const cat = String(p?.category || "").toLowerCase();
+                      return {
+                        priceItemId: p?._id,
+                        category: p?.category,
+                        unit: p?.unit,
+                        name: p?.name || "Unknown Item",
+                        dosage: cat === "bed" ? "Bed Fee" : "As prescribed",
+                        quantity: item.quantity,
+                        instructions: cat === "bed" ? "Ward bed requested" : item.prescription,
+                        dispensed: false,
+                      };
+                    });
 
-                    const prescription = cartDrugsLatestFirst
-                      .map(
-                        (item) =>
-                          `${item.drug?.name || "Unknown Drug"} (Qty: ${
-                            item.quantity
-                          }): ${item.prescription}`
-                      )
+                    const prescription = cartItemsLatestFirst
+                      .map((item) => {
+                        const p = item.priceItem;
+                        const cat = String(p?.category || "").toLowerCase();
+                        if (cat === "bed") return `${p?.name || "Bed Fee"} (Qty: ${item.quantity})`;
+                        return `${p?.name || "Unknown Drug"} (Qty: ${item.quantity}): ${item.prescription}`;
+                      })
                       .join("\n");
 
                     await addToPharmacy.mutateAsync({

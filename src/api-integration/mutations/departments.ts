@@ -17,7 +17,7 @@ export const useCreateDepartmentMutation = () => {
   });
 };
 
-export const updateDepartmentApi = async (id: string, payload: { name?: string; description?: string }): Promise<Department> => {
+export const updateDepartmentApi = async (id: string, payload: { name?: string; description?: string; bedCapacity?: number }): Promise<Department> => {
   const res = await api.patch(`/departments/${encodeURIComponent(id)}`, payload);
   return res.data as any;
 };
@@ -25,7 +25,7 @@ export const updateDepartmentApi = async (id: string, payload: { name?: string; 
 export const useUpdateDepartmentMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string } }) => updateDepartmentApi(id, data),
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string; bedCapacity?: number } }) => updateDepartmentApi(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["departments"] });
     },

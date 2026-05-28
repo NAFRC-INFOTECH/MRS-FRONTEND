@@ -15,6 +15,12 @@ import PaypointSidebar from './PaypointSidebar';
 import PharmacySidebar from './PharmacySidebar';
 import EarDoctorSidebar from './EarDoctorSidebar';
 import EyeDoctorSidebar from './EyeDoctorSidebar';
+import ChildrenWardSidebar from './ChildrenWardSidebar';
+import FemaleWardSidebar from './FemaleWardSidebar';
+import MaleWardSidebar from './MaleWardSidebar';
+import FemaleVIPSidebar from './FemaleVIPSidebar';
+import MaleVIPWardSidebar from './MaleVIPWardSidebar';
+import AntenatalSidebar from './AntenatalSidebar';
 
 
 
@@ -66,6 +72,12 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle, isMob
           if (dept === "nhia" || dept === "general") return <NHIASidebar />;
           if (dept === "paypoint" || dept === "general") return <PaypointSidebar />;
           if (dept === "pharmacy" || dept === "general") return <PharmacySidebar />;
+          if (dept === "antenatal") return <AntenatalSidebar />;
+          if (dept === "childrenward") return <ChildrenWardSidebar />;
+          if (dept === "femaleward") return <FemaleWardSidebar />;
+          if (dept === "maleward") return <MaleWardSidebar />;
+          if (dept === "femalevip") return <FemaleVIPSidebar />;
+          if (dept === "malevip") return <MaleVIPWardSidebar />;
           return null;
         }
 
