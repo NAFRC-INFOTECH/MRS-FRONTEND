@@ -1,8 +1,10 @@
 import { Copy, Pencil, Trash2 } from "lucide-react";
+// import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { getCategoryLabel, formatCurrency, type PriceItem } from "./priceListTypes";
+// import { useOccupyBedMutation, useReleaseBedMutation } from "@/api-integration/mutations/priceList";
 
 type PriceTableRowProps = {
   item: PriceItem;
@@ -19,6 +21,14 @@ export default function PriceTableRow({
   onDelete,
   onToggleStatus,
 }: PriceTableRowProps) {
+  // const occupy = useOccupyBedMutation();
+  // const release = useReleaseBedMutation();
+
+  const isBed = item.category === "bed";
+  const inStock = Number(item.stockQuantity ?? 0);
+  const used = Number(item.soldQuantity ?? 0);
+  const remaining = inStock - used;
+
   return (
     <TableRow>
       <TableCell className="font-medium">{item.name}</TableCell>
@@ -33,6 +43,14 @@ export default function PriceTableRow({
           <TableCell>{item.soldQuantity ?? 0}</TableCell>
           <TableCell className={(item.stockQuantity ?? 0) - (item.soldQuantity ?? 0) <= 0 ? "text-red-600 font-semibold" : ""}>
             {(item.stockQuantity ?? 0) - (item.soldQuantity ?? 0)}
+          </TableCell>
+        </>
+      ) : isBed ? (
+        <>
+          <TableCell>{inStock}</TableCell>
+          <TableCell>{used}</TableCell>
+          <TableCell className={remaining <= 0 ? "text-red-600 font-semibold" : ""}>
+            {remaining}
           </TableCell>
         </>
       ) : (
@@ -62,6 +80,56 @@ export default function PriceTableRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
+          {/* {isBed && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                disabled={occupy.isPending || release.isPending}
+                onClick={async () => {
+                  const raw = window.prompt("How many beds to mark as used (occupy)?", "1");
+                  if (!raw) return;
+                  const qty = Number(raw);
+                  if (!Number.isFinite(qty) || !Number.isInteger(qty) || qty <= 0) {
+                    toast.error("Enter a valid whole number");
+                    return;
+                  }
+                  try {
+                    await occupy.mutateAsync({ id: item._id, quantity: qty });
+                    toast.success("Bed usage updated");
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : "Failed");
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                disabled={occupy.isPending || release.isPending}
+                onClick={async () => {
+                  const raw = window.prompt("How many beds to release (reduce used)?", "1");
+                  if (!raw) return;
+                  const qty = Number(raw);
+                  if (!Number.isFinite(qty) || !Number.isInteger(qty) || qty <= 0) {
+                    toast.error("Enter a valid whole number");
+                    return;
+                  }
+                  try {
+                    await release.mutateAsync({ id: item._id, quantity: qty });
+                    toast.success("Bed usage updated");
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : "Failed");
+                  }
+                }}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </>
+          )} */}
           <Button type="button" variant="outline" size="icon-sm" onClick={() => onEdit(item)}>
             <Pencil className="h-4 w-4" />
           </Button>

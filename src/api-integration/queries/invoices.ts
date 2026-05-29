@@ -9,7 +9,31 @@ export const PAYMENT_STATUS = {
 
 export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS];
 
+export const BILLING_ROUTE = {
+  PAYPOINT: "paypoint",
+  NHIA: "nhia",
+} as const;
+
+export type BillingRoute = typeof BILLING_ROUTE[keyof typeof BILLING_ROUTE];
+
+export const NHIA_STAMP_STATUS = {
+  AWAITING: "awaiting",
+  STAMPED: "stamped",
+} as const;
+
+export type NHIAStampStatus = typeof NHIA_STAMP_STATUS[keyof typeof NHIA_STAMP_STATUS];
+
+export const COPAY_STATUS = {
+  AWAITING: "awaiting",
+  PAID: "paid",
+} as const;
+
+export type CopayStatus = typeof COPAY_STATUS[keyof typeof COPAY_STATUS];
+
 export type InvoiceDrugItem = {
+  priceItemId?: string;
+  category?: string;
+  unit?: string;
   name: string;
   dosage: string;
   quantity: number;
@@ -42,6 +66,17 @@ export type Invoice = {
   items?: InvoiceItem[];
   totalCost: number;
   paymentStatus: PaymentStatus;
+  billingRoute?: BillingRoute;
+  patientIsPersonnel?: boolean;
+  patientHasNHIAAccess?: boolean;
+  patientCopayPercent?: number;
+  patientCopayAmount?: number;
+  patientAmountDue?: number;
+  nhiaAmountDue?: number;
+  copayStatus?: CopayStatus;
+  copayPaidAt?: string;
+  nhiaStampStatus?: NHIAStampStatus;
+  nhiaStampedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -67,6 +102,9 @@ export const getInvoicesApi = async (params?: {
   paidByRole?: string;
   paidFrom?: string;
   paidTo?: string;
+  billingRoute?: BillingRoute;
+  nhiaStampStatus?: NHIAStampStatus;
+  copayStatus?: CopayStatus;
 }): Promise<Invoice[]> => {
   const res = await api.get("/invoices", { params });
   return res.data as Invoice[];
@@ -90,6 +128,16 @@ export const updateInvoicePaymentStatusApi = async (
   return res.data as Invoice;
 };
 
+export const stampInvoiceNHIAApi = async (invoiceId: string): Promise<Invoice> => {
+  const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/nhia/stamp`);
+  return res.data as Invoice;
+};
+
+export const markInvoiceCopayPaidApi = async (invoiceId: string): Promise<Invoice> => {
+  const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/nhia/copay-paid`);
+  return res.data as Invoice;
+};
+
 export const useAllInvoicesQuery = () => {
   return useQuery({
     queryKey: ["invoices", "all"],
@@ -104,6 +152,9 @@ export const useInvoicesQuery = (params?: {
   paidByRole?: string;
   paidFrom?: string;
   paidTo?: string;
+  billingRoute?: BillingRoute;
+  nhiaStampStatus?: NHIAStampStatus;
+  copayStatus?: CopayStatus;
 }) => {
   return useQuery({
     queryKey: [
@@ -115,6 +166,9 @@ export const useInvoicesQuery = (params?: {
       params?.paidByRole ?? "",
       params?.paidFrom ?? "",
       params?.paidTo ?? "",
+      params?.billingRoute ?? "",
+      params?.nhiaStampStatus ?? "",
+      params?.copayStatus ?? "",
     ],
     queryFn: () => getInvoicesApi(params),
   });

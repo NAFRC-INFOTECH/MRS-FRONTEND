@@ -154,13 +154,15 @@ export const calculatePriceSummary = (
 
   const totalValue = activeItemsArray.reduce((sum: number, item: PriceItem) => {
     const price = Number(item.price) || 0;
-    const multiplier = item.category === "drug" ? (Number(item.stockQuantity) || 0) : 1;
+    const multiplier = item.category === "drug" || item.category === "bed" ? (Number(item.stockQuantity) || 0) : 1;
     return sum + price * multiplier;
   }, 0);
 
   const servicesValue = activeItemsArray.reduce((sum: number, item: PriceItem) => {
     if (item.category === "drug") return sum;
-    return sum + (Number(item.price) || 0);
+    const price = Number(item.price) || 0;
+    const multiplier = item.category === "bed" ? (Number(item.stockQuantity) || 0) : 1;
+    return sum + price * multiplier;
   }, 0);
 
   const totalDrugsInStock = drugItems.reduce((sum: number, item: PriceItem) => {

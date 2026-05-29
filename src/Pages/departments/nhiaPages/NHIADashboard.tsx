@@ -134,7 +134,7 @@ export default function NHIADashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Card className="bg-green-50 dark:bg-green-900/20 shadow-none">
+          <Card className="bg-green-50 dark:bg-green-900/20 shadow-none rounded-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Total Cleared</CardTitle>
@@ -147,7 +147,7 @@ export default function NHIADashboard() {
             </CardContent>
           </Card>
             
-          <Card className="bg-yellow-50 dark:bg-yellow-900/20 shadow-none">
+          <Card className="bg-yellow-50 dark:bg-yellow-900/20 shadow-none rounded-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Awaiting Verification</CardTitle>
@@ -160,7 +160,7 @@ export default function NHIADashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-red-50 dark:bg-red-900/20 shadow-none">
+          <Card className="bg-red-50 dark:bg-red-900/20 shadow-none rounded-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Not Cleared</CardTitle>
@@ -173,7 +173,7 @@ export default function NHIADashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50 dark:bg-purple-900/20 shadow-none">
+          <Card className="bg-purple-50 dark:bg-purple-900/20 shadow-none rounded-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Personnel Desk</CardTitle>
@@ -189,7 +189,7 @@ export default function NHIADashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-blue-50 dark:bg-blue-900/20 shadow-none">
+          <Card className="bg-blue-50 dark:bg-blue-900/20 shadow-none rounded-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Civilian Desk</CardTitle>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, FileText } from "lucide-react";
+import { ArrowLeft, BedDouble, CheckCircle2, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { useInvoicesByPatientIdQuery } from "@/api-integration/queries/invoices"
 import { useCreateInvoiceMutation } from "@/api-integration/mutations/invoices";
 import { useUpdatePharmacyDeskStateMutation } from "@/api-integration/mutations/patients";
 import { useDispensePriceItemMutation } from "@/api-integration/mutations/priceList";
+import { useAdmitToWardMutation, useDischargeWardAdmissionMutation } from "@/api-integration/mutations/wards";
 import { toast } from "sonner";
 import { formatCurrency } from "@/Pages/adminPages/createPriceListsPage/components/priceListTypes";
 
@@ -24,17 +25,67 @@ export default function ViewPrescription() {
   const createInvoice = useCreateInvoiceMutation();
   const updatePharmacyDeskState = useUpdatePharmacyDeskStateMutation();
   const dispensePriceItem = useDispensePriceItemMutation();
+  const admitToWard = useAdmitToWardMutation();
+  const dischargeAdmission = useDischargeWardAdmissionMutation();
   const [dispensingDrugKey, setDispensingDrugKey] = useState<string | null>(null);
   const [dispensingAll, setDispensingAll] = useState(false);
+  const [selectedWardUnit, setSelectedWardUnit] = useState<string>("");
 
   const { data: pharmacyPatients, isLoading: pharmacyLoading, isError: pharmacyIsError, error: pharmacyError } =
     usePharmacyReferredPatientsQuery();
 
-  const { data: priceItems } = usePriceItemsQuery({ category: "drug", activeOnly: true });
+  const { data: priceItems } = usePriceItemsQuery({ category: "all", activeOnly: true });
 
   const { data: invoices, isLoading: invoicesLoading } = useInvoicesByPatientIdQuery(patientId);
 
   const pharmacyPatient = pharmacyPatients?.find((p) => p._id === patientId) as PharmacyPatient | undefined;
+
+  const latestInvoice = invoices?.[0] as any | undefined;
+  const isInvoiceCleared = useMemo(() => {
+    if (!latestInvoice) return false;
+    const route = String(latestInvoice.billingRoute || "");
+    if (route === "paypoint") return String(latestInvoice.paymentStatus || "") === "paid";
+    const stamped = String(latestInvoice.nhiaStampStatus || "") === "stamped";
+    const due = Number(latestInvoice.patientAmountDue ?? 0) || 0;
+    const copayOk = due <= 0 ? true : String(latestInvoice.copayStatus || "") === "paid";
+    return stamped && copayOk;
+  }, [latestInvoice]);
+
+  const invoiceClearanceLabel = useMemo(() => {
+    if (!latestInvoice) return "No Invoice";
+    const route = String(latestInvoice.billingRoute || "");
+    if (route === "paypoint") return String(latestInvoice.paymentStatus || "") === "paid" ? "Paid" : "Awaiting Paypoint";
+    const stamped = String(latestInvoice.nhiaStampStatus || "") === "stamped";
+    if (!stamped) return "Awaiting NHIA Stamp";
+    const due = Number(latestInvoice.patientAmountDue ?? 0) || 0;
+    if (due > 0 && String(latestInvoice.copayStatus || "") !== "paid") return "Awaiting NHIA Copay";
+    return "Cleared";
+  }, [latestInvoice]);
+
+  const bedItem = useMemo(() => {
+    const list = (pharmacyPatient?.drugs || []) as any[];
+    return (
+      list.find((d) => String(d?.category || "").toLowerCase() === "bed") ||
+      list.find((d) => String(d?.dosage || "").toLowerCase() === "bed fee") ||
+      null
+    );
+  }, [pharmacyPatient]);
+
+  const suggestedWardUnit = useMemo(() => {
+    const nm = String(bedItem?.name || "").toLowerCase().replace(/[^a-z]/g, "");
+    if (nm.includes("children")) return "ChildrenWard";
+    if (nm.includes("femalevip")) return "FemaleVIP";
+    if (nm.includes("malevip")) return "MaleVIP";
+    if (nm.includes("femaleward")) return "FemaleWard";
+    if (nm.includes("maleward")) return "MaleWard";
+    return "";
+  }, [bedItem]);
+
+  const wardUnit = selectedWardUnit || suggestedWardUnit;
+
+  const wardUnits = useMemo(() => ["ChildrenWard", "FemaleWard", "MaleWard", "MaleVIP", "FemaleVIP"], []);
+
+  const isBedTransferred = !!(pharmacyPatient as any)?.pharmacy?.admitted || !!(pharmacyPatient as any)?.pharmacy?.admissionId;
 
   const normalizeInvoiceDrug = (d: any) => ({
     name: String(d?.name ?? "").trim().toLowerCase(),
@@ -68,11 +119,6 @@ export default function ViewPrescription() {
     return priceItems?.find((item) => item.name.toLowerCase() === drug.name.toLowerCase());
   };
 
-  const getDrugPrice = (drug: DrugItem): number => {
-    const item = getPriceItem(drug);
-    return item?.price || 0;
-  };
-
   const handleSendInvoice = async () => {
     if (!pharmacyPatient?.drugs || !patientId) return;
     if (invoicesLoading) return;
@@ -82,28 +128,129 @@ export default function ViewPrescription() {
     }
     try {
       const drugsWithPrices = pharmacyPatient.drugs.map((drug) => {
-        const unitPrice = getDrugPrice(drug);
+        const priceItem = getPriceItem(drug);
+        const unitPrice = priceItem?.price || 0;
         return {
           ...drug,
+          priceItemId: priceItem?._id || drug.priceItemId,
+          category: priceItem?.category,
+          unit: priceItem?.unit,
           unitPrice,
           totalPrice: unitPrice * drug.quantity,
         };
       });
-      await createInvoice.mutateAsync({ patientId, drugs: drugsWithPrices });
-      toast.success("Invoice sent to paypoint");
+      const inv = await createInvoice.mutateAsync({ patientId, drugs: drugsWithPrices });
+      const route = String((inv as any)?.billingRoute || "");
+      toast.success(route === "nhia" ? "Invoice sent to NHIA" : "Invoice sent to Paypoint");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err ?? "");
       toast.error(msg || "Failed to send invoice");
     }
   };
 
+  const handleTransferToWard = async () => {
+    if (!patientId || !pharmacyPatient?.drugs) return;
+    if (!bedItem) {
+      toast.error("No bed fee found on this prescription");
+      return;
+    }
+    if (!bedItem.priceItemId) {
+      toast.error("Bed fee has no price item id");
+      return;
+    }
+    if (!latestInvoice) {
+      toast.error("Send invoice first");
+      return;
+    }
+    if (!isInvoiceCleared) {
+      toast.error(`Not cleared: ${invoiceClearanceLabel}`);
+      return;
+    }
+    if (!wardUnit) {
+      toast.error("Select ward unit");
+      return;
+    }
+    if (isBedTransferred) {
+      toast.error("Patient already transferred to ward");
+      return;
+    }
+
+    const qty = Number(bedItem.quantity ?? 1) || 1;
+    const medicationOrders = (pharmacyPatient.drugs || [])
+      .map((drug, drugIndex) => {
+        const priceItem = getPriceItem(drug);
+        const category = String((priceItem as any)?.category || "").toLowerCase();
+        if (category !== "drug") return null;
+        const priceItemId =
+          String(priceItem?._id || "").trim() ||
+          String(drug.priceItemId || "").trim() ||
+          `manual:${String(drug.name || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")}:${drugIndex}`;
+        return {
+          priceItemId,
+          name: String(drug.name || ""),
+          quantity: Number(drug.quantity ?? 0) || 0,
+          instructions: String((drug as any)?.instructions || ""),
+          usage: String(drug.dosage || (drug as any)?.instructions || ""),
+        };
+      })
+      .filter(Boolean) as any[];
+    const admission = await admitToWard.mutateAsync({
+      patientId,
+      wardUnit,
+      bedPriceItemId: bedItem.priceItemId,
+      quantity: qty,
+      pharmacyPrescription: String(pharmacyPatient.prescription || ""),
+      medicationOrders,
+    });
+
+    try {
+      const nextDrugs = (pharmacyPatient.drugs || []).map((d) => {
+        const isBed =
+          String(d?.category || "").toLowerCase() === "bed" ||
+          String(d?.dosage || "").toLowerCase() === "bed fee";
+        if (!isBed) return d;
+        if (bedItem.priceItemId && d.priceItemId && String(d.priceItemId) !== String(bedItem.priceItemId)) return d;
+        return { ...d, dispensed: true };
+      });
+      const nextDeskState = nextDrugs.every((x) => !!x.dispensed) ? "completed" : pharmacyPatient.deskState;
+      await updatePharmacyDeskState.mutateAsync({
+        patientId,
+        deskState: nextDeskState,
+        prescription: pharmacyPatient.prescription,
+        drugs: nextDrugs,
+      });
+      toast.success(`Transferred to ${wardUnit}`);
+    } catch (err) {
+      try {
+        await dischargeAdmission.mutateAsync(String((admission as any)._id || ""));
+      } catch {}
+      const msg = err instanceof Error ? err.message : String(err ?? "");
+      toast.error(msg || "Failed to transfer to ward");
+    }
+  };
+
   const handleDispenseDrug = async (drug: DrugItem, index: number) => {
     if (!patientId || !pharmacyPatient?.drugs) return;
     if (drug.dispensed) return;
+    if (!latestInvoice) {
+      toast.error("Send invoice first");
+      return;
+    }
+    if (!isInvoiceCleared) {
+      toast.error(`Not cleared: ${invoiceClearanceLabel}`);
+      return;
+    }
 
     const priceItem = getPriceItem(drug);
     if (!priceItem) {
       toast.error(`No price-list item found for ${drug.name}`);
+      return;
+    }
+    if (String((priceItem as any).category || "").toLowerCase() !== "drug") {
+      toast.error(`${drug.name} is not a drug item`);
       return;
     }
 
@@ -146,9 +293,17 @@ export default function ViewPrescription() {
 
   const handleDispenseAll = async () => {
     if (!patientId || !pharmacyPatient?.drugs) return;
+    if (!latestInvoice) {
+      toast.error("Send invoice first");
+      return;
+    }
+    if (!isInvoiceCleared) {
+      toast.error(`Not cleared: ${invoiceClearanceLabel}`);
+      return;
+    }
     const pending = pharmacyPatient.drugs
       .map((drug, idx) => ({ drug, idx }))
-      .filter(({ drug }) => !drug.dispensed);
+      .filter(({ drug }) => !drug.dispensed && String((getPriceItem(drug) as any)?.category || "").toLowerCase() === "drug");
     if (pending.length === 0) {
       toast.info("All drugs are already dispensed");
       return;
@@ -176,7 +331,7 @@ export default function ViewPrescription() {
 
       await updatePharmacyDeskState.mutateAsync({
         patientId,
-        deskState: "completed",
+        deskState: nextDrugs.every((d) => d.dispensed) ? "completed" : pharmacyPatient.deskState,
         prescription: pharmacyPatient.prescription,
         drugs: nextDrugs,
       });
@@ -243,15 +398,18 @@ export default function ViewPrescription() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Patient Details</CardTitle>
-          {pharmacyPatient?.drugs && pharmacyPatient.drugs.length > 0 && (
-            <Button
-              onClick={handleSendInvoice}
-              disabled={createInvoice.isPending || invoicesLoading || invoiceAlreadySentForCurrentPrescription}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Send Invoice to Paypoint
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{invoiceClearanceLabel}</Badge>
+            {pharmacyPatient?.drugs && pharmacyPatient.drugs.length > 0 && (
+              <Button
+                onClick={handleSendInvoice}
+                disabled={createInvoice.isPending || invoicesLoading || invoiceAlreadySentForCurrentPrescription}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Send Invoice
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {pharmacyLoading && <p className="text-muted-foreground">Loading patient details...</p>}
@@ -291,10 +449,60 @@ export default function ViewPrescription() {
         </CardContent>
       </Card> */}
 
+      {bedItem && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Ward Admission</CardTitle>
+            {isBedTransferred ? (
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Transferred</Badge>
+            ) : (
+              <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-medium flex items-center gap-2">
+                <BedDouble className="h-4 w-4" />
+                {bedItem.name}
+              </div>
+              <div className="text-sm text-muted-foreground">Quantity: {bedItem.quantity}</div>
+            </div>
+
+            {!isBedTransferred && (
+              <div className="flex flex-col gap-3 md:flex-row md:items-end">
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">Ward Unit</div>
+                  <select
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={wardUnit}
+                    onChange={(e) => setSelectedWardUnit(e.target.value)}
+                  >
+                    <option value="">Select ward</option>
+                    {wardUnits.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleTransferToWard}
+                  disabled={admitToWard.isPending || updatePharmacyDeskState.isPending || !latestInvoice || !isInvoiceCleared}
+                  className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]"
+                >
+                  Transfer to Ward
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Current Drugs</CardTitle>
-          {pharmacyPatient?.drugs && pharmacyPatient.drugs.length > 0 && (
+          {pharmacyPatient?.drugs && pharmacyPatient.drugs.some((d) => String((getPriceItem(d) as any)?.category || "").toLowerCase() === "drug") && (
             <Button
               size="sm"
               onClick={handleDispenseAll}
@@ -302,7 +510,11 @@ export default function ViewPrescription() {
                 dispensingAll ||
                 dispensePriceItem.isPending ||
                 updatePharmacyDeskState.isPending ||
-                pharmacyPatient.drugs.every((d) => d.dispensed)
+                pharmacyPatient.drugs
+                  .filter((d) => String((getPriceItem(d) as any)?.category || "").toLowerCase() === "drug")
+                  .every((d) => d.dispensed) ||
+                !latestInvoice ||
+                !isInvoiceCleared
               }
               className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]"
             >
@@ -313,7 +525,7 @@ export default function ViewPrescription() {
         <CardContent>
           {pharmacyLoading ? (
             <p className="text-muted-foreground">Loading drugs...</p>
-          ) : pharmacyPatient?.drugs && pharmacyPatient.drugs.length > 0 ? (
+          ) : pharmacyPatient?.drugs && pharmacyPatient.drugs.some((d) => String((getPriceItem(d) as any)?.category || "").toLowerCase() === "drug") ? (
             <div className="overflow-x-auto rounded-t-[8px] border border-gray-200 overflow-hidden">
               <table className="min-w-full">
                 <thead className="bg-[#56bbe3] text-white">
@@ -325,7 +537,10 @@ export default function ViewPrescription() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pharmacyPatient.drugs.map((drug: DrugItem, idx: number) => {
+                  {pharmacyPatient.drugs
+                    .map((drug: DrugItem, idx: number) => ({ drug, idx }))
+                    .filter(({ drug }) => String((getPriceItem(drug) as any)?.category || "").toLowerCase() === "drug")
+                    .map(({ drug, idx }) => {
                     const priceItem = getPriceItem(drug);
                     const drugKey = `${priceItem?._id || drug.name}:${idx}`;
                     return (
@@ -346,7 +561,9 @@ export default function ViewPrescription() {
                                 dispensingDrugKey === drugKey ||
                                 dispensingAll ||
                                 dispensePriceItem.isPending ||
-                                updatePharmacyDeskState.isPending
+                                updatePharmacyDeskState.isPending ||
+                                !latestInvoice ||
+                                !isInvoiceCleared
                               }
                               onClick={() => handleDispenseDrug(drug, idx)}
                               className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]"

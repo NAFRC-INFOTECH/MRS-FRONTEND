@@ -43,6 +43,16 @@ export const dispensePriceItemApi = async ({
   return res.data as PriceItem;
 };
 
+export const occupyBedApi = async ({ id, quantity }: { id: string; quantity: number }): Promise<PriceItem> => {
+  const res = await api.patch(`/price-list/${id}/bed/occupy`, { quantity });
+  return res.data as PriceItem;
+};
+
+export const releaseBedApi = async ({ id, quantity }: { id: string; quantity: number }): Promise<PriceItem> => {
+  const res = await api.patch(`/price-list/${id}/bed/release`, { quantity });
+  return res.data as PriceItem;
+};
+
 export const deletePriceItemApi = async (id: string): Promise<{ ok: boolean }> => {
   const res = await api.delete(`/price-list/${id}`);
   return res.data as { ok: boolean };
@@ -75,6 +85,30 @@ export const useDispensePriceItemMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: dispensePriceItemApi,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "detail", data._id] });
+    },
+  });
+};
+
+export const useOccupyBedMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: occupyBedApi,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "detail", data._id] });
+    },
+  });
+};
+
+export const useReleaseBedMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: releaseBedApi,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
       queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });

@@ -8,7 +8,6 @@ import { useGopdQueueQuery } from "@/api-integration/queries/gopd";
 import { useAddDoctorDayListMutation } from "@/api-integration/mutations/doctorDayList";
 import { useAddClinicalDayListMutation } from "@/api-integration/mutations/clinicalDayList";
 import { api } from "@/api-integration/api/apiClient";
-import { getVitalsApi } from "@/api-integration/queries/vitals";
 import { toast } from "sonner";
 import { useSearch } from "@/contexts/SearchContext";
 
@@ -96,20 +95,21 @@ export default function PatientsInQueue() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={async () => {
-                          const vitals = await getVitalsApi(r.id);
-                          const today = new Date();
-                          const y = today.getFullYear();
-                          const m = today.getMonth() + 1;
-                          const d = today.getDate();
-                          const hasToday = (vitals as any[]).some((v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d);
-                          if (!hasToday) {
-                            toast.error("Record today's vitals before transfer");
+                          try {
+                            await addDaylist.mutateAsync({ patientId: r.id, sourceDepartment: "GOPD" });
+                          } catch (err: unknown) {
+                            const msg = err instanceof Error ? err.message : String(err ?? "");
+                            if (msg.toLowerCase().includes("vitals")) {
+                              toast.error("Record today's vitals before transfer");
+                            } else {
+                              toast.error(msg || "Unable to transfer to doctor");
+                            }
                             return;
                           }
-                          await addDaylist.mutateAsync({ patientId: r.id, sourceDepartment: "GOPD" });
                           try {
                             await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
                           } catch {}
+                          toast.success("Transferred to Doctor");
                           navigate(`/gopd/patients-in-queue`);
                         }}
                         className="flex items-center gap-2"
@@ -119,23 +119,21 @@ export default function PatientsInQueue() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={async () => {
-                          const vitals = await getVitalsApi(r.id);
-                          const today = new Date();
-                          const y = today.getFullYear();
-                          const m = today.getMonth() + 1;
-                          const d = today.getDate();
-                          const hasToday = (vitals as any[]).some(
-                            (v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d
-                          );
-                          if (!hasToday) {
-                            toast.error("Record today's vitals before transfer");
+                          try {
+                            await addClinicalDaylist.mutateAsync({
+                              patientId: r.id,
+                              targetDepartment: "EarDoctor",
+                              sourceDepartment: "GOPD",
+                            });
+                          } catch (err: unknown) {
+                            const msg = err instanceof Error ? err.message : String(err ?? "");
+                            if (msg.toLowerCase().includes("vitals")) {
+                              toast.error("Record today's vitals before transfer");
+                            } else {
+                              toast.error(msg || "Unable to transfer to EarDoctor");
+                            }
                             return;
                           }
-                          await addClinicalDaylist.mutateAsync({
-                            patientId: r.id,
-                            targetDepartment: "EarDoctor",
-                            sourceDepartment: "GOPD",
-                          });
                           try {
                             await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
                           } catch {}
@@ -149,23 +147,21 @@ export default function PatientsInQueue() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={async () => {
-                          const vitals = await getVitalsApi(r.id);
-                          const today = new Date();
-                          const y = today.getFullYear();
-                          const m = today.getMonth() + 1;
-                          const d = today.getDate();
-                          const hasToday = (vitals as any[]).some(
-                            (v) => Number(v.year) === y && Number(v.month) === m && Number(v.day) === d
-                          );
-                          if (!hasToday) {
-                            toast.error("Record today's vitals before transfer");
+                          try {
+                            await addClinicalDaylist.mutateAsync({
+                              patientId: r.id,
+                              targetDepartment: "EyeDoctor",
+                              sourceDepartment: "GOPD",
+                            });
+                          } catch (err: unknown) {
+                            const msg = err instanceof Error ? err.message : String(err ?? "");
+                            if (msg.toLowerCase().includes("vitals")) {
+                              toast.error("Record today's vitals before transfer");
+                            } else {
+                              toast.error(msg || "Unable to transfer to EyeDoctor");
+                            }
                             return;
                           }
-                          await addClinicalDaylist.mutateAsync({
-                            patientId: r.id,
-                            targetDepartment: "EyeDoctor",
-                            sourceDepartment: "GOPD",
-                          });
                           try {
                             await api.delete(`/gopd/queue/${encodeURIComponent(r.id)}`);
                           } catch {}

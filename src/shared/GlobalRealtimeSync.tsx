@@ -43,7 +43,9 @@ export default function GlobalRealtimeSync() {
     const invalidatePatients = () => {
       qc.invalidateQueries({ queryKey: ["patients"] });
       qc.invalidateQueries({ queryKey: ["patients", "paypoint"] });
+      qc.invalidateQueries({ queryKey: ["patients", "nhia"] });
       qc.invalidateQueries({ queryKey: ["patients", "nhia", "stats"] });
+      qc.invalidateQueries({ queryKey: ["patients", "pharmacy"] });
       qc.invalidateQueries({ queryKey: ["patient"] });
       qc.invalidateQueries({ queryKey: ["gopd-queue"] });
     };
@@ -51,6 +53,9 @@ export default function GlobalRealtimeSync() {
       qc.invalidateQueries({ queryKey: ["invoices", "all"] });
       qc.invalidateQueries({ queryKey: ["invoices", "patient"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+    };
+    const invalidateWards = () => {
+      qc.invalidateQueries({ queryKey: ["wards", "admissions"] });
     };
     const onUserUpdated = () => {
       invalidateUsers();
@@ -83,6 +88,8 @@ export default function GlobalRealtimeSync() {
     socket.on("patient.deleted", onPatientChanged);
     socket.on("invoice.created", onInvoiceChanged);
     socket.on("invoice.updated", onInvoiceChanged);
+    socket.on("wardAdmission.created", invalidateWards);
+    socket.on("wardAdmission.updated", invalidateWards);
     socket.on("connect_error", onConnectError);
     return () => {
       socket.off("patient.created", onPatientChanged);
@@ -90,6 +97,8 @@ export default function GlobalRealtimeSync() {
       socket.off("patient.deleted", onPatientChanged);
       socket.off("invoice.created", onInvoiceChanged);
       socket.off("invoice.updated", onInvoiceChanged);
+      socket.off("wardAdmission.created", invalidateWards);
+      socket.off("wardAdmission.updated", invalidateWards);
       socket.off("connect_error", onConnectError);
       socket.disconnect();
     };

@@ -76,7 +76,13 @@ export const useUpdatePharmacyDeskStateMutation = () => {
 };
 
 export const useCheckNHIAAccessMutation = () => {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (patientId: string) => getNHIAAccessApi(patientId) as Promise<NHIAAccess>,
+    onSuccess: (_data, patientId) => {
+      qc.invalidateQueries({ queryKey: ["patients"] });
+      qc.invalidateQueries({ queryKey: ["patients", "nhia"] });
+      qc.invalidateQueries({ queryKey: ["patient", patientId] });
+    },
   });
 };
