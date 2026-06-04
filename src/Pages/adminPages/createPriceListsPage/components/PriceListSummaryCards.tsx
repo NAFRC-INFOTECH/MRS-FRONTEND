@@ -42,6 +42,7 @@ const emptySummary: PriceSummary = {
   totalDrugsInStock: 0,
   totalDrugsSold: 0,
   totalDrugsSoldValue: 0,
+  nhiaClearedValue: 0,
 };
 
 export default function PriceListSummaryCards({
@@ -151,8 +152,9 @@ export default function PriceListSummaryCards({
 }
 
 function SummaryGrid({ summary, paypointServiceRevenue }: { summary: PriceSummary; paypointServiceRevenue: number }) {
+  console.log(summary)
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card className="bg-blue-50 dark:bg-blue-900/20 shadow-none max-h-[10rem] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -227,13 +229,29 @@ function SummaryGrid({ summary, paypointServiceRevenue }: { summary: PriceSummar
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle>Inventory Value</CardTitle>
-            <CardDescription>Total value of stock & services</CardDescription>
+            <CardDescription>Total value of stocks</CardDescription>
           </div>
           <BedDouble className="h-5 w-5 text-red-500" />
         </CardHeader>
         <CardContent>
           <div className="text-lg font-semibold">
             {formatCurrency(summary.totalValue)}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* NHIA Cleared Amount */}
+      <Card className="bg-primary/5 dark:bg-primary/90 shadow-none max-h-[10rem] rounded-md">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>NHIA Cleared</CardTitle>
+            <CardDescription>Total value of all cleared</CardDescription>
+          </div>
+          <Wallet className="h-5 w-5 text-primary" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-lg font-semibold">
+            {formatCurrency(Number(summary.nhiaClearedValue ?? 0))}
           </div>
         </CardContent>
       </Card>

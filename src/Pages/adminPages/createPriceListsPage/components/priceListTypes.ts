@@ -5,6 +5,8 @@ export const predefinedCategories = [
   "consultation",
   "bed",
   "registration",
+  "test",
+  "scan",
   "procedure",
   "laboratory",
   "other",
@@ -53,6 +55,7 @@ export type PriceSummary = {
   totalDrugsInStock: number;
   totalDrugsSold: number;
   totalDrugsSoldValue: number;
+  nhiaClearedValue?: number;
 };
 
 export type PriceTemplate = Omit<PriceItem, "_id">;
@@ -64,6 +67,8 @@ export const categoryLabels: Record<string, string> = {
   consultation: "Consultation",
   bed: "Bed Fees",
   registration: "Registration Fee",
+  test: "Tests",
+  scan: "Scans",
   procedure: "Procedures",
   laboratory: "Laboratory",
   other: "Other",
@@ -193,5 +198,6 @@ export const calculatePriceSummary = (
     totalDrugsInStock,
     totalDrugsSold,
     totalDrugsSoldValue,
+    nhiaClearedValue: 0,
   };
 };

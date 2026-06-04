@@ -58,6 +58,17 @@ export const deletePriceItemApi = async (id: string): Promise<{ ok: boolean }> =
   return res.data as { ok: boolean };
 };
 
+export const clonePriceListMonthApi = async (payload: {
+  fromMonth: string;
+  toMonth: string;
+  overwrite?: boolean;
+  resetSoldQuantity?: boolean;
+  resetStockQuantity?: boolean;
+}): Promise<{ ok: boolean; fromMonth: string; toMonth: string; sourceCount: number; deletedCount: number; createdCount: number }> => {
+  const res = await api.post("/price-list/clone-month", payload);
+  return res.data as { ok: boolean; fromMonth: string; toMonth: string; sourceCount: number; deletedCount: number; createdCount: number };
+};
+
 export const useCreatePriceItemMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -121,6 +132,17 @@ export const useDeletePriceItemMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deletePriceItemApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
+      queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });
+    },
+  });
+};
+
+export const useClonePriceListMonthMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: clonePriceListMonthApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["price-list", "items"] });
       queryClient.invalidateQueries({ queryKey: ["price-list", "summary"] });

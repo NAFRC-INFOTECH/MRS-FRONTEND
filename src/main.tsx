@@ -84,6 +84,7 @@ import {
   FemaleVIP,
   WardsRedirect,
   AntenatalPatients,
+  WardPatients,
 } from './App'
 import { SearchProvider } from './contexts/SearchContext';
 import ClinicalRedirect from './Pages/clinical/ClinicalRedirect';
@@ -125,6 +126,7 @@ const router = createBrowserRouter(
               <Route index element={<AdminDashboard />} />
               <Route path='all-departments' element={<AllDepartments />} />
               <Route path='price-list' element={<CreatePriceList />} />
+              <Route path='ward-patients' element={<WardPatients />} />
               <Route path='doctors' element={<Doctors />} />
               <Route path='doctors/:id' element={<DoctorProfile />} />
               <Route path='staffs' element={<Nurses />} />
@@ -147,6 +149,7 @@ const router = createBrowserRouter(
                 <Route path='patient-history/:patientId' element={<PatientMedicalHistory />} />
                 <Route path='todays-patients-list' element={<TodaysPatientsList />} />
                 <Route path='today-transferred-list' element={<TodayTransferredList />} />
+                <Route path='ward-patients' element={<WardPatients />} />
               </Route>
             </Route>
           </Route>

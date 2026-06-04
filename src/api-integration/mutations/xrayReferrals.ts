@@ -4,6 +4,7 @@ import type { XrayReferral } from "../queries/xray";
 
 export type CreateXrayReferralPayload = {
   patientId: string | null;
+  invoiceId?: string;
   date: string;
   serviceNoOrUUID?: string;
   rank?: string;

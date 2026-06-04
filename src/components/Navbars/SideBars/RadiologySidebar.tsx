@@ -20,7 +20,7 @@ export default function RadiologySidebar() {
   const activePath = getActivePath(routes.map((r) => r.path));
 
   const IconWrapper = ({ Icon, active }: { Icon: React.ElementType; active: boolean }) => {
-    return <Icon size={20} color={active ? "#ffffff" : "#6B7280"} />;
+    return <Icon size={20} color={active ? "#ffffff" : "#9e9e9edc"} />;
   };
 
   const getMillisecondsUntilMidnight = () => {
@@ -50,7 +50,7 @@ export default function RadiologySidebar() {
               to={item.path}
               sx={{
                 background: active ? "#56bbe3" : "transparent",
-                color: active ? "#ffffff" : "#6B7280",
+                color: active ? "#ffffff" : "#9e9e9edc",
                 borderTopRightRadius: "8px",
                 borderBottomRightRadius: "8px",
                 my: 0.5,

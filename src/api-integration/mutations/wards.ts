@@ -57,3 +57,25 @@ export const useAdministerWardMedicationMutation = () => {
     },
   });
 };
+
+export const updateWardMedicationOrdersApi = async (payload: {
+  admissionId: string;
+  pharmacyPrescription?: string;
+  medicationOrders: WardMedicationOrder[];
+}): Promise<WardAdmissionRow> => {
+  const res = await api.patch(`/wards/admissions/${encodeURIComponent(payload.admissionId)}/medications`, {
+    pharmacyPrescription: payload.pharmacyPrescription,
+    medicationOrders: payload.medicationOrders,
+  });
+  return res.data as WardAdmissionRow;
+};
+
+export const useUpdateWardMedicationOrdersMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateWardMedicationOrdersApi,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wards", "admissions"] });
+    },
+  });
+};
