@@ -4,6 +4,7 @@ import type { LabReferral } from "../queries/lab";
 
 export type CreateLabReferralPayload = {
   patientId: string | null;
+  invoiceId?: string;
   date: string;
   serviceNoOrUUID?: string;
   rank?: string;

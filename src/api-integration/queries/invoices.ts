@@ -85,6 +85,7 @@ export const createInvoiceApi = async (payload: {
   patientId: string;
   drugs?: InvoiceDrugItem[];
   items?: InvoiceItem[];
+  preferredBillingRoute?: BillingRoute;
 }): Promise<Invoice> => {
   const res = await api.post("/invoices", payload);
   return res.data as Invoice;
@@ -135,6 +136,16 @@ export const stampInvoiceNHIAApi = async (invoiceId: string): Promise<Invoice> =
 
 export const markInvoiceCopayPaidApi = async (invoiceId: string): Promise<Invoice> => {
   const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/nhia/copay-paid`);
+  return res.data as Invoice;
+};
+
+export const updateInvoiceItemsApi = async (invoiceId: string, items: InvoiceItem[]): Promise<Invoice> => {
+  const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/items`, { items });
+  return res.data as Invoice;
+};
+
+export const cancelInvoiceApi = async (invoiceId: string): Promise<Invoice> => {
+  const res = await api.patch(`/invoices/${encodeURIComponent(invoiceId)}/cancel`);
   return res.data as Invoice;
 };
 

@@ -7,6 +7,14 @@ export type XrayReferral = {
   senderId: string;
   senderName?: string;
   senderEmail?: string;
+  invoiceId?: string;
+  billingRoute?: "paypoint" | "nhia";
+  paymentStatus?: string;
+  nhiaStampStatus?: string;
+  copayStatus?: string;
+  patientAmountDue?: number;
+  isCleared?: boolean;
+  clearanceLabel?: string;
   date: string;
   serviceNoOrUUID?: string;
   rank?: string;

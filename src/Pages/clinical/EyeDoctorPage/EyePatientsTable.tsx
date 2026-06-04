@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, History } from "lucide-react";
+import { ChevronDown, History, ScanLine } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useClinicalDayListQuery } from "@/api-integration/queries/clinicalDayList";
 import { useSearch } from "@/contexts/SearchContext";
+import EyeRadiologyReferralModal from "./EyeRadiologyReferralModal";
 
 export default function EyePatientsTable() {
   const { query } = useSearch();
@@ -12,6 +13,8 @@ export default function EyePatientsTable() {
   const navigate = useNavigate();
 //   const [searchName, setSearchName] = useState("");
   const [searchIdService, setSearchIdService] = useState("");
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     const list = (daylist as any[]).map((q) => {
@@ -94,6 +97,16 @@ export default function EyePatientsTable() {
                           <History className="w-4 h-4" />
                           <span>View Patient History</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedPatientId(r.id);
+                            setReferralOpen(true);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <ScanLine className="w-4 h-4" />
+                          <span>Refer to Radiology</span>
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -109,6 +122,12 @@ export default function EyePatientsTable() {
           </tbody>
         </table>
       </div>
+
+      <EyeRadiologyReferralModal
+        open={referralOpen}
+        onOpenChange={setReferralOpen}
+        patientId={selectedPatientId}
+      />
     </div>
   );
 }

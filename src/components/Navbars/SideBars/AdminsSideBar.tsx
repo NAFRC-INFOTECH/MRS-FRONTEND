@@ -6,6 +6,7 @@ import {
 } from "@mui/material"
 import {
   Calendar,
+  BedDouble,
   ContactRound,
   FolderOpen,
   LayoutPanelLeft,
@@ -36,7 +37,7 @@ export default function AdminsSideBar() {
       <Icon
         size={20}
         variant="Outline"
-        color={active ? "#ffffff" : "#6B7280"}
+        color={active ? "#ffffff" : "#9e9e9edc"}
       />
     )
   }
@@ -58,7 +59,7 @@ export default function AdminsSideBar() {
 
   return (
     <section>
-      <div className="h-[50vh] md:h-[70vh] overflow-y-scroll w-full">
+      <div className="h-[68vh] md:h-[70vh] lg:h-[75vh] overflow-y-scroll w-full">
         <List>
           <span className="block text-start text-xs text-gray-500 pl-4 mb-2">
             MAIN
@@ -72,6 +73,7 @@ export default function AdminsSideBar() {
             { text: "Daily Duties", path: "/admin-dashboard/daily-duty", icon: ClipboardList },
             { text: "Doctors", path: "/admin-dashboard/doctors", icon: FolderOpen },
             { text: "Price List", path: "/admin-dashboard/price-list", icon: ReceiptText },
+            { text: "Ward Patients", path: "/admin-dashboard/ward-patients", icon: BedDouble },
             { text: "Radiology", path: "/admin-dashboard/radiology", icon: ScanLine },
             { text: "Recordings", path: "/admin-dashboard/recordings", icon: LibraryBig },
             { text: "Service Users", path: "/admin-dashboard/service-users", icon: ShieldUser },
@@ -87,13 +89,13 @@ export default function AdminsSideBar() {
                 to={item.path}
                 sx={{
                   background: active ? "#56bbe3" : "transparent",
-                  color: active ? "#ffffff" : "#6B7280",
+                  color: active ? "#ffffff" : "#9e9e9edc",
                   borderTopRightRadius: "8px",
                   borderBottomRightRadius: "8px",
                   my: 0.5,
                   ":hover": {
                     background: active ? "#56bbe3" : "#c9c9c91e",
-                    color: active ? "#ffffff" : "#6B7280",
+                    color: active ? "#ffffff" : "#9e9e9edc",
                   }
                 }}
               >

@@ -30,18 +30,32 @@ export function PriceListTable({
 }: PriceListTableProps) {
   const [pageSize, setPageSize] = useState<number>(5);
   const [page, setPage] = useState<number>(1);
+  const currentMonthKey = useMemo(() => new Date().toISOString().slice(0, 7), []);
+
+  const currentMonthItems = useMemo(() => {
+    return items.filter((it) => {
+      const raw = it.createdAt || it.updatedAt;
+      if (!raw) return false;
+      const d = new Date(raw);
+      if (Number.isNaN(d.getTime())) return false;
+      return d.toISOString().slice(0, 7) === currentMonthKey;
+    });
+  }, [items, currentMonthKey]);
 
   useEffect(() => {
     setPage(1);
   }, [items, pageSize]);
 
-  const total = items.length;
+  const total = currentMonthItems.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = Math.min(total, startIndex + pageSize);
 
-  const paginatedItems = useMemo(() => items.slice(startIndex, endIndex), [items, startIndex, endIndex]);
+  const paginatedItems = useMemo(
+    () => currentMonthItems.slice(startIndex, endIndex),
+    [currentMonthItems, startIndex, endIndex]
+  );
 
   return (
     <div className="space-y-3">
@@ -72,17 +86,17 @@ export function PriceListTable({
             />
           ))}
 
-          {items.length === 0 && (
+          {total === 0 && (
             <TableRow>
               <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
-                No price items match the current filters.
+                No price items for the current month.
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
 
-      {items.length > 0 && (
+      {total > 0 && (
         <div className="flex flex-col gap-4 mt-4 bg-background/80 backdrop-blur md:flex-row md:items-center md:justify-between">
           {/* Left */}
           <div className="flex flex-col gap-1">

@@ -26,7 +26,7 @@ export default function LabSidebar() {
     return (
       <Icon
         size={20}
-        color={active ? "#ffffff" : "#6B7280"}
+        color={active ? "#ffffff" : "#9e9e9edc"}
       />
     )
   }
@@ -66,7 +66,7 @@ export default function LabSidebar() {
               to={item.path}
               sx={{
                 background: active ? "#56bbe3" : "transparent",
-                color: active ? "#ffffff" : "#6B7280",
+                color: active ? "#ffffff" : "#9e9e9edc",
                 borderTopRightRadius: "8px",
                 borderBottomRightRadius: "8px",
                 my: 0.5,

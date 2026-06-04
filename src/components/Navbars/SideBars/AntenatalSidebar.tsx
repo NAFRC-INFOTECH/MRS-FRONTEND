@@ -34,7 +34,7 @@ export default function AntenatalSidebar() {
                   my: 0.5,
                   ":hover": {
                     background: active ? "#56bbe3" : "#c9c9c91e",
-                    color: active ? "#ffffff" : "#6B7280",
+                    color: active ? "#ffffff" : "#9e9e9edc",
                   },
                 }}
               >

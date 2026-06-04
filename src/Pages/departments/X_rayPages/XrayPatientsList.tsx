@@ -5,6 +5,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useXrayReferralsQuery, type XrayReferral } from "@/api-integration/queries/xray";
 import { useUpdateXrayReferralStatusMutation } from "@/api-integration/mutations/xrayReferrals";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -37,8 +38,33 @@ export default function XrayPatientsList() {
         imagingArea: r.imagingArea || "-",
         examinationRequired: r.examinationRequired || "-",
         status: r.status,
+        billingRoute: r.billingRoute,
+        isCleared: !!r.isCleared,
+        clearanceLabel: r.clearanceLabel || (r.isCleared ? "Cleared" : "Not Cleared"),
       }));
   }, [referrals]);
+
+  const getBillingRouteBadge = (billingRoute?: string) => {
+    const v = String(billingRoute || "").toLowerCase();
+    if (v === "nhia") return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">NHIA</Badge>;
+    if (v === "paypoint") return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Paypoint</Badge>;
+    return <Badge variant="outline">-</Badge>;
+  };
+
+  const getClearanceBadge = (row: { isCleared: boolean; clearanceLabel: string }) => {
+    if (row.isCleared) return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Cleared</Badge>;
+    const label = String(row.clearanceLabel || "");
+    if (label.toLowerCase().includes("nhia")) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+    }
+    if (label.toLowerCase().includes("copay")) {
+      return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">{label}</Badge>;
+    }
+    if (label.toLowerCase().includes("awaiting")) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+    }
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">{label || "Not Cleared"}</Badge>;
+  };
 
   return (
     <div className="py-4">
@@ -70,6 +96,7 @@ export default function XrayPatientsList() {
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Age</th>
               <th className="px-4 py-2 text-left">Imaging Area</th>
+              <th className="px-4 py-2 text-left">Payment</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
@@ -78,7 +105,7 @@ export default function XrayPatientsList() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={8} className="py-4 text-center text-gray-500">
+                <td colSpan={9} className="py-4 text-center text-gray-500">
                   Loading...
                 </td>
               </tr>
@@ -93,6 +120,12 @@ export default function XrayPatientsList() {
                   <td className="px-4 py-2 font-medium whitespace-nowrap">{r.name}</td>
                   <td className="px-4 py-2 whitespace-nowrap">{r.age}</td>
                   <td className="px-4 py-2 whitespace-nowrap">{r.imagingArea}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {getBillingRouteBadge(r.billingRoute)}
+                      {getClearanceBadge(r)}
+                    </div>
+                  </td>
                   <td className="px-4 py-2 whitespace-nowrap">{r.status}</td>
                   <td className="px-4 py-2 whitespace-nowrap">
                     <DropdownMenu>
@@ -104,7 +137,7 @@ export default function XrayPatientsList() {
 
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          disabled={updateStatus.isPending || r.status === "COMPLETED"}
+                          disabled={updateStatus.isPending || r.status === "COMPLETED" || !r.isCleared}
                           onClick={() => {
                             updateStatus.mutate(
                               { id: r.id, status: "RECEIVED" },
@@ -119,7 +152,7 @@ export default function XrayPatientsList() {
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
-                          disabled={updateStatus.isPending || r.status === "COMPLETED"}
+                          disabled={updateStatus.isPending || r.status === "COMPLETED" || !r.isCleared}
                           onClick={() => {
                             updateStatus.mutate(
                               { id: r.id, status: "COMPLETED" },
@@ -136,7 +169,9 @@ export default function XrayPatientsList() {
                         <DropdownMenuSeparator />
 
                         <DropdownMenuItem
+                          disabled={!r.isCleared}
                           onClick={() => {
+                            if (!r.isCleared) return;
                             navigate(`/radiology/patient-list/${r.patientId}`);
                           }}
                         >
@@ -154,7 +189,7 @@ export default function XrayPatientsList() {
 
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-4 text-center">
+                <td colSpan={9} className="py-4 text-center">
                   No referred patients.
                 </td>
               </tr>

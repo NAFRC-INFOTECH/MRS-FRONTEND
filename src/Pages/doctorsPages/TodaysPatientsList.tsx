@@ -16,11 +16,16 @@ import TransferRequestFormModal from "./components/forms/TransferRequestFormModa
 import { useSearch } from "@/contexts/SearchContext";
 import type { PriceItem } from "../adminPages/createPriceListsPage/components/priceListTypes";
 import { Badge } from "@/components/ui/badge";
+import { useLabReferralsByDateQuery } from "@/api-integration/queries/lab";
+import { useXrayReferralsQuery } from "@/api-integration/queries/xray";
 
 
 export default function TodaysPatientsList() {
   const { query } = useSearch();
   const { data: daylist = [] } = useDoctorDayListQuery("GOPD", "all");
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const labReferrals = useLabReferralsByDateQuery(today);
+  const xrayReferrals = useXrayReferralsQuery({ date: today });
   const { data: drugPriceItems = [] } = usePriceItemsQuery({
     category: "drug",
     activeOnly: true,
@@ -44,6 +49,63 @@ export default function TodaysPatientsList() {
     return [...drugPriceItems, ...bedPriceItems];
   }, [drugPriceItems, bedPriceItems]);
 
+  const labStatusByPatientId = useMemo(() => {
+    const list = (labReferrals.data || []) as any[];
+    const m = new Map<string, { label: string; isCleared: boolean; billingRoute?: string; ts: number }>();
+    for (const r of list) {
+      const pid = String(r.patientId || "");
+      if (!pid) continue;
+      const ts = new Date(r.createdAt || r.updatedAt || r.date || 0).getTime();
+      const next = { label: String(r.clearanceLabel || (r.isCleared ? "Cleared" : "Not Cleared")), isCleared: !!r.isCleared, billingRoute: r.billingRoute, ts };
+      const current = m.get(pid);
+      if (!current || ts > current.ts) m.set(pid, next);
+    }
+    const out = new Map<string, { label: string; isCleared: boolean; billingRoute?: string }>();
+    for (const [k, v] of m.entries()) out.set(k, { label: v.label, isCleared: v.isCleared, billingRoute: v.billingRoute });
+    return out;
+  }, [labReferrals.data]);
+
+  const xrayStatusByPatientId = useMemo(() => {
+    const list = (xrayReferrals.data || []) as any[];
+    const m = new Map<string, { label: string; isCleared: boolean; billingRoute?: string; ts: number }>();
+    for (const r of list) {
+      const pid = String(r.patientId || "");
+      if (!pid) continue;
+      const ts = new Date(r.createdAt || r.updatedAt || r.date || 0).getTime();
+      const next = { label: String(r.clearanceLabel || (r.isCleared ? "Cleared" : "Not Cleared")), isCleared: !!r.isCleared, billingRoute: r.billingRoute, ts };
+      const current = m.get(pid);
+      if (!current || ts > current.ts) m.set(pid, next);
+    }
+    const out = new Map<string, { label: string; isCleared: boolean; billingRoute?: string }>();
+    for (const [k, v] of m.entries()) out.set(k, { label: v.label, isCleared: v.isCleared, billingRoute: v.billingRoute });
+    return out;
+  }, [xrayReferrals.data]);
+
+  const renderClearanceBadge = (st?: { label: string; isCleared: boolean; billingRoute?: string }) => {
+    if (!st) return <span className="text-muted-foreground">-</span>;
+    const route = String(st.billingRoute || "").toLowerCase();
+    const routeBadge =
+      route === "nhia"
+        ? <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">NHIA</Badge>
+        : route === "paypoint"
+          ? <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Paypoint</Badge>
+          : <Badge variant="outline">-</Badge>;
+    const clearanceBadge = (() => {
+      if (st.isCleared) return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Cleared</Badge>;
+      const label = String(st.label || "");
+      if (label.toLowerCase().includes("nhia")) return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+      if (label.toLowerCase().includes("10%")) return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">{label}</Badge>;
+      if (label.toLowerCase().includes("awaiting")) return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">{label || "Not Cleared"}</Badge>;
+    })();
+    return (
+      <div className="flex items-center gap-2">
+        {routeBadge}
+        {clearanceBadge}
+      </div>
+    );
+  };
+
   const rows = useMemo(() => {
     const list = (daylist as any[]).map((q) => {
       const id = String(q.patientId || "");
@@ -51,7 +113,9 @@ export default function TodaysPatientsList() {
       const phone = q.phone || "";
       const cardNumber = q.cardNumber || "";
       const rank = q.rank || "";
-      return { id, fullName, phone, cardNumber, rank };
+      const lab = labStatusByPatientId.get(id);
+      const xray = xrayStatusByPatientId.get(id);
+      return { id, fullName, phone, cardNumber, rank, lab, xray };
     });
     return list.filter((r) => {
       const nmOk = query ? r.fullName.toLowerCase().includes(query.toLowerCase()) : true;
@@ -61,7 +125,7 @@ export default function TodaysPatientsList() {
         : true;
       return nmOk && idOk;
     });
-  }, [daylist, query, searchIdService]);
+  }, [daylist, query, searchIdService, labStatusByPatientId, xrayStatusByPatientId]);
 
   const filteredItems = useMemo(() => {
     const q = drugSearch.trim().toLowerCase();
@@ -151,6 +215,8 @@ export default function TodaysPatientsList() {
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Phone</th>
               <th className="px-4 py-2 text-left">Rank</th>
+              <th className="px-4 py-2 text-left">Lab</th>
+              <th className="px-4 py-2 text-left">Scan</th>
               <th className="px-4 py-2 text-left">Action</th>
             </tr>
           </thead>
@@ -164,6 +230,8 @@ export default function TodaysPatientsList() {
                 <td className="px-4 py-2 font-medium whitespace-nowrap">{r.fullName}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.phone || "-"}</td>
                 <td className="px-4 py-2 whitespace-nowrap">{r.rank || "-"}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{renderClearanceBadge(r.lab)}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{renderClearanceBadge(r.xray)}</td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -191,7 +259,7 @@ export default function TodaysPatientsList() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-4">
+                <td colSpan={8} className="text-center py-4">
                   No patients in queue.
                 </td>
               </tr>
@@ -278,14 +346,12 @@ export default function TodaysPatientsList() {
         open={formOpen}
         onOpenChange={setFormOpen}
         patientId={selectedPatientId}
-        destination={destination as "lab" | "xray" | "nhia" | "paypoint" | null}
+        destination={destination as "lab" | "xray" | null}
         onSubmitted={(dest) => {
           const destLabel = dest === "lab" ? "Lab" : dest === "xray" ? "X-ray" : dest === "nhia" ? "NHIA" : "Paypoint";
           toast.success(`Request sent to ${destLabel}`);
           if (dest === "lab") navigate("");
           else if (dest === "xray") navigate("");
-          else if (dest === "nhia") navigate("");
-          else if (dest === "paypoint") navigate("");
         }}
       />
 

@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUpdateLabReferralStatusMutation } from "@/api-integration/mutations/labReferrals";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 import {
   DropdownMenu,
@@ -39,8 +40,33 @@ export default function LabPatientsList() {
       specimen: r.specimen || "-",
       examinationRequired: r.examinationRequired || "-",
       status: r.status,
+      billingRoute: r.billingRoute,
+      isCleared: !!r.isCleared,
+      clearanceLabel: r.clearanceLabel || (r.isCleared ? "Cleared" : "Not Cleared"),
     }));
   }, [referrals]);
+
+  const getBillingRouteBadge = (billingRoute?: string) => {
+    const v = String(billingRoute || "").toLowerCase();
+    if (v === "nhia") return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">NHIA</Badge>;
+    if (v === "paypoint") return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Paypoint</Badge>;
+    return <Badge variant="outline">-</Badge>;
+  };
+
+  const getClearanceBadge = (row: { isCleared: boolean; clearanceLabel: string }) => {
+    if (row.isCleared) return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Cleared</Badge>;
+    const label = String(row.clearanceLabel || "");
+    if (label.toLowerCase().includes("nhia")) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+    }
+    if (label.toLowerCase().includes("copay")) {
+      return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">{label}</Badge>;
+    }
+    if (label.toLowerCase().includes("awaiting")) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">{label}</Badge>;
+    }
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">{label || "Not Cleared"}</Badge>;
+  };
 
   return (
     <div className="py-4">
@@ -76,6 +102,7 @@ export default function LabPatientsList() {
               <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Age</th>
               <th className="px-4 py-2 text-left">Specimen</th>
+              <th className="px-4 py-2 text-left">Payment</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
@@ -85,7 +112,7 @@ export default function LabPatientsList() {
             {/* Loading */}
             {isLoading && (
               <tr>
-                <td colSpan={8} className="text-center py-4 text-gray-500">
+                <td colSpan={9} className="text-center py-4 text-gray-500">
                   Loading…
                 </td>
               </tr>
@@ -117,6 +144,12 @@ export default function LabPatientsList() {
                     {r.specimen}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {getBillingRouteBadge(r.billingRoute)}
+                      {getClearanceBadge(r)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 whitespace-nowrap">
                     {r.status}
                   </td>
 
@@ -134,7 +167,8 @@ export default function LabPatientsList() {
                         <DropdownMenuItem
                           disabled={
                             updateStatus.isPending ||
-                            r.status === "COMPLETED"
+                            r.status === "COMPLETED" ||
+                            !r.isCleared
                           }
                           onClick={() => {
                             updateStatus.mutate(
@@ -154,7 +188,8 @@ export default function LabPatientsList() {
                         <DropdownMenuItem
                           disabled={
                             updateStatus.isPending ||
-                            r.status === "COMPLETED"
+                            r.status === "COMPLETED" ||
+                            !r.isCleared
                           }
                           onClick={() => {
                             updateStatus.mutate(
@@ -175,7 +210,9 @@ export default function LabPatientsList() {
 
                         {/* Lab Actions */}
                         <DropdownMenuItem
+                          disabled={!r.isCleared}
                           onClick={() => {
+                            if (!r.isCleared) return;
                             navigate(`/lab/patient-list/${r.patientId}`);
                           }}
                         >
@@ -195,7 +232,7 @@ export default function LabPatientsList() {
             {/* Empty State */}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center py-4">
+                <td colSpan={9} className="text-center py-4">
                   No referred patients.
                 </td>
               </tr>

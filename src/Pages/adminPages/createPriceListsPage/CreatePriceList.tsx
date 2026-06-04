@@ -1,13 +1,19 @@
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { usePriceItemsQuery, usePriceSummariesQuery } from "@/api-integration/queries/priceList";
 import {
   useCreatePriceItemMutation,
   useDeletePriceItemMutation,
   useUpdatePriceItemMutation,
+  useClonePriceListMonthMutation,
 } from "@/api-integration/mutations/priceList";
 
 const PriceListFilters = lazy(() =>
@@ -46,6 +52,12 @@ export default function CreatePriceList() {
   const [activeOnly, setActiveOnly] = useState(false);
   const [monthlyDate, setMonthlyDate] = useState(() => new Date().toISOString().slice(0, 7));
   const [yearlyDate, setYearlyDate] = useState(() => String(new Date().getFullYear()));
+  const [cloneOpen, setCloneOpen] = useState(false);
+  const [cloneFromMonth, setCloneFromMonth] = useState("");
+  const [cloneToMonth, setCloneToMonth] = useState("");
+  const [cloneOverwrite, setCloneOverwrite] = useState(false);
+  const [cloneResetSold, setCloneResetSold] = useState(true);
+  const [cloneResetStock, setCloneResetStock] = useState(false);
 
   const { data: allItems = [] } = usePriceItemsQuery({
     q: undefined,
@@ -86,6 +98,21 @@ export default function CreatePriceList() {
   const createMutation = useCreatePriceItemMutation();
   const updateMutation = useUpdatePriceItemMutation();
   const deleteMutation = useDeletePriceItemMutation();
+  const cloneMonthMutation = useClonePriceListMonthMutation();
+
+  const prevMonthOf = (month: string) => {
+    const [yRaw, mRaw] = String(month || "").split("-");
+    const y = Number(yRaw);
+    const m = Number(mRaw);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) return "";
+    const d = new Date(y, m - 2, 1, 0, 0, 0, 0);
+    return d.toISOString().slice(0, 7);
+  };
+
+  useEffect(() => {
+    setCloneToMonth(monthlyDate);
+    setCloneFromMonth(prevMonthOf(monthlyDate));
+  }, [monthlyDate]);
 
   const updateForm = (updates: Partial<PriceForm>) => {
     setForm((current) => ({ ...current, ...updates }));
@@ -211,6 +238,19 @@ export default function CreatePriceList() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{isLoading ? "Syncing..." : ""}</Badge>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCloneToMonth(monthlyDate);
+              setCloneFromMonth(prevMonthOf(monthlyDate));
+              setCloneOverwrite(false);
+              setCloneResetSold(true);
+              setCloneResetStock(false);
+              setCloneOpen(true);
+            }}
+          >
+            Copy Previous Month
+          </Button>
         </div>
       </div>
 
@@ -322,6 +362,82 @@ export default function CreatePriceList() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={cloneOpen} onOpenChange={setCloneOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy Price List Items</DialogTitle>
+            <DialogDescription>
+              Duplicate all items created in one month into another month.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="from-month">From Month</Label>
+              <Input
+                id="from-month"
+                type="month"
+                value={cloneFromMonth}
+                onChange={(e) => setCloneFromMonth(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="to-month">To Month</Label>
+              <Input
+                id="to-month"
+                type="month"
+                value={cloneToMonth}
+                onChange={(e) => setCloneToMonth(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox checked={cloneResetSold} onCheckedChange={(v) => setCloneResetSold(!!v)} />
+                <span className="text-sm">Reset sold quantity to 0</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={cloneResetStock} onCheckedChange={(v) => setCloneResetStock(!!v)} />
+                <span className="text-sm">Reset stock quantity to 0</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={cloneOverwrite} onCheckedChange={(v) => setCloneOverwrite(!!v)} />
+                <span className="text-sm">Overwrite target month items</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCloneOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#56bbe3] text-white hover:bg-[#56bbe3]"
+              disabled={cloneMonthMutation.isPending}
+              onClick={async () => {
+                try {
+                  const res = await cloneMonthMutation.mutateAsync({
+                    fromMonth: cloneFromMonth,
+                    toMonth: cloneToMonth,
+                    overwrite: cloneOverwrite,
+                    resetSoldQuantity: cloneResetSold,
+                    resetStockQuantity: cloneResetStock,
+                  });
+                  toast.success(`Copied ${res.createdCount} items into ${res.toMonth}`);
+                  setMonthlyDate(res.toMonth);
+                  setCloneOpen(false);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to copy month");
+                }
+              }}
+            >
+              Copy Items
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

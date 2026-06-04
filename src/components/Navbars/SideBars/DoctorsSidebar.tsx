@@ -8,6 +8,7 @@ import {
 } from "@mui/material"
 import {
   ContactRound,
+  BedDouble,
   LayoutPanelLeft,
 } from "lucide-react"
 import { useEffect } from "react"
@@ -30,7 +31,7 @@ export default function DoctorsSidebar() {
       <Icon
         size={20}
         variant="Outline"
-        color={active ? "#ffffff" : "#6B7280"}
+        color={active ? "#ffffff" : "#9e9e9edc"}
       />
     )
   }
@@ -62,6 +63,7 @@ export default function DoctorsSidebar() {
           { text: "Dashboard", path: "/doctors-dashboard", icon: LayoutPanelLeft },
           { text: "Consultations", path: "/doctors-dashboard/todays-patients-list", icon: ContactRound },
           { text: "Transferred Patients", path: "/doctors-dashboard/today-transferred-list", icon: ContactRound },
+          { text: "Ward Patients", path: "/doctors-dashboard/ward-patients", icon: BedDouble },
         ].map((item) => {
           const active = isRouteActive(item.path)
 
@@ -72,13 +74,13 @@ export default function DoctorsSidebar() {
               to={item.path}
               sx={{
                 background: active ? "#56bbe3" : "transparent",
-                color: active ? "#ffffff" : "#6B7280",
+                color: active ? "#ffffff" : "#9e9e9edc",
                 borderTopRightRadius: "8px",
                 borderBottomRightRadius: "8px",
                 my: 0.5,
                 ":hover": {
                   background: active ? "#56bbe3" : "#c9c9c91e",
-                  color: active ? "#ffffff" : "#6B7280",
+                  color: active ? "#ffffff" : "#9e9e9edc",
                 }
               }}
             >

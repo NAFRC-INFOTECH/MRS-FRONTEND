@@ -60,6 +60,7 @@ import MaleVIP from './Pages/departments/wards/MaleVIP'
 import FemaleVIP from './Pages/departments/wards/FemaleVIP'
 import WardsRedirect from './Pages/departments/wards/WardsRedirect'
 import AntenatalPatients from './Pages/departments/Antenatal/AntenatalPatients'
+import WardPatients from './Pages/adminPages/wardPatients/WardPatients'
 
 
 
@@ -127,4 +128,5 @@ export {
   FemaleVIP,
   WardsRedirect,
   AntenatalPatients,
+  WardPatients,
 }
